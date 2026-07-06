@@ -213,7 +213,7 @@
             <td style="padding:8px 12px; text-align:center; white-space:nowrap;">
                 <!-- Enviar USDT — botão primário -->
                 <button type="button"
-                    onclick="openSendModal(<?= $d['id'] ?>, <?= $usdtToSend ?>, '<?= $d['id'] ?>', '<?= esc(addslashes($walletShort)) ?>')"
+                    onclick="openSendModal(<?= $d['id'] ?>, <?= max(0, $usdtTotal - $usdtDelivered) ?>, <?= $usdtToSend ?>, <?= (float)($d['lot_reserved'] ?? 0) ?>, '<?= $d['id'] ?>', '<?= esc(addslashes($walletShort)) ?>')"
                     style="display:inline-flex; align-items:center; gap:4px; background:rgba(192,132,252,0.15); color:#c084fc; padding:5px 11px; font-size:12px; border-radius:6px; font-weight:600; border:1px solid rgba(192,132,252,0.3); cursor:pointer; white-space:nowrap; margin-bottom:4px;"
                     onmouseover="this.style.background='rgba(192,132,252,0.25)'" onmouseout="this.style.background='rgba(192,132,252,0.15)'">
                     Enviar
@@ -270,6 +270,8 @@
                     onfocus="this.style.borderColor='#c084fc'" onblur="this.style.borderColor='rgba(255,255,255,0.12)'">
                 <div id="modal-max-hint" style="font-size:11px; color:#64748b; margin-top:4px;"></div>
             </div>
+            <input type="hidden" id="modal-pending" value="0">
+            <input type="hidden" id="modal-lot-reserved" value="0">
             <div style="margin-bottom:20px;">
                 <label style="display:block; font-size:12px; font-weight:600; color:#94a3b8; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.05em;">Hash da Transação *</label>
                 <input type="text" name="notes" id="modal-notes" placeholder="Ex: Hash da rede TRC-20..." required
@@ -294,14 +296,19 @@
 </div>
 
 <script>
-function openSendModal(contractId, pending, contractLabel, wallet) {
+let usdtSendConfirmed = false;
+
+function openSendModal(contractId, absoluteMax, pending, lotReserved, contractLabel, wallet) {
     document.getElementById('modal-title').textContent = 'Enviar USDT — Operação #' + contractLabel;
     var amountInput = document.getElementById('modal-amount');
-    amountInput.value = pending.toFixed(2);
-    amountInput.max   = pending;
-    document.getElementById('modal-max-hint').textContent = 'Máx: ' + pending.toFixed(2).replace('.', ',') + ' USDT';
+    amountInput.value = Math.min(pending, absoluteMax).toFixed(2);
+    amountInput.max   = absoluteMax;
+    document.getElementById('modal-max-hint').textContent = 'Máx: ' + absoluteMax.toFixed(2).replace('.', ',') + ' USDT';
     document.getElementById('modal-notes').value = '';
+    document.getElementById('modal-pending').value = pending;
+    document.getElementById('modal-lot-reserved').value = lotReserved;
     document.getElementById('send-form').action = '<?= site_url('admin/contracts/deliver-usdt/') ?>' + contractId;
+    usdtSendConfirmed = false;
 
     var walletRow = document.getElementById('modal-wallet-row');
     if (wallet) {
@@ -322,6 +329,52 @@ function closeSendModal() {
 document.getElementById('send-modal').addEventListener('click', function(e) {
     if (e.target === this) closeSendModal();
 });
+
+document.getElementById('send-form').onsubmit = function (e) {
+    if (usdtSendConfirmed) return true;
+
+    const value        = parseFloat(document.getElementById('modal-amount').value);
+    const pending       = parseFloat(document.getElementById('modal-pending').value);
+    const lotReserved   = parseFloat(document.getElementById('modal-lot-reserved').value);
+
+    if (value > lotReserved || value > pending) {
+        e.preventDefault();
+        const reasons = [];
+        if (value > lotReserved) reasons.push('não há lotes reservados suficientes para cobrir esse valor');
+        if (value > pending) reasons.push('o pagamento total desta operação ainda não foi efetivado');
+        document.getElementById('usdt-send-confirm-text').textContent =
+            'Este envio está fora do fluxo normal: ' + reasons.join(' e ') + '. Deseja continuar mesmo assim?';
+        document.getElementById('usdt-send-confirm-modal').style.display = 'flex';
+        return false;
+    }
+};
+
+function closeUsdtSendConfirmModal() {
+    document.getElementById('usdt-send-confirm-modal').style.display = 'none';
+}
+
+function confirmUsdtSend() {
+    usdtSendConfirmed = true;
+    closeUsdtSendConfirmModal();
+    document.getElementById('send-form').submit();
+}
 </script>
+
+<!-- Modal de Confirmação de Envio Fora do Fluxo -->
+<div id="usdt-send-confirm-modal" style="display:none; position:fixed; inset:0; z-index:9500; background:rgba(0,0,0,0.75); backdrop-filter:blur(6px); justify-content:center; align-items:center; padding:20px;">
+    <div style="background:#1e293b; border:1px solid rgba(251,191,36,0.3); border-radius:24px; width:100%; max-width:460px; padding:32px; box-shadow:0 25px 60px rgba(0,0,0,0.5);">
+        <div style="display:flex; gap:14px; align-items:flex-start; margin-bottom:20px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <div>
+                <h2 style="font-size:17px; font-weight:700; color:white; margin-bottom:6px;">Envio fora do fluxo normal</h2>
+                <p id="usdt-send-confirm-text" style="font-size:13px; color:#94a3b8; line-height:1.6;"></p>
+            </div>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button onclick="closeUsdtSendConfirmModal()" style="flex:1; padding:12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:12px; color:#94a3b8; font-size:14px; font-weight:600; cursor:pointer;">Cancelar</button>
+            <button onclick="confirmUsdtSend()" style="flex:1; padding:12px; background:#059669; border:none; border-radius:12px; color:white; font-size:14px; font-weight:700; cursor:pointer;">Concordo</button>
+        </div>
+    </div>
+</div>
 
 <?= $this->endSection() ?>

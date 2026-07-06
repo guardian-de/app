@@ -454,6 +454,8 @@ class AdminController extends BaseController
         $paidRatio   = $contract['total_brl'] > 0 ? min(1.0, (float)$contract['paid_amount'] / (float)$contract['total_brl']) : 0;
         $usdtPending = max(0, round($paidRatio * (float)$contract['total_amount'], 4) - (float)$contract['delivered_usdt']);
 
+        $unlinkedDelivered = (new \App\Models\LotAllocationModel())->getUnlinkedDelivered('contract', $id, (float)$contract['delivered_usdt']);
+
         $lotModel = new \App\Models\UsdtLotModel();
         $rawLots  = $lotModel->select('id, supplier, usdt_amount, usdt_reserved, usdt_delivered, conversion_rate, total_brl, status')
             ->where('status', 'active')
@@ -483,6 +485,7 @@ class AdminController extends BaseController
             'clientProof'         => $clientProof,
             'totalReservedUsdt'   => $totalReservedUsdt,
             'usdtPending'         => $usdtPending,
+            'unlinkedDelivered'   => $unlinkedDelivered,
             'availableLots'       => $availableLots,
             'currentBaseRate'     => $currentBaseRate,
             'suppliers'           => $suppliers,
@@ -527,16 +530,16 @@ class AdminController extends BaseController
         if (!empty($filters['end_date'])) {
             $builder->where('contracts.due_date <=', $filters['end_date']);
         }
-        if (!empty($filters['status'])) {
+        if ($filters['status'] === 'sent') {
+            $builder->where('contracts.total_amount > 0', null, false)
+                     ->where('contracts.delivered_usdt >= contracts.total_amount', null, false);
+        } elseif (!empty($filters['status'])) {
             $builder->where('contracts.status', $filters['status']);
         }
         if ($filters['delivery_status'] === 'em_aberto') {
             $builder->where('COALESCE(la_totals.total_lot_allocated, 0) < contracts.total_amount', null, false);
-        } elseif ($filters['delivery_status'] === 'pendente') {
-            $builder->where('COALESCE(la_totals.total_lot_allocated, 0) >= contracts.total_amount', null, false);
-            $builder->where('contracts.delivered_usdt < contracts.total_amount');
         } elseif ($filters['delivery_status'] === 'concluido') {
-            $builder->where('contracts.delivered_usdt >= contracts.total_amount');
+            $builder->where('COALESCE(la_totals.total_lot_allocated, 0) >= contracts.total_amount', null, false);
         }
 
         $contracts = $builder->orderBy("CASE
@@ -788,16 +791,27 @@ class AdminController extends BaseController
             }
             $sendable = round($sendable, 2);
 
-            if ($sendable < 0.01) {
-                $db->transRollback();
-                return redirect()->back()->with('error', 'Este cliente não possui USDT entregável coberto por lote reservado.');
+            // Teto absoluto: soma do saldo restante (total - entregue) de todas as operações pendentes do cliente,
+            // usado apenas quando o valor pedido ultrapassa o fluxo normal (lote + pagamento).
+            $allPending  = $contractModel->getPendingDeliveries($userId, 'profit');
+            $absoluteMax = 0.0;
+            foreach ($allPending as $p) {
+                $absoluteMax += max(0, (float)$p['total_amount'] - (float)$p['delivered_usdt']);
             }
-            if ($amountUsdt > $sendable + 0.009) {
+            $absoluteMax = round($absoluteMax, 2);
+
+            if ($absoluteMax < 0.01) {
                 $db->transRollback();
-                return redirect()->back()->with('error', 'O valor informado (' . number_format($amountUsdt, 2, ',', '.') . ' USDT) excede o entregável com lote reservado (' . number_format($sendable, 2, ',', '.') . ' USDT).');
+                return redirect()->back()->with('error', 'Este cliente não possui USDT pendente de envio.');
+            }
+            if ($amountUsdt > $absoluteMax + 0.009) {
+                $db->transRollback();
+                return redirect()->back()->with('error', 'O valor informado (' . number_format($amountUsdt, 2, ',', '.') . ' USDT) excede o saldo total pendente do cliente (' . number_format($absoluteMax, 2, ',', '.') . ' USDT).');
             }
 
             $remaining = $amountUsdt;
+
+            // 1) Consome primeiro o que está coberto por lote reservado (fluxo normal, prioridade por margem).
             foreach ($reservations as $res) {
                 if ($remaining < 0.01) break;
                 $cid = (int)$res['contract_id'];
@@ -813,6 +827,22 @@ class AdminController extends BaseController
                 $pendingByContract[$cid]   = round($pendingByContract[$cid] - $deliver, 2);
                 $deliveredByContract[$cid] = round(($deliveredByContract[$cid] ?? 0) + $deliver, 2);
                 $remaining                 = round($remaining - $deliver, 2);
+            }
+
+            // 2) Excedente fora do fluxo normal (sem lote e/ou sem pagamento total ainda efetivado): distribui pela
+            // mesma ordem de prioridade (maior margem primeiro, sem lote por último), sem consumir reservas de lote.
+            if ($remaining >= 0.01) {
+                foreach ($allPending as $p) {
+                    if ($remaining < 0.01) break;
+                    $cid          = (int)$p['id'];
+                    $alreadySent  = $deliveredByContract[$cid] ?? 0.0;
+                    $contractLeft = max(0, (float)$p['total_amount'] - (float)$p['delivered_usdt'] - $alreadySent);
+                    $deliver      = round(min($contractLeft, $remaining), 2);
+                    if ($deliver < 0.01) continue;
+
+                    $deliveredByContract[$cid] = round($alreadySent + $deliver, 2);
+                    $remaining                 = round($remaining - $deliver, 2);
+                }
             }
 
             $financialModel = new \App\Models\FinancialStatementModel();
