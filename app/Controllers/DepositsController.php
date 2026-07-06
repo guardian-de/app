@@ -10,6 +10,7 @@ class DepositsController extends BaseController
 {
     public function index()
     {
+        if ($response = $this->checkPermission('deposits')) return $response;
         $db = \Config\Database::connect();
         try {
             $db->query("CREATE TABLE IF NOT EXISTS `deposits` (
@@ -94,6 +95,7 @@ class DepositsController extends BaseController
 
     public function show($id)
     {
+        if ($response = $this->checkPermission('deposits')) return $response;
         $db = \Config\Database::connect();
         $deposit = $db->table('deposits d')
             ->select('d.*, u.login as user_login, a.login as accepted_by_login, r.login as reversed_by_login, rj.login as rejected_by_login')
@@ -131,6 +133,7 @@ class DepositsController extends BaseController
 
     public function accept($id)
     {
+        if ($response = $this->checkPermission('deposits')) return $response;
         $depositModel = new DepositModel();
         $deposit = $depositModel->find($id);
 
@@ -200,6 +203,7 @@ class DepositsController extends BaseController
 
     public function reject($id)
     {
+        if ($response = $this->checkPermission('deposits')) return $response;
         $depositModel = new DepositModel();
         $deposit = $depositModel->find($id);
 
@@ -239,6 +243,7 @@ class DepositsController extends BaseController
 
     public function reverse($id)
     {
+        if ($response = $this->checkPermission('deposits')) return $response;
         if (session()->get('user_role') !== 'admin') {
             return redirect()->back()->with('error', 'Apenas administradores podem reverter depósitos.');
         }
@@ -290,6 +295,7 @@ class DepositsController extends BaseController
 
     public function reverseRejection($id)
     {
+        if ($response = $this->checkPermission('deposits')) return $response;
         if (session()->get('user_role') !== 'admin') {
             return redirect()->back()->with('error', 'Apenas administradores podem reverter rejeições.');
         }

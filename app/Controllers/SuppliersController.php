@@ -8,6 +8,7 @@ class SuppliersController extends BaseController
 {
     public function index()
     {
+        if ($response = $this->checkPermission('suppliers')) return $response;
         $model = new SupplierModel();
         return view('admin/suppliers/index', [
             'suppliers'   => $model->orderBy('name', 'ASC')->findAll(),
@@ -17,6 +18,7 @@ class SuppliersController extends BaseController
 
     public function store()
     {
+        if ($response = $this->checkPermission('suppliers')) return $response;
         $name = trim($this->request->getPost('name'));
         if (empty($name)) {
             return redirect()->back()->with('error', 'Nome do fornecedor é obrigatório.');
@@ -33,6 +35,7 @@ class SuppliersController extends BaseController
 
     public function toggle(int $id)
     {
+        if ($response = $this->checkPermission('suppliers')) return $response;
         $model    = new SupplierModel();
         $supplier = $model->find($id);
         if (!$supplier) {
