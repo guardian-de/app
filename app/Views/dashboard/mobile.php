@@ -1318,7 +1318,9 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 items.forEach(item => {
                     const isPendingDeposit  = item.operation_type === 'deposit_pending';
                     const isRejectedDeposit = item.operation_type === 'deposit_rejected';
-                    const isCredit = item.nature === 'C';
+                    // Entrega de USDT é um débito no ledger da empresa, mas para o
+                    // cliente é um recebimento — exibir como crédito (verde).
+                    const isCredit = item.nature === 'C' || item.operation_type === 'withdrawal';
 
                     // Depósitos pendentes/rejeitados são informativos: sem sinal (não afetam o saldo)
                     let color, sign;
