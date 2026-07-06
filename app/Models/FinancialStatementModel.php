@@ -61,6 +61,7 @@ class FinancialStatementModel extends Model
                      THEN 'USDT' ELSE 'BRL' END USING utf8mb4) AS unit,
                 CONVERT(NULL USING utf8mb4) AS rejection_reason,
                 fs.fee_percent, fs.fee_brl, c.total_amount AS usdt_amount,
+                ROUND(c.comercial_brl / NULLIF(c.total_amount, 0), 4) AS spot_rate,
                 CONVERT((
                     SELECT GROUP_CONCAT(DISTINCT ul.purchase_hash SEPARATOR ', ')
                     FROM lot_allocations la
@@ -99,6 +100,7 @@ class FinancialStatementModel extends Model
                     CONVERT('BRL' USING utf8mb4) AS unit,
                     CONVERT(d.rejection_reason USING utf8mb4) AS rejection_reason,
                     NULL AS fee_percent, NULL AS fee_brl, NULL AS usdt_amount,
+                    NULL AS spot_rate,
                     CONVERT(NULL USING utf8mb4) AS purchase_hash,
                     CONVERT(NULL USING utf8mb4) AS notes
                 FROM deposits d

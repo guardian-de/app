@@ -86,6 +86,7 @@ return [
     'stmt_rejection_reason'         => '拒绝原因',
     'stmt_usdt_label'               => 'USDT 金额',
     'stmt_fee_label'                => '费率',
+    'stmt_spot_label'               => '现货价',
     'stmt_hash_label'               => '交易哈希',
     'stmt_page_prev'                => '上一页',
     'stmt_page_next'                => '下一页',
