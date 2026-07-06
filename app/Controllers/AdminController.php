@@ -1038,6 +1038,9 @@ class AdminController extends BaseController
         $data['d0_block_message'] = $settingsModel->getConfig('business_hours_d0_block_message', 'Transações em tempo real (D+0) fora do horário de funcionamento.');
         $data['d1_block_message'] = $settingsModel->getConfig('business_hours_d1_block_message', 'Transações D+1 fora do horário de funcionamento.');
         $data['d2_block_message'] = $settingsModel->getConfig('business_hours_d2_block_message', 'Transações D+2 fora do horário de funcionamento.');
+        $data['d0_allow_outside'] = $settingsModel->getConfig('business_hours_d0_allow_outside', '0');
+        $data['d1_allow_outside'] = $settingsModel->getConfig('business_hours_d1_allow_outside', '0');
+        $data['d2_allow_outside'] = $settingsModel->getConfig('business_hours_d2_allow_outside', '0');
         
         return view('admin/settings', $data);
     }
@@ -1057,6 +1060,9 @@ class AdminController extends BaseController
         $d0BlockMsg = $this->request->getPost('business_hours_d0_block_message');
         $d1BlockMsg = $this->request->getPost('business_hours_d1_block_message');
         $d2BlockMsg = $this->request->getPost('business_hours_d2_block_message');
+        $d0Allow = $this->request->getPost('business_hours_d0_allow_outside');
+        $d1Allow = $this->request->getPost('business_hours_d1_allow_outside');
+        $d2Allow = $this->request->getPost('business_hours_d2_allow_outside');
         
         if ($start) $settingsModel->setConfig('business_hours_start', $start);
         if ($end) $settingsModel->setConfig('business_hours_end', $end);
@@ -1070,6 +1076,9 @@ class AdminController extends BaseController
         $settingsModel->setConfig('business_hours_d0_block_message', $d0BlockMsg ?? '');
         $settingsModel->setConfig('business_hours_d1_block_message', $d1BlockMsg ?? '');
         $settingsModel->setConfig('business_hours_d2_block_message', $d2BlockMsg ?? '');
+        $settingsModel->setConfig('business_hours_d0_allow_outside', $d0Allow ?? '0');
+        $settingsModel->setConfig('business_hours_d1_allow_outside', $d1Allow ?? '0');
+        $settingsModel->setConfig('business_hours_d2_allow_outside', $d2Allow ?? '0');
         
         return redirect()->back()->with('success', 'Configurações atualizadas com sucesso!');
     }

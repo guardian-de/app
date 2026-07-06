@@ -67,23 +67,53 @@
                 </div>
             </div>
             
-            <!-- Mensagens de Bloqueio de Compra -->
-            <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; gap: 15px;">
-                <h4 style="font-size: 14px; color: #f87171; font-weight: 600; margin: 0;">🚫 Mensagens de Bloqueio de Compra (Fora do Horário)</h4>
+            <!-- Regras e Bloqueios Fora do Horário -->
+            <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; gap: 20px;">
+                <h4 style="font-size: 14px; color: #f87171; font-weight: 600; margin: 0;">🚫 Regras e Bloqueios Fora do Horário</h4>
                 
-                <div class="form-group" style="display: flex; flex-direction: column; gap: 8px;">
-                    <label style="display: block; color: #94a3b8; font-size: 12px; font-weight: 600;">Bloqueio D+0</label>
-                    <input type="text" name="business_hours_d0_block_message" value="<?= esc($d0_block_message) ?>" required style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none; font-size: 14px;">
+                <!-- D+0 -->
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 15px; align-items: flex-end;">
+                    <div class="form-group">
+                        <label style="display: block; color: #94a3b8; font-size: 11px; font-weight: 600; margin-bottom: 8px;">Ação D+0</label>
+                        <select name="business_hours_d0_allow_outside" style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 11px; border-radius: 10px; color: white; outline: none; font-size: 13px; cursor: pointer; height: 43px;">
+                            <option value="0" <?= $d0_allow_outside === '0' ? 'selected' : '' ?>>🚫 Bloquear Compra</option>
+                            <option value="1" <?= $d0_allow_outside === '1' ? 'selected' : '' ?>>🔓 Permitir Compra</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label style="display: block; color: #94a3b8; font-size: 11px; font-weight: 600; margin-bottom: 8px;">Mensagem de Bloqueio D+0</label>
+                        <input type="text" name="business_hours_d0_block_message" value="<?= esc($d0_block_message) ?>" required style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 11px; border-radius: 10px; color: white; outline: none; font-size: 13px; height: 43px;">
+                    </div>
                 </div>
-                
-                <div class="form-group" style="display: flex; flex-direction: column; gap: 8px;">
-                    <label style="display: block; color: #94a3b8; font-size: 12px; font-weight: 600;">Bloqueio D+1</label>
-                    <input type="text" name="business_hours_d1_block_message" value="<?= esc($d1_block_message) ?>" required style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none; font-size: 14px;">
+
+                <!-- D+1 -->
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 15px; align-items: flex-end;">
+                    <div class="form-group">
+                        <label style="display: block; color: #94a3b8; font-size: 11px; font-weight: 600; margin-bottom: 8px;">Ação D+1</label>
+                        <select name="business_hours_d1_allow_outside" style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 11px; border-radius: 10px; color: white; outline: none; font-size: 13px; cursor: pointer; height: 43px;">
+                            <option value="0" <?= $d1_allow_outside === '0' ? 'selected' : '' ?>>🚫 Bloquear Compra</option>
+                            <option value="1" <?= $d1_allow_outside === '1' ? 'selected' : '' ?>>🔓 Permitir Compra</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label style="display: block; color: #94a3b8; font-size: 11px; font-weight: 600; margin-bottom: 8px;">Mensagem de Bloqueio D+1</label>
+                        <input type="text" name="business_hours_d1_block_message" value="<?= esc($d1_block_message) ?>" required style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 11px; border-radius: 10px; color: white; outline: none; font-size: 13px; height: 43px;">
+                    </div>
                 </div>
-                
-                <div class="form-group" style="display: flex; flex-direction: column; gap: 8px;">
-                    <label style="display: block; color: #94a3b8; font-size: 12px; font-weight: 600;">Bloqueio D+2</label>
-                    <input type="text" name="business_hours_d2_block_message" value="<?= esc($d2_block_message) ?>" required style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none; font-size: 14px;">
+
+                <!-- D+2 -->
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 15px; align-items: flex-end;">
+                    <div class="form-group">
+                        <label style="display: block; color: #94a3b8; font-size: 11px; font-weight: 600; margin-bottom: 8px;">Ação D+2</label>
+                        <select name="business_hours_d2_allow_outside" style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 11px; border-radius: 10px; color: white; outline: none; font-size: 13px; cursor: pointer; height: 43px;">
+                            <option value="0" <?= $d2_allow_outside === '0' ? 'selected' : '' ?>>🚫 Bloquear Compra</option>
+                            <option value="1" <?= $d2_allow_outside === '1' ? 'selected' : '' ?>>🔓 Permitir Compra</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label style="display: block; color: #94a3b8; font-size: 11px; font-weight: 600; margin-bottom: 8px;">Mensagem de Bloqueio D+2</label>
+                        <input type="text" name="business_hours_d2_block_message" value="<?= esc($d2_block_message) ?>" required style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 11px; border-radius: 10px; color: white; outline: none; font-size: 13px; height: 43px;">
+                    </div>
                 </div>
             </div>
         </div>
