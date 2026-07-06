@@ -1256,7 +1256,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 deposit_rejected:     '<?= lang('App.stmt_op_deposit_rejected') ?>',
                 rejectionReason:      '<?= lang('App.stmt_rejection_reason') ?>',
                 usdtLabel:            '<?= lang('App.stmt_usdt_label') ?>',
-                feeLabel:             '<?= lang('App.stmt_fee_label') ?>',
+                spotLabel:            '<?= lang('App.stmt_spot_label') ?>',
                 hashLabel:            '<?= lang('App.stmt_hash_label') ?>',
                 pagePrev:             '<?= lang('App.stmt_page_prev') ?>',
                 pageNext:             '<?= lang('App.stmt_page_next') ?>',
@@ -1315,7 +1315,9 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 items.forEach(item => {
                     const isPendingDeposit  = item.operation_type === 'deposit_pending';
                     const isRejectedDeposit = item.operation_type === 'deposit_rejected';
-                    const isCredit = item.nature === 'C';
+                    // Entrega de USDT é um débito no ledger da empresa, mas para o
+                    // cliente é um recebimento — exibir como crédito (verde).
+                    const isCredit = item.nature === 'C' || item.operation_type === 'withdrawal';
 
                     // Depósitos pendentes/rejeitados são informativos: sem sinal (não afetam o saldo)
                     let color, sign;
@@ -1337,10 +1339,9 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                             const usdtVal = parseFloat(item.usdt_amount).toLocaleString('pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 });
                             parts.push(`<div>${stmtLang.usdtLabel}: ${usdtVal} USDT</div>`);
                         }
-                        if (item.fee_percent != null) {
-                            const feePct = parseFloat(item.fee_percent).toLocaleString('pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 });
-                            const feeBrl = item.fee_brl != null ? parseFloat(item.fee_brl).toLocaleString('pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 }) : null;
-                            parts.push(`<div>${stmtLang.feeLabel}: ${feePct}%${feeBrl !== null ? ` · R$ ${feeBrl}` : ''}</div>`);
+                        if (item.spot_rate != null) {
+                            const spotVal = parseFloat(item.spot_rate).toLocaleString('pt-BR', { minimumFractionDigits:4, maximumFractionDigits:4 });
+                            parts.push(`<div>${stmtLang.spotLabel}: R$ ${spotVal}</div>`);
                         }
                         if (item.purchase_hash) {
                             parts.push(`<div style="font-family:monospace;word-break:break-all;">${stmtLang.hashLabel}: ${item.purchase_hash}</div>`);

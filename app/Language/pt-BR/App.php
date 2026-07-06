@@ -86,6 +86,7 @@ return [
     'stmt_rejection_reason'         => 'Motivo',
     'stmt_usdt_label'               => 'Valor USDT',
     'stmt_fee_label'                => 'Taxa',
+    'stmt_spot_label'               => 'Cotação Spot',
     'stmt_hash_label'               => 'Hash da Transação',
     'stmt_page_prev'                => 'Anterior',
     'stmt_page_next'                => 'Próximo',
