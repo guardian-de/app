@@ -430,7 +430,19 @@ $adminAlertSound = $settingsModel->getConfig('admin_alert_sound', 'chime_premium
             <span style="color:var(--primary)">GUARDIAN</span> ADMIN
         </a>
         <div class="nav-links">
-            <?php if (session()->get('user_role') === 'admin'): ?>
+            <?php
+                $isAdmin = session()->get('user_role') === 'admin';
+                $perms = session()->get('user_permissions') ?? [];
+                if (!is_array($perms)) {
+                    $perms = [];
+                }
+                
+                $hasPerm = function(string $perm) use ($isAdmin, $perms): bool {
+                    return $isAdmin || in_array($perm, $perms);
+                };
+            ?>
+
+            <?php if ($hasPerm('usuarios')): ?>
             <a href="<?= url_to('admin_users') ?>"
                 class="nav-link <?= current_url() == url_to('admin_users') ? 'active' : '' ?>">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -441,6 +453,8 @@ $adminAlertSound = $settingsModel->getConfig('admin_alert_sound', 'chime_premium
                 Usuários
             </a>
             <?php endif; ?>
+
+            <?php if ($hasPerm('transacoes')): ?>
             <a href="<?= url_to('admin_transactions') ?>"
                 class="nav-link <?= current_url() == url_to('admin_transactions') ? 'active' : '' ?>">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -451,6 +465,9 @@ $adminAlertSound = $settingsModel->getConfig('admin_alert_sound', 'chime_premium
                 </svg>
                 Transações
             </a>
+            <?php endif; ?>
+
+            <?php if ($hasPerm('enviar_usdt')): ?>
             <a href="<?= url_to('admin_delivery') ?>"
                 class="nav-link <?= (isset($active_menu) && $active_menu == 'delivery') ? 'active' : '' ?>">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -462,6 +479,9 @@ $adminAlertSound = $settingsModel->getConfig('admin_alert_sound', 'chime_premium
                 </svg>
                 Enviar USDT
             </a>
+            <?php endif; ?>
+
+            <?php if ($hasPerm('lots')): ?>
             <a href="<?= url_to('admin_lots') ?>"
                 class="nav-link <?= (isset($active_menu) && $active_menu == 'lots') ? 'active' : '' ?>">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -472,6 +492,9 @@ $adminAlertSound = $settingsModel->getConfig('admin_alert_sound', 'chime_premium
                 </svg>
                 Lotes
             </a>
+            <?php endif; ?>
+
+            <?php if ($hasPerm('enviar_usdt') || $hasPerm('transacoes')): ?>
             <a href="<?= url_to('admin_contracts') ?>"
                 class="nav-link <?= (isset($active_menu) && $active_menu == 'contracts') ? 'active' : '' ?>">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -484,6 +507,9 @@ $adminAlertSound = $settingsModel->getConfig('admin_alert_sound', 'chime_premium
                 </svg>
                 Operações
             </a>
+            <?php endif; ?>
+
+            <?php if ($hasPerm('deposits')): ?>
             <a href="<?= url_to('admin_deposits') ?>" id="deposits-nav-link"
                 class="nav-link <?= (isset($active_menu) && $active_menu == 'deposits') ? 'active' : '' ?>"
                 style="position: relative;">
@@ -494,6 +520,9 @@ $adminAlertSound = $settingsModel->getConfig('admin_alert_sound', 'chime_premium
                 Depósitos
                 <span id="deposits-nav-dot" style="display:none; position:absolute; top:8px; right:12px; width:8px; height:8px; border-radius:50%; background:#f87171; box-shadow:0 0 0 2px rgba(15,23,42,0.9);"></span>
             </a>
+            <?php endif; ?>
+
+            <?php if ($hasPerm('transacoes')): ?>
             <a href="<?= url_to('admin_conciliation') ?>"
                 class="nav-link <?= (isset($active_menu) && $active_menu == 'conciliation') ? 'active' : '' ?>">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -502,7 +531,9 @@ $adminAlertSound = $settingsModel->getConfig('admin_alert_sound', 'chime_premium
                 </svg>
                 Conciliação
             </a>
-            <?php if (session()->get('user_role') === 'admin'): ?>
+            <?php endif; ?>
+
+            <?php if ($hasPerm('suppliers')): ?>
             <a href="<?= url_to('admin_suppliers') ?>"
                 class="nav-link <?= (isset($active_menu) && $active_menu == 'suppliers') ? 'active' : '' ?>">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -512,6 +543,9 @@ $adminAlertSound = $settingsModel->getConfig('admin_alert_sound', 'chime_premium
                 </svg>
                 Fornecedores
             </a>
+            <?php endif; ?>
+
+            <?php if ($hasPerm('settings')): ?>
             <a href="<?= url_to('admin_settings') ?>"
                 class="nav-link <?= current_url() == url_to('admin_settings') ? 'active' : '' ?>">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"

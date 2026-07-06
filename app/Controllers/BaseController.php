@@ -45,4 +45,66 @@ abstract class BaseController extends Controller
         service('request')->setLocale($lang);
         service('language')->setLocale($lang);
     }
+
+    protected function checkPermission(string $permission)
+    {
+        $role = session()->get('user_role');
+        if ($role === 'admin') {
+            return null;
+        }
+
+        $perms = session()->get('user_permissions') ?? [];
+        if (!is_array($perms) || !in_array($permission, $perms)) {
+            if ($this->request->isAJAX()) {
+                $this->response->setJSON(['success' => false, 'message' => 'Permissão negada.'])->send();
+                exit;
+            }
+            session()->setFlashdata('error', 'Acesso negado: você não tem permissão para acessar esta área.');
+            
+            $targetUrl = $this->getFirstAllowedUrl();
+            if (current_url() === base_url($targetUrl)) {
+                $targetUrl = '/logout';
+            }
+            header('Location: ' . base_url($targetUrl));
+            exit;
+        }
+        return null;
+    }
+
+    protected function getFirstAllowedUrl(): string
+    {
+        $role = session()->get('user_role');
+        if ($role === 'admin') {
+            return '/admin/contracts';
+        }
+
+        $perms = session()->get('user_permissions') ?? [];
+        if (!is_array($perms)) {
+            $perms = [];
+        }
+
+        if (in_array('enviar_usdt', $perms)) {
+            return '/admin/contracts';
+        }
+        if (in_array('transacoes', $perms)) {
+            return '/admin/transactions';
+        }
+        if (in_array('usuarios', $perms)) {
+            return '/admin/users';
+        }
+        if (in_array('lots', $perms)) {
+            return '/admin/lots';
+        }
+        if (in_array('deposits', $perms)) {
+            return '/admin/deposits';
+        }
+        if (in_array('suppliers', $perms)) {
+            return '/admin/suppliers';
+        }
+        if (in_array('settings', $perms)) {
+            return '/admin/settings';
+        }
+
+        return '/dashboard';
+    }
 }
