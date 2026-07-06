@@ -430,7 +430,7 @@ $adminAlertSound = $settingsModel->getConfig('admin_alert_sound', 'chime_premium
             <span style="color:var(--primary)">GUARDIAN</span> ADMIN
         </a>
         <div class="nav-links">
-            <?php if (in_array(session()->get('user_role'), ['admin', 'operator'])): ?>
+            <?php if (session()->get('user_role') === 'admin'): ?>
             <a href="<?= url_to('admin_users') ?>"
                 class="nav-link <?= current_url() == url_to('admin_users') ? 'active' : '' ?>">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"

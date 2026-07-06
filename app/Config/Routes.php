@@ -22,17 +22,19 @@ $routes->get('logout', 'Auth::logout', ['as' => 'logout']);
 
 // Admin Routes (Substitui o cadastro público)
 $routes->group('admin', ['filter' => 'admin'], function($routes) {
-    $routes->get('users', 'AdminController::index', ['as' => 'admin_users']);
-    $routes->get('users/create', 'AdminController::create', ['as' => 'admin_users_create']);
-    $routes->post('users/store', 'AdminController::store', ['as' => 'admin_users_store']);
-    $routes->get('users/edit/(:num)', 'AdminController::edit/$1', ['as' => 'admin_users_edit']);
-    $routes->post('users/update/(:num)', 'AdminController::update/$1', ['as' => 'admin_users_update']);
-    $routes->post('users/adjust-limit/(:num)', 'AdminController::adjustLimit/$1', ['as' => 'admin_users_adjust_limit']);
-    $routes->post('users/transfer-limit/(:num)', 'AdminController::transferLimit/$1', ['as' => 'admin_users_transfer_limit']);
-    $routes->post('users/register-purchase/(:num)', 'AdminController::registerPurchase/$1', ['as' => 'admin_users_register_purchase']);
-    $routes->get('users/statement/(:num)', 'AdminController::getUserStatement/$1', ['as' => 'admin_users_statement']);
-    $routes->get('users/statement/export/(:num)', 'AdminController::exportUserStatementCsv/$1', ['as' => 'admin_users_statement_export']);
-    $routes->get('users/activity/(:num)', 'AdminController::userActivity/$1', ['as' => 'admin_users_activity']);
+    $routes->group('users', ['filter' => 'adminonly'], function($routes) {
+        $routes->get('/', 'AdminController::index', ['as' => 'admin_users']);
+        $routes->get('create', 'AdminController::create', ['as' => 'admin_users_create']);
+        $routes->post('store', 'AdminController::store', ['as' => 'admin_users_store']);
+        $routes->get('edit/(:num)', 'AdminController::edit/$1', ['as' => 'admin_users_edit']);
+        $routes->post('update/(:num)', 'AdminController::update/$1', ['as' => 'admin_users_update']);
+        $routes->post('adjust-limit/(:num)', 'AdminController::adjustLimit/$1', ['as' => 'admin_users_adjust_limit']);
+        $routes->post('transfer-limit/(:num)', 'AdminController::transferLimit/$1', ['as' => 'admin_users_transfer_limit']);
+        $routes->post('register-purchase/(:num)', 'AdminController::registerPurchase/$1', ['as' => 'admin_users_register_purchase']);
+        $routes->get('statement/(:num)', 'AdminController::getUserStatement/$1', ['as' => 'admin_users_statement']);
+        $routes->get('statement/export/(:num)', 'AdminController::exportUserStatementCsv/$1', ['as' => 'admin_users_statement_export']);
+        $routes->get('activity/(:num)', 'AdminController::userActivity/$1', ['as' => 'admin_users_activity']);
+    });
     $routes->get('transactions', 'AdminController::transactions', ['as' => 'admin_transactions']);
     $routes->get('transactions/check-new', 'AdminController::checkNewTransactions', ['as' => 'admin_transactions_check_new']);
     $routes->get('transactions/show/(:num)', 'AdminController::transactionDetails/$1', ['as' => 'admin_transactions_show']);
