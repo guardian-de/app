@@ -1200,6 +1200,12 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                             window.open(`https://wa.me/${operatorWhatsapp}?text=${encodedText}`, '_blank');
                         }
                         
+                        if (data.warning) {
+                            document.getElementById('success-msg-text').innerHTML = `<?= lang('App.transaction_success_msg') ?><br><br><span style="color: #eab308; font-weight: 600; display: block; background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.25); padding: 12px; border-radius: 12px; font-size: 13px; text-align: left; line-height: 1.5;">⚠️ ${data.warning}</span>`;
+                        } else {
+                            document.getElementById('success-msg-text').innerHTML = `<?= lang('App.transaction_success_msg') ?>`;
+                        }
+
                         document.getElementById('proof-transaction-id').value = data.transaction_id;
                         showModal('success-modal');
                     } else if (response.status !== 401) {
