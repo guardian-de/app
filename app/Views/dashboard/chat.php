@@ -690,7 +690,7 @@
         }
 
         updateLiveRate();
-        setInterval(updateLiveRate, 300); // Atualiza a cada 0.3 segundos para dinâmica ultrarrápida
+        setInterval(updateLiveRate, 500); // Atualiza a cada 0.5 segundos para dinâmica ultrarrápida
 
         async function updateDebtBalance() {
             try {
