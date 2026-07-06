@@ -7,6 +7,11 @@ use CodeIgniter\Router\RouteCollection;
  */
 $routes->get('/', 'Home::index');
 
+$routes->get('dev', function() {
+    return 'Hello World';
+});
+
+
 // Auth Routes
 $routes->get('login', 'Auth::login', ['as' => 'login']);
 $routes->post('login', 'Auth::authenticate', ['as' => 'authenticate']);
