@@ -954,7 +954,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                         if (lastVal !== currentExchangeRate) {
                             window.mobileChart.data.labels.push(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
                             window.mobileChart.data.datasets[0].data.push(currentExchangeRate);
-                            if (window.mobileChart.data.labels.length > 100) {
+                            if (window.mobileChart.data.labels.length > 15) {
                                 window.mobileChart.data.labels.shift();
                                 window.mobileChart.data.datasets[0].data.shift();
                             }

@@ -677,7 +677,7 @@
                             if (lastVal !== currentExchangeRate) {
                                 window.myChart.data.labels.push(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
                                 window.myChart.data.datasets[0].data.push(currentExchangeRate);
-                                if (window.myChart.data.labels.length > 100) {
+                                if (window.myChart.data.labels.length > 15) {
                                     window.myChart.data.labels.shift();
                                     window.myChart.data.datasets[0].data.shift();
                                 }

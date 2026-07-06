@@ -139,13 +139,13 @@ class ChatController extends BaseController
         // Busca o histórico global
         $data = $db->table('dollar_history')
                    ->orderBy('created_at', 'DESC')
-                   ->limit(100)
+                   ->limit(15)
                    ->get()
                    ->getResultArray();
 
         if (empty($data)) {
             // Fallback para API externa (Binance) caso a base esteja vazia
-            $apiUrl = 'https://api.binance.com/api/v3/klines?symbol=USDTBRL&interval=15m&limit=20';
+            $apiUrl = 'https://api.binance.com/api/v3/klines?symbol=USDTBRL&interval=15m&limit=15';
             $ch = curl_init($apiUrl);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_TIMEOUT, 5);
