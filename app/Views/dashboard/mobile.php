@@ -929,36 +929,13 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
 
             async function updateLiveRate() {
                 try {
-                    let baseRate = 0;
-                    let feePercent = 10.00;
-
-                    // 1. Tentar obter cotação em tempo real diretamente da Binance no client-side
-                    try {
-                        const binanceResp = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=USDTBRL');
-                        const binanceData = await binanceResp.json();
-                        if (binanceData && binanceData.price) {
-                            baseRate = parseFloat(binanceData.price);
-                        }
-                    } catch (err) {
-                        console.warn('Erro ao buscar Binance no client-side:', err);
-                    }
-
-                    // 2. Buscar informações do servidor (para obter a taxa/fee do usuário logado)
                     const response = await fetch('<?= url_to('chat_rate') ?>?delivery_type=' + encodeURIComponent(selectedDeliveryType));
                     const data = await response.json();
-                    
-                    if (baseRate === 0) {
-                        baseRate = parseFloat(data.base_rate) || 0;
-                    }
-                    feePercent = parseFloat(data.fee_percent) || 0;
-                    
-                    const rate = baseRate * (1 + (feePercent / 100));
-
                     // Mostrar cotação SEM taxas no header
-                    document.getElementById('live-rate-val').textContent = `R$ ${baseRate.toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`;
-                    currentExchangeRate = rate;
-                    currentBaseRate = baseRate;
-                    currentFeePercent = feePercent;
+                    document.getElementById('live-rate-val').textContent = `R$ ${parseFloat(data.base_rate).toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`;
+                    currentExchangeRate = parseFloat(data.rate);
+                    currentBaseRate = parseFloat(data.base_rate);
+                    currentFeePercent = parseFloat(data.fee_percent);
 
                     if (document.getElementById('buy-modal') && document.getElementById('buy-modal').style.display === 'flex') {
                         document.getElementById('modal-base-rate').textContent = `R$ ${currentBaseRate.toLocaleString('pt-BR', { minimumFractionDigits: 4 })}`;
