@@ -54,7 +54,7 @@
                 <td style="padding: 20px 25px; color: #64748b; font-size: 13px;"><?= date('d/m/Y', strtotime($user['created_at'])) ?></td>
                 <td style="padding: 20px 25px; text-align: right;">
                     <div style="display: inline-flex; gap: 8px; justify-content: flex-end;">
-                        <button class="btn btn-primary" onclick="openAdjustModal(<?= $user['id'] ?>, '<?= htmlspecialchars($user['login'], ENT_QUOTES) ?>')" style="background: var(--primary); color: white; padding: 8px 14px; font-size: 13px;">Ajustar Saldo</button>
+                        <button class="btn btn-primary" onclick="openAdjustModal(<?= $user['id'] ?>, '<?= htmlspecialchars($user['login'], ENT_QUOTES) ?>', <?= $user['score'] ?? 0 ?>)" style="background: var(--primary); color: white; padding: 8px 14px; font-size: 13px;">Ajustar Saldo</button>
                         <?php if (session()->get('user_role') === 'admin'): ?>
                             <button class="btn" onclick="openPurchaseModal(<?= $user['id'] ?>, '<?= htmlspecialchars($user['login'], ENT_QUOTES) ?>', <?= $user['fee_percent'] ?? 0 ?>, <?= $user['score'] ?? 0 ?>)" style="background: rgba(16, 185, 129, 0.1); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); padding: 8px 14px; font-size: 13px;">Comprar</button>
                         <?php endif; ?>

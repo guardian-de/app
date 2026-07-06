@@ -31,6 +31,7 @@ class Filters extends BaseFilters
         'invalidchars'  => InvalidChars::class,
         'secureheaders' => SecureHeaders::class,
         'admin'         => \App\Filters\AdminFilter::class,
+        'adminonly'     => \App\Filters\AdminOnlyFilter::class,
         'auth'          => \App\Filters\AuthFilter::class,
         'cors'          => Cors::class,
         'forcehttps'    => ForceHTTPS::class,

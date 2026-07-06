@@ -1116,22 +1116,41 @@ class AdminController extends BaseController
         $amount = (float)$this->request->getPost('amount');
         $operation = $this->request->getPost('operation');
         $notes = $this->request->getPost('notes') ?: 'Ajuste de Saldo/Limite';
+        $adminId = session()->get('user_id');
 
         if ($amount <= 0) {
             return redirect()->back()->with('error', 'O valor do ajuste deve ser maior que zero.');
         }
 
         $financialModel = new \App\Models\FinancialStatementModel();
-        $financialModel->insert([
-            'user_id'          => $id,
-            'admin_id'         => session()->get('user_id'),
-            'contract_id'      => null,
-            'operation_type'   => ($operation === 'add') ? 'adjustment_add' : 'adjustment_subtract',
-            'nature'           => ($operation === 'add') ? 'C' : 'D',
-            'amount'           => $amount,
-            'description'      => $notes,
-            'transaction_date' => date('Y-m-d H:i:s')
-        ]);
+
+        if ($operation === 'add') {
+            // Depósito lançado manualmente pelo admin: já entra aprovado (sem
+            // comprovante) e fica com histórico em Depósitos > Aprovados.
+            $depositModel = new \App\Models\DepositModel();
+            $depositId = $depositModel->insert([
+                'user_id'     => $id,
+                'amount'      => $amount,
+                'proof_file'  => '',
+                'status'      => 'accepted',
+                'notes'       => $notes,
+                'accepted_by' => $adminId,
+                'accepted_at' => date('Y-m-d H:i:s'),
+            ]);
+            $deposit = $depositModel->find($depositId);
+            $depositModel->applyAcceptedDeposit($deposit, $adminId, $notes);
+        } else {
+            $financialModel->insert([
+                'user_id'          => $id,
+                'admin_id'         => $adminId,
+                'contract_id'      => null,
+                'operation_type'   => 'adjustment_subtract',
+                'nature'           => 'D',
+                'amount'           => $amount,
+                'description'      => $notes,
+                'transaction_date' => date('Y-m-d H:i:s')
+            ]);
+        }
 
         $newBalance = $financialModel->getBalance($id);
         return redirect()->back()->with('success', 'Ajuste aplicado para ' . $user['login'] . '. Novo saldo: R$ ' . number_format($newBalance, 2, ',', '.') . '.');

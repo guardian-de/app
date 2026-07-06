@@ -23,4 +23,44 @@ class DepositModel extends Model
     protected $dateFormat    = 'datetime';
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
+
+    /**
+     * Lança o crédito no extrato do cliente e distribui o valor entre os
+     * contratos em aberto (FIFO). Usado tanto ao aceitar um depósito enviado
+     * pelo cliente quanto ao lançar um depósito manual feito pelo admin.
+     */
+    public function applyAcceptedDeposit(array $deposit, int $actorId, string $description): void
+    {
+        $now = date('Y-m-d H:i:s');
+
+        (new FinancialStatementModel())->insert([
+            'user_id'          => $deposit['user_id'],
+            'admin_id'         => $actorId,
+            'operation_type'   => 'deposit',
+            'nature'           => 'C',
+            'amount'           => $deposit['amount'],
+            'description'      => $description,
+            'transaction_date' => $now,
+        ]);
+
+        $contractModel = new ContractModel();
+        $openContracts = \Config\Database::connect()->table('contracts')
+            ->where('user_id', $deposit['user_id'])
+            ->whereIn('status', ['pending', 'partially_paid', 'overdue'])
+            ->orderBy('created_at', 'ASC')
+            ->get()->getResultArray();
+
+        $toDistribute = (float) $deposit['amount'];
+        foreach ($openContracts as $contract) {
+            if ($toDistribute <= 0) { break; }
+
+            $remaining = (float) $contract['remaining_balance'];
+            if ($remaining <= 0) { continue; }
+
+            $payment = min($toDistribute, $remaining);
+            $contractModel->registerPayment($contract['id'], $payment);
+
+            $toDistribute -= $payment;
+        }
+    }
 }
