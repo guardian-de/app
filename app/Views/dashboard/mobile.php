@@ -612,9 +612,6 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 <?= lang('App.transaction_success_msg') ?>
             </p>
             <div id="success-actions">
-                <button onclick="openProofModal()" class="btn-primary" style="margin-bottom: 10px; width: 100%; background: #22c55e; border: none; padding: 15px; border-radius: 12px; color: white; font-weight: 700;">
-                    <i class="fas fa-upload" style="margin-right: 8px;"></i> <?= $isChinese ? '上传凭证' : 'Enviar Comprovante' ?>
-                </button>
                 <button onclick="closeSuccessModal()" style="width: 100%; background: rgba(255,255,255,0.05); color: #94a3b8; border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; cursor: pointer; font-weight: 600;">
                     <?= lang('App.understood') ?>
                 </button>

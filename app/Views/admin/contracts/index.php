@@ -79,6 +79,7 @@
                     <option value="partially_paid"<?= ($filters['status'] ?? '') === 'partially_paid' ? 'selected' : '' ?>>Parcialmente Pago</option>
                     <option value="paid"          <?= ($filters['status'] ?? '') === 'paid'           ? 'selected' : '' ?>>Pago</option>
                     <option value="overdue"       <?= ($filters['status'] ?? '') === 'overdue'        ? 'selected' : '' ?>>Vencido</option>
+                    <option value="sent"          <?= ($filters['status'] ?? '') === 'sent'           ? 'selected' : '' ?>>Enviado</option>
                 </select>
             </div>
             <div style="display: flex; flex-direction: column; gap: 5px; min-width: 140px;">
@@ -87,7 +88,6 @@
                     style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 12px; color: white; font-size: 13px; outline: none; cursor: pointer;">
                     <option value="">Todos</option>
                     <option value="em_aberto"  <?= ($filters['delivery_status'] ?? '') === 'em_aberto'  ? 'selected' : '' ?>>Em aberto</option>
-                    <option value="pendente"   <?= ($filters['delivery_status'] ?? '') === 'pendente'   ? 'selected' : '' ?>>Pendente</option>
                     <option value="concluido"  <?= ($filters['delivery_status'] ?? '') === 'concluido'  ? 'selected' : '' ?>>Concluído</option>
                 </select>
             </div>
@@ -288,7 +288,7 @@
         const existing = tbody.querySelector('tr[data-contract-id="' + data.id + '"]');
 
         if (existing) {
-            fetch(rowBase + data.id)
+            fetch(rowBase + data.id, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(function (r) { return r.ok ? r.text() : null; })
                 .then(function (html) {
                     if (!html) return;
@@ -310,7 +310,7 @@
     }
 
     function poll() {
-        fetch(pollUrl + '?since=' + encodeURIComponent(since))
+        fetch(pollUrl + '?since=' + encodeURIComponent(since), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function (r) { return r.ok ? r.json() : null; })
             .then(function (rows) {
                 failures = 0;

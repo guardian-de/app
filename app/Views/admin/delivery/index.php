@@ -155,20 +155,23 @@
                        onmouseover="this.style.background='rgba(56,189,248,0.22)'" onmouseout="this.style.background='rgba(56,189,248,0.12)'">
                         Operações
                     </a>
-                    <?php $sendable = (float)($g['sendable_usdt'] ?? 0); ?>
-                    <?php if($sendable >= 0.01): ?>
+                    <?php
+                        $sendable    = (float)($g['sendable_usdt'] ?? 0);
+                        $absoluteMax = max(0, (float)$g['total_amount'] - (float)$g['delivered_usdt']);
+                    ?>
+                    <?php if($absoluteMax >= 0.01): ?>
                     <button type="button"
                        title="Enviar USDT — distribui automaticamente pelas operações de maior lucro"
-                       onclick="openBulkSendModal(<?= (int)$g['user_id'] ?>, <?= number_format($sendable, 2, '.', '') ?>, '<?= esc(addslashes($g['user_name'])) ?>', '<?= esc(addslashes($walletShort)) ?>')"
+                       onclick="openBulkSendModal(<?= (int)$g['user_id'] ?>, <?= number_format($absoluteMax, 2, '.', '') ?>, <?= number_format($sendable, 2, '.', '') ?>, '<?= esc(addslashes($g['user_name'])) ?>', '<?= esc(addslashes($walletShort)) ?>')"
                        style="display:inline-flex; align-items:center; justify-content:center; gap:4px; background:rgba(192,132,252,0.12); color:#c084fc; padding:5px 10px; font-size:12px; border-radius:6px; font-weight:600; border:1px solid rgba(192,132,252,0.28); cursor:pointer; white-space:nowrap;"
                        onmouseover="this.style.background='rgba(192,132,252,0.22)'" onmouseout="this.style.background='rgba(192,132,252,0.12)'">
                         Enviar
                         <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                     </button>
                     <?php else: ?>
-                    <span title="Nenhum USDT entregável coberto por lote reservado"
+                    <span title="Nenhum USDT pendente de envio"
                        style="display:inline-flex; align-items:center; justify-content:center; gap:4px; background:rgba(100,116,139,0.1); color:#64748b; padding:5px 10px; font-size:12px; border-radius:6px; font-weight:600; border:1px solid rgba(100,116,139,0.2); white-space:nowrap; cursor:not-allowed;">
-                        Sem lote
+                        —
                     </span>
                     <?php endif; ?>
                 </div>
@@ -194,7 +197,7 @@
         <p style="font-size:12px; color:#94a3b8; margin:0 0 16px; line-height:1.5;">
             O valor será distribuído automaticamente entre as operações do cliente,
             priorizando os de <strong style="color:#c084fc;">maior lucro</strong> (taxa do cliente − custo do lote).
-            Apenas USDT coberto por lote reservado pode ser enviado.
+            Valores fora do coberto por lote/pagamento pedem confirmação extra.
         </p>
 
         <div id="bulk-modal-wallet-row" style="display:none; align-items:center; gap:8px; margin-bottom:16px; padding:8px 12px; background:rgba(129,140,248,0.07); border:1px solid rgba(129,140,248,0.15); border-radius:8px;">
@@ -211,6 +214,7 @@
                     onfocus="this.style.borderColor='#c084fc'" onblur="this.style.borderColor='rgba(255,255,255,0.12)'">
                 <div id="bulk-modal-max-hint" style="font-size:11px; color:#64748b; margin-top:4px;"></div>
             </div>
+            <input type="hidden" id="bulk-modal-sendable" value="0">
             <div style="margin-bottom:20px;">
                 <label style="display:block; font-size:12px; font-weight:600; color:#94a3b8; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.05em;">Hash da Transação *</label>
                 <input type="text" name="notes" id="bulk-modal-notes" placeholder="Ex: Hash da rede TRC-20..." required
@@ -235,14 +239,18 @@
 </div>
 
 <script>
-function openBulkSendModal(userId, sendable, userName, wallet) {
+let bulkSendConfirmed = false;
+
+function openBulkSendModal(userId, absoluteMax, sendable, userName, wallet) {
     document.getElementById('bulk-modal-title').textContent = 'Enviar USDT — ' + userName;
     var amountInput = document.getElementById('bulk-modal-amount');
     amountInput.value = sendable.toFixed(2);
-    amountInput.max   = sendable;
-    document.getElementById('bulk-modal-max-hint').textContent = 'Máx entregável com lote: ' + sendable.toFixed(2).replace('.', ',') + ' USDT';
+    amountInput.max   = absoluteMax;
+    document.getElementById('bulk-modal-max-hint').textContent = 'Máx entregável com lote: ' + sendable.toFixed(2).replace('.', ',') + ' USDT (total pendente: ' + absoluteMax.toFixed(2).replace('.', ',') + ' USDT)';
     document.getElementById('bulk-modal-notes').value = '';
+    document.getElementById('bulk-modal-sendable').value = sendable;
     document.getElementById('bulk-send-form').action = '<?= site_url('admin/delivery/send/') ?>' + userId;
+    bulkSendConfirmed = false;
 
     var walletRow = document.getElementById('bulk-modal-wallet-row');
     if (wallet) {
@@ -262,6 +270,48 @@ function closeBulkSendModal() {
 document.getElementById('bulk-send-modal').addEventListener('click', function(e) {
     if (e.target === this) closeBulkSendModal();
 });
+
+document.getElementById('bulk-send-form').onsubmit = function (e) {
+    if (bulkSendConfirmed) return true;
+
+    const value    = parseFloat(document.getElementById('bulk-modal-amount').value);
+    const sendable = parseFloat(document.getElementById('bulk-modal-sendable').value);
+
+    if (value > sendable) {
+        e.preventDefault();
+        document.getElementById('bulk-usdt-send-confirm-text').textContent =
+            'Este envio está fora do fluxo normal: parte do valor não está coberta por lotes reservados e/ou pagamento total efetivado nas operações deste cliente. Deseja continuar mesmo assim?';
+        document.getElementById('bulk-usdt-send-confirm-modal').style.display = 'flex';
+        return false;
+    }
+};
+
+function closeBulkUsdtSendConfirmModal() {
+    document.getElementById('bulk-usdt-send-confirm-modal').style.display = 'none';
+}
+
+function confirmBulkUsdtSend() {
+    bulkSendConfirmed = true;
+    closeBulkUsdtSendConfirmModal();
+    document.getElementById('bulk-send-form').submit();
+}
 </script>
+
+<!-- Modal de Confirmação de Envio Fora do Fluxo (bulk) -->
+<div id="bulk-usdt-send-confirm-modal" style="display:none; position:fixed; inset:0; z-index:9500; background:rgba(0,0,0,0.75); backdrop-filter:blur(6px); justify-content:center; align-items:center; padding:20px;">
+    <div style="background:#1e293b; border:1px solid rgba(251,191,36,0.3); border-radius:24px; width:100%; max-width:460px; padding:32px; box-shadow:0 25px 60px rgba(0,0,0,0.5);">
+        <div style="display:flex; gap:14px; align-items:flex-start; margin-bottom:20px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <div>
+                <h2 style="font-size:17px; font-weight:700; color:white; margin-bottom:6px;">Envio fora do fluxo normal</h2>
+                <p id="bulk-usdt-send-confirm-text" style="font-size:13px; color:#94a3b8; line-height:1.6;"></p>
+            </div>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button onclick="closeBulkUsdtSendConfirmModal()" style="flex:1; padding:12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:12px; color:#94a3b8; font-size:14px; font-weight:600; cursor:pointer;">Cancelar</button>
+            <button onclick="confirmBulkUsdtSend()" style="flex:1; padding:12px; background:#059669; border:none; border-radius:12px; color:white; font-size:14px; font-weight:700; cursor:pointer;">Concordo</button>
+        </div>
+    </div>
+</div>
 
 <?= $this->endSection() ?>

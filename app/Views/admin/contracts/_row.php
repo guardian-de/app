@@ -1,14 +1,12 @@
 <?php
 /** @var array $contract */
-$status_color = '#94a3b8';
-$status_bg    = 'rgba(148, 163, 184, 0.1)';
-if ($contract['status'] === 'paid')           { $status_color = '#4ade80'; $status_bg = 'rgba(34, 197, 94, 0.1)'; }
-elseif ($contract['status'] === 'overdue')    { $status_color = '#f87171'; $status_bg = 'rgba(248, 113, 113, 0.1)'; }
-elseif ($contract['status'] === 'partially_paid') { $status_color = '#60a5fa'; $status_bg = 'rgba(96, 165, 250, 0.1)'; }
-
 $totalLotAllocated = (float)($contract['total_lot_allocated'] ?? 0);
 $totalAmount       = (float)$contract['total_amount'];
 $deliveredUsdt     = (float)$contract['delivered_usdt'];
+
+$isPaid   = $contract['status'] === 'paid';
+$isSent   = $totalAmount > 0 && $deliveredUsdt >= $totalAmount;
+$isClosed = $totalAmount > 0 && $totalLotAllocated >= $totalAmount;
 ?>
 <tr data-contract-id="<?= $contract['id'] ?>" style="border-bottom: 1px solid rgba(255,255,255,0.05);">
     <td style="padding: 15px; font-family: monospace; color: #94a3b8; font-size: 13px;">
@@ -36,15 +34,16 @@ $deliveredUsdt     = (float)$contract['delivered_usdt'];
         <?= date('d/m/Y', strtotime($contract['due_date'])) ?>
     </td>
     <td style="padding: 15px;">
-        <span class="status-badge" style="color: <?= $status_color ?>; background: <?= $status_bg ?>;">
-            <?= esc($contract['status']) ?>
-        </span>
+        <?php if ($isPaid): ?>
+            <div><span class="status-badge" style="color: #4ade80; background: rgba(34, 197, 94, 0.1);">Pago</span></div>
+        <?php endif; ?>
+        <?php if ($isSent): ?>
+            <div<?= $isPaid ? ' style="margin-top: 4px;"' : '' ?>><span class="status-badge" style="color: #60a5fa; background: rgba(96, 165, 250, 0.1);">Enviado</span></div>
+        <?php endif; ?>
     </td>
     <td style="padding: 15px;">
-        <?php if ($deliveredUsdt >= $totalAmount && $totalAmount > 0): ?>
+        <?php if ($isClosed): ?>
             <span class="status-badge" style="color: #34d399; background: rgba(52, 211, 153, 0.1);">Concluído</span>
-        <?php elseif ($totalLotAllocated >= $totalAmount && $totalAmount > 0): ?>
-            <span class="status-badge" style="color: #fbbf24; background: rgba(251, 191, 36, 0.1);">Pendente</span>
         <?php else: ?>
             <span class="status-badge" style="color: #f87171; background: rgba(248, 113, 113, 0.1);">Em aberto</span>
         <?php endif; ?>
