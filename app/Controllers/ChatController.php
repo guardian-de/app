@@ -998,17 +998,10 @@ class ChatController extends BaseController
 
         // 2. Fallback para Binance
         $apiUrl = 'https://api.binance.com/api/v3/ticker/price?symbol=USDTBRL';
-        $ch = curl_init($apiUrl);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)');
-        $response = curl_exec($ch);
-        $error = curl_error($ch);
-        curl_close($ch);
+        $response = $this->curlGetWithDoh($apiUrl);
         
-        if ($error) {
-            log_message('error', 'Binance API CURL Error: ' . $error);
+        if (!$response) {
+            log_message('error', 'Binance API Failure or Timeout');
             return null;
         }
 
@@ -1019,7 +1012,7 @@ class ChatController extends BaseController
             return $rateWithFee;
         }
 
-        log_message('error', 'Binance API Failure: ' . $response);
+        log_message('error', 'Binance API Invalid Response: ' . $response);
         return null;
     }
 
@@ -1154,5 +1147,75 @@ class ChatController extends BaseController
         ]);
 
         return $this->response->setJSON(['status' => 'success', 'message' => 'Depósito enviado e aguardando validação.']);
+    }
+
+    private function resolveHostViaDoh($host)
+    {
+        $ch = curl_init("https://1.1.1.1/dns-query?name=" . urlencode($host) . "&type=A");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Accept: application/dns-json']);
+        $response = curl_exec($ch);
+        $error = curl_error($ch);
+        curl_close($ch);
+
+        if (!$error && $response) {
+            $data = json_decode($response, true);
+            if (isset($data['Answer']) && is_array($data['Answer'])) {
+                foreach ($data['Answer'] as $ans) {
+                    if (isset($ans['type']) && $ans['type'] == 1 && isset($ans['data'])) {
+                        return $ans['data'];
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private function curlGetWithDoh($url, $headers = [], $timeout = 5)
+    {
+        $parsed = parse_url($url);
+        $host = $parsed['host'] ?? null;
+        
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)');
+        if (!empty($headers)) {
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        }
+        
+        $response = curl_exec($ch);
+        $errno = curl_errno($ch);
+        curl_close($ch);
+        
+        if ($errno === 6 && $host) {
+            $ip = $this->resolveHostViaDoh($host);
+            if ($ip) {
+                $scheme = $parsed['scheme'] ?? 'https';
+                $port = isset($parsed['port']) ? ':' . $parsed['port'] : '';
+                $path = $parsed['path'] ?? '';
+                $query = isset($parsed['query']) ? '?' . $parsed['query'] : '';
+                $ipUrl = "{$scheme}://{$ip}{$port}{$path}{$query}";
+                
+                $ch = curl_init($ipUrl);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+                curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)');
+                
+                $headers[] = "Host: {$host}";
+                curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+                
+                $response = curl_exec($ch);
+                curl_close($ch);
+            }
+        }
+        
+        return $response;
     }
 }
