@@ -353,7 +353,34 @@
 
 <script>
     let currentPage = 1;
-    const rowsPerPage = 10;
+    const rowsPerPage = 5;
+
+    function getPaginationRange(current, total) {
+        const range = [];
+        const delta = 2;
+        range.push(1);
+        if (total <= 1) return range;
+        let l;
+        for (let i = 2; i < total; i++) {
+            if (Math.abs(i - current) <= delta || (current <= 4 && i <= 5) || (current >= total - 3 && i >= total - 4)) {
+                range.push(i);
+            }
+        }
+        range.push(total);
+        const result = [];
+        for (let i = 0; i < range.length; i++) {
+            if (l !== undefined) {
+                if (range[i] - l === 2) {
+                    result.push(l + 1);
+                } else if (range[i] - l > 2) {
+                    result.push('...');
+                }
+            }
+            result.push(range[i]);
+            l = range[i];
+        }
+        return result;
+    }
 
     function applyFilters(resetPage = false) {
         if (resetPage) {
@@ -491,18 +518,26 @@
             };
             btnContainer.appendChild(prevBtn);
             
-            // Page buttons
-            for (let p = 1; p <= totalPages; p++) {
-                const pageBtn = document.createElement('button');
-                pageBtn.innerText = p;
-                const isActive = p === currentPage;
-                pageBtn.style.cssText = 'background: ' + (isActive ? '#ffffff' : 'rgba(15,23,42,0.3)') + '; border: 1px solid ' + (isActive ? '#ffffff' : '#334155') + '; color: ' + (isActive ? '#0f172a' : 'white') + '; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: ' + (isActive ? '700' : '500') + '; transition: all 0.2s;';
-                pageBtn.onclick = () => {
-                    currentPage = p;
-                    applyFilters();
+            // Page buttons with sliding range and ellipses
+            const range = getPaginationRange(currentPage, totalPages);
+            range.forEach(p => {
+                if (p === '...') {
+                    const span = document.createElement('span');
+                    span.innerText = '...';
+                    span.style.cssText = 'display: inline-block; padding: 6px 12px; color: #64748b; font-size: 12px;';
+                    btnContainer.appendChild(span);
+                } else {
+                    const pageBtn = document.createElement('button');
+                    pageBtn.innerText = p;
+                    const isActive = p === currentPage;
+                    pageBtn.style.cssText = 'background: ' + (isActive ? '#ffffff' : 'rgba(15,23,42,0.3)') + '; border: 1px solid ' + (isActive ? '#ffffff' : '#334155') + '; color: ' + (isActive ? '#0f172a' : 'white') + '; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: ' + (isActive ? '700' : '500') + '; transition: all 0.2s;';
+                    pageBtn.onclick = () => {
+                        currentPage = p;
+                        applyFilters();
+                    };
+                    btnContainer.appendChild(pageBtn);
                 }
-                btnContainer.appendChild(pageBtn);
-            }
+            });
             
             // Next button
             const nextBtn = document.createElement('button');
