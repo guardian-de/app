@@ -1,0 +1,343 @@
+<?php
+
+namespace App\Controllers;
+
+use App\Models\UsdtLotModel;
+use App\Models\LotAllocationModel;
+use App\Models\ActivityLogModel;
+use App\Models\SupplierModel;
+
+class LotsController extends BaseController
+{
+    public function index()
+    {
+        $lotModel      = new UsdtLotModel();
+        $supplierModel = new SupplierModel();
+
+        $filters = [
+            'start_date'    => $this->request->getGet('start_date') ?? '',
+            'end_date'      => $this->request->getGet('end_date')   ?? '',
+            'supplier'      => $this->request->getGet('supplier')   ?? '',
+            'delivery_type' => $this->request->getGet('delivery_type') ?? '',
+            'status'        => $this->request->getGet('status')     ?? '',
+        ];
+        $perPage = (int)($this->request->getGet('per_page') ?? 15);
+        if (!in_array($perPage, [15, 25, 50, 100])) { $perPage = 15; }
+
+        $builder = $lotModel->select('usdt_lots.*, users.login as created_by_name')
+            ->join('users', 'users.id = usdt_lots.created_by', 'left');
+
+        if (!empty($filters['start_date'])) {
+            $builder->where('usdt_lots.created_at >=', $filters['start_date'] . ' 00:00:00');
+        }
+        if (!empty($filters['end_date'])) {
+            $builder->where('usdt_lots.created_at <=', $filters['end_date'] . ' 23:59:59');
+        }
+        if (!empty($filters['supplier'])) {
+            $builder->like('usdt_lots.supplier', $filters['supplier']);
+        }
+        if (!empty($filters['delivery_type'])) {
+            $builder->where('usdt_lots.delivery_type', $filters['delivery_type']);
+        }
+        if (!empty($filters['status'])) {
+            $builder->where('usdt_lots.status', $filters['status']);
+        }
+
+        $lots = $builder->orderBy('usdt_lots.created_at', 'DESC')->paginate($perPage);
+
+        return view('admin/lots/index', [
+            'lots'        => $lots,
+            'pager'       => $lotModel->pager,
+            'filters'     => $filters,
+            'per_page'    => $perPage,
+            'suppliers'   => $supplierModel->getEnabled(),
+            'summary'     => $lotModel->getSummary(),
+            'active_menu' => 'lots',
+        ]);
+    }
+
+    public function create()
+    {
+        $supplierModel = new SupplierModel();
+        return view('admin/lots/new', [
+            'suppliers'   => $supplierModel->getEnabled(),
+            'active_menu' => 'lots',
+        ]);
+    }
+
+    public function store()
+    {
+        $lotModel  = new UsdtLotModel();
+        $logModel  = new ActivityLogModel();
+
+        $usdtAmount     = (float)$this->request->getPost('usdt_amount');
+        $conversionRate = (float)$this->request->getPost('conversion_rate');
+        $supplier       = trim($this->request->getPost('supplier'));
+        $purchaseHash   = trim($this->request->getPost('purchase_hash') ?? '');
+        $deliveryType   = $this->request->getPost('delivery_type');
+
+        if ($usdtAmount <= 0 || $conversionRate <= 0 || empty($supplier)) {
+            return redirect()->back()->withInput()->with('error', 'Preencha todos os campos obrigatórios.');
+        }
+        $totalBrl = round($usdtAmount * $conversionRate, 2);
+
+        $lotId = $lotModel->insert([
+            'supplier'      => $supplier,
+            'purchase_hash' => $purchaseHash ?: null,
+            'delivery_type' => in_array($deliveryType, ['d+0', 'd+1', 'd+2']) ? $deliveryType : null,
+            'usdt_amount'   => $usdtAmount,
+            'conversion_rate' => $conversionRate,
+            'total_brl'     => $totalBrl,
+            'status'        => 'active',
+            'created_by'    => session()->get('user_id'),
+        ]);
+
+        $logModel->record('lot.created', 'lot', $lotId, [
+            'supplier'        => $supplier,
+            'purchase_hash'   => $purchaseHash ?: null,
+            'delivery_type'   => $deliveryType,
+            'usdt_amount'     => $usdtAmount,
+            'conversion_rate' => $conversionRate,
+            'total_brl'       => $totalBrl,
+        ]);
+
+        return redirect()->to("/admin/lots/{$lotId}")->with('success', 'Lote registrado com sucesso!');
+    }
+
+    public function show(int $id)
+    {
+        $lotModel = new UsdtLotModel();
+        $logModel = new ActivityLogModel();
+
+        $lot = $lotModel->select('usdt_lots.*, users.login as created_by_name')
+            ->join('users', 'users.id = usdt_lots.created_by', 'left')
+            ->where('usdt_lots.id', $id)
+            ->first();
+
+        if (!$lot) {
+            return redirect()->to('/admin/lots')->with('error', 'Lote não encontrado.');
+        }
+
+        $db = \Config\Database::connect();
+        $allocations = $db->query("
+            SELECT
+                la.*,
+                CASE WHEN la.contract_id IS NOT NULL THEN 'contrato' ELSE 'transacao' END AS entity_label,
+                COALESCE(uc.login, ut.login) AS client_name,
+                allocators.login AS allocated_by_name,
+                deliverers.login AS delivered_by_name
+            FROM lot_allocations la
+            LEFT JOIN contracts c       ON c.id = la.contract_id
+            LEFT JOIN transactions t    ON t.id = la.transaction_id
+            LEFT JOIN users uc          ON uc.id = c.user_id
+            LEFT JOIN users ut          ON ut.id = t.user_id
+            LEFT JOIN users allocators  ON allocators.id = la.allocated_by
+            LEFT JOIN users deliverers  ON deliverers.id = la.delivered_by
+            WHERE la.lot_id = ?
+            ORDER BY la.created_at DESC
+        ", [$id])->getResultArray();
+
+        $logs = $logModel->getForEntity('lot', $id);
+
+        return view('admin/lots/show', [
+            'lot'         => $lot,
+            'allocations' => $allocations,
+            'logs'        => $logs,
+            'active_menu' => 'lots',
+        ]);
+    }
+
+    public function allocate()
+    {
+        $allocationModel = new LotAllocationModel();
+        $lotModel        = new UsdtLotModel();
+        $logModel        = new ActivityLogModel();
+
+        $lotId         = (int)$this->request->getPost('lot_id');
+        $usdtAmount    = (float)$this->request->getPost('usdt_amount');
+        $contractId    = $this->request->getPost('contract_id')    ?: null;
+        $transactionId = $this->request->getPost('transaction_id') ?: null;
+
+        $error = $this->validateAllocation($lotModel, $lotId, $usdtAmount, $contractId, $transactionId);
+        if ($error) {
+            return $this->response->setJSON(['success' => false, 'message' => $error]);
+        }
+
+        $allocationId = $allocationModel->insert([
+            'lot_id'         => $lotId,
+            'contract_id'    => $contractId,
+            'transaction_id' => $transactionId,
+            'usdt_amount'    => $usdtAmount,
+            'status'         => 'reserved',
+            'allocated_by'   => session()->get('user_id'),
+        ]);
+
+        $lotModel->recalculateTotals($lotId);
+
+        $entityType = $contractId ? 'contract' : 'transaction';
+        $entityId   = (int)($contractId ?? $transactionId);
+
+        $logModel->record('lot.allocated', 'lot', $lotId, [
+            'allocation_id' => $allocationId,
+            'entity_type'   => $entityType,
+            'entity_id'     => $entityId,
+            'usdt_amount'   => $usdtAmount,
+        ]);
+
+        return $this->response->setJSON(['success' => true, 'allocation_id' => $allocationId]);
+    }
+
+    private function validateAllocation(UsdtLotModel $lotModel, int $lotId, float $usdtAmount, ?string $contractId, ?string $transactionId): ?string
+    {
+        if (!$lotId || $usdtAmount <= 0 || (!$contractId && !$transactionId)) {
+            return 'Dados inválidos.';
+        }
+
+        $error     = null;
+        $available = $lotModel->getAvailable($lotId);
+
+        if ($contractId && $transactionId) {
+            $error = 'Informe apenas contrato ou transação, não ambos.';
+        } elseif ($usdtAmount > $available) {
+            $error = "Disponível no lote: {$available} USDT. Solicitado: {$usdtAmount} USDT.";
+        } elseif ($contractId) {
+            $db       = \Config\Database::connect();
+            $contract = $db->table('contracts')->where('id', $contractId)->get()->getRow();
+            if ($contract) {
+                $alreadyReserved = (float)$db->query("
+                    SELECT COALESCE(SUM(usdt_amount), 0) AS total
+                    FROM lot_allocations
+                    WHERE contract_id = ? AND status = 'reserved'
+                ", [$contractId])->getRow()->total;
+
+                $remainingToAllocate = max(0, (float)$contract->total_amount - (float)$contract->delivered_usdt - $alreadyReserved);
+
+                if ($usdtAmount > $remainingToAllocate + 0.001) {
+                    $error = 'O contrato precisa de apenas ' . number_format($remainingToAllocate, 2, '.', ',') . ' USDT. Não é possível alocar ' . number_format($usdtAmount, 2, '.', ',') . ' USDT.';
+                }
+            }
+        }
+
+        return $error;
+    }
+
+    public function cancelAllocation(int $id)
+    {
+        $allocationModel = new LotAllocationModel();
+        $lotModel        = new UsdtLotModel();
+        $logModel        = new ActivityLogModel();
+
+        $allocation = $allocationModel->find($id);
+        if (!$allocation) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Alocação não encontrada.']);
+        }
+
+        if ($allocation['status'] === 'delivered') {
+            return $this->response->setJSON(['success' => false, 'message' => 'Alocação já entregue não pode ser cancelada.']);
+        }
+
+        $allocationModel->update($id, ['status' => 'cancelled']);
+        $lotModel->recalculateTotals((int)$allocation['lot_id']);
+
+        $logModel->record('lot.allocation_cancelled', 'lot', (int)$allocation['lot_id'], [
+            'allocation_id' => $id,
+            'usdt_amount'   => $allocation['usdt_amount'],
+        ]);
+
+        return $this->response->setJSON(['success' => true]);
+    }
+
+    public function quickBuy()
+    {
+        $lotModel        = new UsdtLotModel();
+        $allocationModel = new LotAllocationModel();
+        $logModel        = new ActivityLogModel();
+
+        $contractId     = (int)$this->request->getPost('contract_id');
+        $usdtAmount     = (float)$this->request->getPost('usdt_amount');
+        $conversionRate = (float)$this->request->getPost('conversion_rate');
+        $totalBrl       = (float)$this->request->getPost('total_brl');
+        $supplier       = trim($this->request->getPost('supplier'));
+        $deliveryType   = trim($this->request->getPost('delivery_type') ?? '');
+        $purchaseHash   = trim($this->request->getPost('purchase_hash') ?? '');
+
+        $validationError = match(true) {
+            !$contractId || $usdtAmount <= 0 || $conversionRate <= 0 || empty($supplier)
+                => 'Preencha todos os campos obrigatórios.',
+            !in_array($deliveryType, ['d+0', 'd+1', 'd+2'])
+                => 'Informe o fluxo do fornecedor (D+0, D+1 ou D+2).',
+            default => null,
+        };
+        if ($validationError) {
+            return $this->response->setJSON(['success' => false, 'message' => $validationError]);
+        }
+
+        $db = \Config\Database::connect();
+        $contract = $db->table('contracts')->where('id', $contractId)->get()->getRow();
+        if (!$contract) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Contrato não encontrado.']);
+        }
+
+        $autoTotal    = round($usdtAmount * $conversionRate, 2);
+        $isOverridden = abs($totalBrl - $autoTotal) > 0.01;
+        $finalBrl     = $totalBrl > 0 ? $totalBrl : $autoTotal;
+
+        $lotId = $lotModel->insert([
+            'supplier'             => $supplier,
+            'purchase_hash'        => $purchaseHash,
+            'delivery_type'        => $deliveryType,
+            'usdt_amount'          => $usdtAmount,
+            'conversion_rate'      => $conversionRate,
+            'total_brl'            => $finalBrl,
+            'total_brl_overridden' => $isOverridden ? 1 : 0,
+            'status'               => 'active',
+            'created_by'           => session()->get('user_id'),
+        ]);
+
+        $logModel->record('lot.created', 'lot', $lotId, [
+            'supplier'        => $supplier,
+            'usdt_amount'     => $usdtAmount,
+            'conversion_rate' => $conversionRate,
+            'total_brl'       => $finalBrl,
+            'quick_buy'       => true,
+            'contract_id'     => $contractId,
+        ]);
+
+        $allocationId = $allocationModel->insert([
+            'lot_id'       => $lotId,
+            'contract_id'  => $contractId,
+            'usdt_amount'  => $usdtAmount,
+            'status'       => 'reserved',
+            'allocated_by' => session()->get('user_id'),
+        ]);
+
+        $lotModel->recalculateTotals($lotId);
+
+        $logModel->record('lot.allocated', 'lot', $lotId, [
+            'allocation_id' => $allocationId,
+            'entity_type'   => 'contract',
+            'entity_id'     => $contractId,
+            'usdt_amount'   => $usdtAmount,
+            'quick_buy'     => true,
+        ]);
+
+        return $this->response->setJSON(['success' => true, 'lot_id' => $lotId]);
+    }
+
+    public function availableLots()
+    {
+        $lotModel = new UsdtLotModel();
+
+        $lots = $lotModel->select('id, supplier, usdt_amount, usdt_reserved, usdt_delivered, conversion_rate, total_brl, status')
+            ->where('status', 'active')
+            ->orderBy('created_at', 'DESC')
+            ->findAll();
+
+        $result = array_map(function ($lot) use ($lotModel) {
+            $lot['usdt_available'] = $lotModel->getAvailable((int)$lot['id']);
+            return $lot;
+        }, $lots);
+
+        return $this->response->setJSON($result);
+    }
+}

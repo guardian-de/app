@@ -1,0 +1,321 @@
+<?php
+
+namespace App\Controllers;
+
+use App\Controllers\BaseController;
+use App\Models\DepositModel;
+use App\Models\FinancialStatementModel;
+use App\Models\ActivityLogModel;
+class DepositsController extends BaseController
+{
+    public function index()
+    {
+        $db = \Config\Database::connect();
+        try {
+            $db->query("CREATE TABLE IF NOT EXISTS `deposits` (
+                `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                `user_id` INT UNSIGNED NOT NULL,
+                `amount` DECIMAL(15,2) NOT NULL,
+                `proof_file` VARCHAR(500) NOT NULL,
+                `status` ENUM('pending','accepted','reversed','rejected') NOT NULL DEFAULT 'pending',
+                `notes` TEXT NULL,
+                `accepted_by` INT UNSIGNED NULL,
+                `accepted_at` DATETIME NULL,
+                `reversed_by` INT UNSIGNED NULL,
+                `reversed_at` DATETIME NULL,
+                `reversal_reason` TEXT NULL,
+                `rejected_by` INT UNSIGNED NULL,
+                `rejected_at` DATETIME NULL,
+                `rejection_reason` TEXT NULL,
+                `created_at` DATETIME NULL,
+                `updated_at` DATETIME NULL
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        } catch (\Throwable $e) { log_message('debug', 'deposits table guard: ' . $e->getMessage()); }
+        try { $db->query("ALTER TABLE `deposits` MODIFY COLUMN `status` ENUM('pending','accepted','reversed','rejected') NOT NULL DEFAULT 'pending'"); } catch (\Throwable $e) {}
+        try { $db->query("ALTER TABLE `deposits` ADD COLUMN `rejected_by` INT UNSIGNED NULL"); } catch (\Throwable $e) {}
+        try { $db->query("ALTER TABLE `deposits` ADD COLUMN `rejected_at` DATETIME NULL"); } catch (\Throwable $e) {}
+        try { $db->query("ALTER TABLE `deposits` ADD COLUMN `rejection_reason` TEXT NULL"); } catch (\Throwable $e) {}
+
+        $status    = $this->request->getGet('status') ?? '';
+        $search    = $this->request->getGet('search') ?? '';
+        $startDate = $this->request->getGet('start_date') ?? '';
+        $endDate   = $this->request->getGet('end_date') ?? '';
+        $perPage   = (int) ($this->request->getGet('per_page') ?? 50);
+
+        $depositModel = new DepositModel();
+        $builder = $depositModel->select('deposits.*, u.login as user_login')
+            ->join('users u', 'u.id = deposits.user_id', 'left')
+            ->orderBy('deposits.created_at', 'DESC');
+
+        if ($status !== '') {
+            $builder->where('deposits.status', $status);
+        }
+        if ($search !== '') {
+            $builder->like('u.login', $search);
+        }
+        if ($startDate !== '') {
+            $builder->where('DATE(deposits.created_at) >=', $startDate);
+        }
+        if ($endDate !== '') {
+            $builder->where('DATE(deposits.created_at) <=', $endDate);
+        }
+
+        $deposits = $builder->paginate($perPage);
+
+        $data = [
+            'title'       => 'Depósitos',
+            'active_menu' => 'deposits',
+            'deposits'    => $deposits,
+            'pager'       => $depositModel->pager,
+            'per_page'    => $perPage,
+            'filters'     => compact('status', 'search', 'startDate', 'endDate'),
+        ];
+
+        return view('admin/deposits/index', $data);
+    }
+
+    public function checkNew()
+    {
+        $db = \Config\Database::connect();
+        if (!$db->tableExists('deposits')) {
+            return $this->response->setJSON([]);
+        }
+
+        $depositModel = new DepositModel();
+        $rows = $depositModel
+            ->select('deposits.id, deposits.amount as amount_brl, deposits.user_id, deposits.created_at, u.login as user_name')
+            ->join('users u', 'u.id = deposits.user_id', 'left')
+            ->where('deposits.status', 'pending')
+            ->orderBy('deposits.id', 'ASC')
+            ->findAll();
+
+        return $this->response->setJSON($rows);
+    }
+
+    public function show($id)
+    {
+        $db = \Config\Database::connect();
+        $deposit = $db->table('deposits d')
+            ->select('d.*, u.login as user_login, a.login as accepted_by_login, r.login as reversed_by_login, rj.login as rejected_by_login')
+            ->join('users u', 'u.id = d.user_id', 'left')
+            ->join('users a', 'a.id = d.accepted_by', 'left')
+            ->join('users r', 'r.id = d.reversed_by', 'left')
+            ->join('users rj', 'rj.id = d.rejected_by', 'left')
+            ->where('d.id', $id)
+            ->get()->getRowArray();
+
+        if (!$deposit) {
+            return redirect()->to(url_to('admin_deposits'))->with('error', 'Depósito não encontrado.');
+        }
+
+        $history = $db->table('activity_logs al')
+            ->select('al.*, u.login as actor_login')
+            ->join('users u', 'u.id = al.user_id', 'left')
+            ->where('al.entity_type', 'deposit')
+            ->where('al.entity_id', $id)
+            ->orderBy('al.created_at', 'DESC')
+            ->get()->getResultArray();
+
+        foreach ($history as &$entry) {
+            $entry['payload'] = json_decode($entry['payload'] ?? '', true) ?? [];
+        }
+        unset($entry);
+
+        return view('admin/deposits/show', [
+            'title'       => 'Depósito #' . $id,
+            'active_menu' => 'deposits',
+            'deposit'     => $deposit,
+            'history'     => $history,
+        ]);
+    }
+
+    public function accept($id)
+    {
+        $depositModel = new DepositModel();
+        $deposit = $depositModel->find($id);
+
+        if (!$deposit) {
+            return redirect()->back()->with('error', 'Depósito inválido ou já processado.');
+        }
+
+        $operatorId = session()->get('user_id');
+        $now = date('Y-m-d H:i:s');
+
+        $db = \Config\Database::connect();
+        $db->table('deposits')
+            ->where('id', $id)
+            ->where('status', 'pending')
+            ->update([
+                'status'      => 'accepted',
+                'accepted_by' => $operatorId,
+                'accepted_at' => $now,
+            ]);
+
+        // Update condicional (WHERE status='pending') garante que, se dois operadores
+        // clicarem ao mesmo tempo, só o primeiro afeta a linha — o segundo cai aqui.
+        if ($db->affectedRows() === 0) {
+            return redirect()->back()->with('error', 'Depósito inválido ou já processado.');
+        }
+
+        $financialModel = new FinancialStatementModel();
+        $financialModel->insert([
+            'user_id'          => $deposit['user_id'],
+            'admin_id'         => $operatorId,
+            'operation_type'   => 'deposit',
+            'nature'           => 'C',
+            'amount'           => $deposit['amount'],
+            'description'      => 'Depósito confirmado #' . $id,
+            'transaction_date' => $now,
+        ]);
+
+        // Auto-paga contratos abertos (FIFO). O saldo é derivado do ledger,
+        // então apenas atualizamos paid_amount dos contratos sem criar novos lançamentos.
+        $contractModel = new \App\Models\ContractModel();
+        $openContracts = $db->table('contracts')
+            ->where('user_id', $deposit['user_id'])
+            ->whereIn('status', ['pending', 'partially_paid', 'overdue'])
+            ->orderBy('created_at', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $toDistribute = (float)$deposit['amount'];
+        foreach ($openContracts as $contract) {
+            if ($toDistribute <= 0) { break; }
+
+            $remaining = (float)$contract['remaining_balance'];
+            if ($remaining <= 0) { continue; }
+
+            $payment = min($toDistribute, $remaining);
+            $contractModel->registerPayment($contract['id'], $payment);
+
+            $toDistribute -= $payment;
+        }
+
+        (new ActivityLogModel())->record('deposit.accepted', 'deposit', (int)$id, [
+            'amount' => $deposit['amount'],
+        ]);
+
+        return redirect()->to(url_to('admin_deposits_show', $id))->with('success', 'Depósito aceito e pagamentos automáticos aplicados.');
+    }
+
+    public function reject($id)
+    {
+        $depositModel = new DepositModel();
+        $deposit = $depositModel->find($id);
+
+        if (!$deposit) {
+            return redirect()->back()->with('error', 'Apenas depósitos pendentes podem ser rejeitados.');
+        }
+
+        $reason = trim($this->request->getPost('rejection_reason') ?? '');
+        if ($reason === '') {
+            return redirect()->back()->with('error', 'O motivo da rejeição é obrigatório.');
+        }
+
+        $operatorId = session()->get('user_id');
+        $now = date('Y-m-d H:i:s');
+
+        $db = \Config\Database::connect();
+        $db->table('deposits')
+            ->where('id', $id)
+            ->where('status', 'pending')
+            ->update([
+                'status'           => 'rejected',
+                'rejected_by'      => $operatorId,
+                'rejected_at'      => $now,
+                'rejection_reason' => $reason,
+            ]);
+
+        if ($db->affectedRows() === 0) {
+            return redirect()->back()->with('error', 'Apenas depósitos pendentes podem ser rejeitados.');
+        }
+
+        (new ActivityLogModel())->record('deposit.rejected', 'deposit', (int)$id, [
+            'reason' => $reason,
+        ]);
+
+        return redirect()->to(url_to('admin_deposits_show', $id))->with('success', 'Depósito rejeitado.');
+    }
+
+    public function reverse($id)
+    {
+        if (session()->get('user_role') !== 'admin') {
+            return redirect()->back()->with('error', 'Apenas administradores podem reverter depósitos.');
+        }
+
+        $depositModel = new DepositModel();
+        $deposit = $depositModel->find($id);
+
+        if (!$deposit) {
+            return redirect()->back()->with('error', 'Apenas depósitos aceitos podem ser revertidos.');
+        }
+
+        $reason = $this->request->getPost('reversal_reason') ?? '';
+        $adminId = session()->get('user_id');
+        $now = date('Y-m-d H:i:s');
+
+        $db = \Config\Database::connect();
+        $db->table('deposits')
+            ->where('id', $id)
+            ->where('status', 'accepted')
+            ->update([
+                'status'          => 'reversed',
+                'reversed_by'     => $adminId,
+                'reversed_at'     => $now,
+                'reversal_reason' => $reason,
+            ]);
+
+        if ($db->affectedRows() === 0) {
+            return redirect()->back()->with('error', 'Apenas depósitos aceitos podem ser revertidos.');
+        }
+
+        $financialModel = new FinancialStatementModel();
+        $financialModel->insert([
+            'user_id'          => $deposit['user_id'],
+            'admin_id'         => $adminId,
+            'operation_type'   => 'adjustment_subtract',
+            'nature'           => 'D',
+            'amount'           => $deposit['amount'],
+            'description'      => 'Estorno de depósito #' . $id . ($reason ? ' — ' . $reason : ''),
+            'transaction_date' => $now,
+        ]);
+
+        (new ActivityLogModel())->record('deposit.reversed', 'deposit', (int)$id, [
+            'amount' => $deposit['amount'],
+            'reason' => $reason,
+        ]);
+
+        return redirect()->to(url_to('admin_deposits_show', $id))->with('success', 'Depósito revertido e estorno lançado no extrato do cliente.');
+    }
+
+    public function reverseRejection($id)
+    {
+        if (session()->get('user_role') !== 'admin') {
+            return redirect()->back()->with('error', 'Apenas administradores podem reverter rejeições.');
+        }
+
+        $depositModel = new DepositModel();
+        $deposit = $depositModel->find($id);
+
+        $db = \Config\Database::connect();
+        $db->table('deposits')
+            ->where('id', $id)
+            ->where('status', 'rejected')
+            ->update([
+                'status'           => 'pending',
+                'rejected_by'      => null,
+                'rejected_at'      => null,
+                'rejection_reason' => null,
+            ]);
+
+        if ($db->affectedRows() === 0) {
+            return redirect()->back()->with('error', 'Apenas depósitos rejeitados podem ter a rejeição revertida.');
+        }
+
+        (new ActivityLogModel())->record('deposit.rejection_reverted', 'deposit', (int)$id, [
+            'previous_reason' => $deposit['rejection_reason'] ?? null,
+        ]);
+
+        return redirect()->to(url_to('admin_deposits_show', $id))->with('success', 'Rejeição revertida. O depósito voltou para pendente e pode ser reavaliado.');
+    }
+}
