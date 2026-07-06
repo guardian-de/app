@@ -24,26 +24,6 @@ class ChatController extends BaseController
             'start' => $settingsModel->getConfig('business_hours_start', '08:00'),
             'end'   => $settingsModel->getConfig('business_hours_end', '16:30')
         ];
-        $data['business_hours_config'] = [
-            'D+0' => [
-                'start'         => $settingsModel->getConfig('business_hours_start', '08:00'),
-                'end'           => $settingsModel->getConfig('business_hours_end', '16:30'),
-                'allow_outside' => $settingsModel->getConfig('business_hours_d0_allow_outside', '0') === '1',
-                'block_message' => $settingsModel->getConfig('business_hours_d0_block_message', 'Transações em tempo real (D+0) fora do horário de funcionamento.')
-            ],
-            'D+1' => [
-                'start'         => $settingsModel->getConfig('business_hours_d1_start', '08:00'),
-                'end'           => $settingsModel->getConfig('business_hours_d1_end', '18:00'),
-                'allow_outside' => $settingsModel->getConfig('business_hours_d1_allow_outside', '0') === '1',
-                'block_message' => $settingsModel->getConfig('business_hours_d1_block_message', 'Transações D+1 fora do horário de funcionamento.')
-            ],
-            'D+2' => [
-                'start'         => $settingsModel->getConfig('business_hours_d2_start', '08:00'),
-                'end'           => $settingsModel->getConfig('business_hours_d2_end', '18:00'),
-                'allow_outside' => $settingsModel->getConfig('business_hours_d2_allow_outside', '0') === '1',
-                'block_message' => $settingsModel->getConfig('business_hours_d2_block_message', 'Transações D+2 fora do horário de funcionamento.')
-            ]
-        ];
         $data['quotation_flow'] = $settingsModel->getConfig('quotation_flow', 'direct');
         $data['operator_whatsapp'] = $settingsModel->getConfig('operator_whatsapp', '');
         
@@ -65,26 +45,6 @@ class ChatController extends BaseController
         $data['business_hours'] = [
             'start' => $settingsModel->getConfig('business_hours_start', '08:00'),
             'end'   => $settingsModel->getConfig('business_hours_end', '16:30')
-        ];
-        $data['business_hours_config'] = [
-            'D+0' => [
-                'start'         => $settingsModel->getConfig('business_hours_start', '08:00'),
-                'end'           => $settingsModel->getConfig('business_hours_end', '16:30'),
-                'allow_outside' => $settingsModel->getConfig('business_hours_d0_allow_outside', '0') === '1',
-                'block_message' => $settingsModel->getConfig('business_hours_d0_block_message', 'Transações em tempo real (D+0) fora do horário de funcionamento.')
-            ],
-            'D+1' => [
-                'start'         => $settingsModel->getConfig('business_hours_d1_start', '08:00'),
-                'end'           => $settingsModel->getConfig('business_hours_d1_end', '18:00'),
-                'allow_outside' => $settingsModel->getConfig('business_hours_d1_allow_outside', '0') === '1',
-                'block_message' => $settingsModel->getConfig('business_hours_d1_block_message', 'Transações D+1 fora do horário de funcionamento.')
-            ],
-            'D+2' => [
-                'start'         => $settingsModel->getConfig('business_hours_d2_start', '08:00'),
-                'end'           => $settingsModel->getConfig('business_hours_d2_end', '18:00'),
-                'allow_outside' => $settingsModel->getConfig('business_hours_d2_allow_outside', '0') === '1',
-                'block_message' => $settingsModel->getConfig('business_hours_d2_block_message', 'Transações D+2 fora do horário de funcionamento.')
-            ]
         ];
         $data['quotation_flow'] = $settingsModel->getConfig('quotation_flow', 'direct');
         $data['operator_whatsapp'] = $settingsModel->getConfig('operator_whatsapp', '');
@@ -503,31 +463,22 @@ class ChatController extends BaseController
             $start = $settingsModel->getConfig('business_hours_start', '08:00');
             $end = $settingsModel->getConfig('business_hours_end', '16:30');
             if ($now < $start || $now > $end) {
-                $allowOutside = $settingsModel->getConfig('business_hours_d0_allow_outside', '0') === '1';
-                if (!$allowOutside) {
-                    $msg = $settingsModel->getConfig('business_hours_d0_block_message', 'Transações em tempo real (D+0) fora do horário de funcionamento.');
-                    return $this->response->setJSON(['error' => $msg])->setStatusCode(403);
-                }
+                $msg = $userLang == 'zh-CN' ? "实时交易 (D+0) 非营业时间 ($start - $end)" : "Transações em tempo real (D+0) fora do horário de funcionamento ($start às $end).";
+                return $this->response->setJSON(['error' => $msg])->setStatusCode(403);
             }
         } elseif ($deliveryType === 'D+1') {
             $start = $settingsModel->getConfig('business_hours_d1_start', '08:00');
             $end = $settingsModel->getConfig('business_hours_d1_end', '18:00');
             if ($now < $start || $now > $end) {
-                $allowOutside = $settingsModel->getConfig('business_hours_d1_allow_outside', '0') === '1';
-                if (!$allowOutside) {
-                    $msg = $settingsModel->getConfig('business_hours_d1_block_message', 'Transações D+1 fora do horário de funcionamento.');
-                    return $this->response->setJSON(['error' => $msg])->setStatusCode(403);
-                }
+                $msg = $userLang == 'zh-CN' ? "D+1 交易非营业时间 ($start - $end)" : "Transações D+1 fora do horário de funcionamento ($start às $end).";
+                return $this->response->setJSON(['error' => $msg])->setStatusCode(403);
             }
         } elseif ($deliveryType === 'D+2') {
             $start = $settingsModel->getConfig('business_hours_d2_start', '08:00');
             $end = $settingsModel->getConfig('business_hours_d2_end', '18:00');
             if ($now < $start || $now > $end) {
-                $allowOutside = $settingsModel->getConfig('business_hours_d2_allow_outside', '0') === '1';
-                if (!$allowOutside) {
-                    $msg = $settingsModel->getConfig('business_hours_d2_block_message', 'Transações D+2 fora do horário de funcionamento.');
-                    return $this->response->setJSON(['error' => $msg])->setStatusCode(403);
-                }
+                $msg = $userLang == 'zh-CN' ? "D+2 交易非营业时间 ($start - $end)" : "Transações D+2 fora do horário de funcionamento ($start às $end).";
+                return $this->response->setJSON(['error' => $msg])->setStatusCode(403);
             }
         }
         
@@ -669,10 +620,7 @@ class ChatController extends BaseController
             }
         }
 
-        return $this->response->setJSON([
-            'status'         => 'success',
-            'transaction_id' => $transactionId
-        ]);
+        return $this->response->setJSON(['status' => 'success', 'transaction_id' => $transactionId]);
     }
 
     public function uploadProof()
