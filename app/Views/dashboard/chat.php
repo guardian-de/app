@@ -446,9 +446,6 @@
                 <?= lang('App.transaction_success_msg') ?>
             </p>
             <div id="success-actions">
-                <button onclick="openProofModal()" class="btn-primary" style="margin: 0 0 10px 0; width: 100%; background: #22c55e;">
-                    <i class="fas fa-upload" style="margin-right: 8px;"></i> <?= $isChinese ? '上传凭证' : 'Enviar Comprovante' ?>
-                </button>
                 <button onclick="closeSuccessModal()" class="btn-secondary" style="margin: 0; width: 100%; background: rgba(255,255,255,0.05); color: #94a3b8; border: 1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 12px; cursor: pointer; font-weight: 600;">
                     <?= lang('App.understood') ?>
                 </button>
@@ -690,7 +687,7 @@
         }
 
         updateLiveRate();
-        setInterval(updateLiveRate, 500); // Atualiza a cada 0.5 segundos para dinâmica ultrarrápida
+        setInterval(updateLiveRate, 1000); // Atualiza a cada 1 segundo para dinâmica ultrarrápida
 
         async function updateDebtBalance() {
             try {

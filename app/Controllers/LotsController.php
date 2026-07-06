@@ -157,20 +157,42 @@ class LotsController extends BaseController
         $usdtAmount    = (float)$this->request->getPost('usdt_amount');
         $contractId    = $this->request->getPost('contract_id')    ?: null;
         $transactionId = $this->request->getPost('transaction_id') ?: null;
+        $retroactive   = (bool)$this->request->getPost('retroactive');
+        $adminId       = session()->get('user_id');
 
-        $error = $this->validateAllocation($lotModel, $lotId, $usdtAmount, $contractId, $transactionId);
+        if ($retroactive) {
+            $error = $this->validateRetroactiveAllocation($lotModel, $allocationModel, $lotId, $usdtAmount, $contractId);
+        } else {
+            $error = $this->validateAllocation($lotModel, $lotId, $usdtAmount, $contractId, $transactionId);
+        }
         if ($error) {
             return $this->response->setJSON(['success' => false, 'message' => $error]);
         }
 
-        $allocationId = $allocationModel->insert([
-            'lot_id'         => $lotId,
-            'contract_id'    => $contractId,
-            'transaction_id' => $transactionId,
-            'usdt_amount'    => $usdtAmount,
-            'status'         => 'reserved',
-            'allocated_by'   => session()->get('user_id'),
-        ]);
+        if ($retroactive) {
+            $lot            = $lotModel->find($lotId);
+            $revenuePerUsdt = $allocationModel->getRevenuePerUsdt('contract', (int)$contractId);
+            $profitBrl      = round(($revenuePerUsdt - (float)$lot['conversion_rate']) * $usdtAmount, 2);
+
+            $allocationId = $allocationModel->insert([
+                'lot_id'       => $lotId,
+                'contract_id'  => $contractId,
+                'usdt_amount'  => $usdtAmount,
+                'status'       => 'delivered',
+                'profit_brl'   => $profitBrl,
+                'allocated_by' => $adminId,
+                'delivered_by' => $adminId,
+            ]);
+        } else {
+            $allocationId = $allocationModel->insert([
+                'lot_id'         => $lotId,
+                'contract_id'    => $contractId,
+                'transaction_id' => $transactionId,
+                'usdt_amount'    => $usdtAmount,
+                'status'         => 'reserved',
+                'allocated_by'   => $adminId,
+            ]);
+        }
 
         $lotModel->recalculateTotals($lotId);
 
@@ -182,6 +204,7 @@ class LotsController extends BaseController
             'entity_type'   => $entityType,
             'entity_id'     => $entityId,
             'usdt_amount'   => $usdtAmount,
+            'retroactive'   => $retroactive,
         ]);
 
         return $this->response->setJSON(['success' => true, 'allocation_id' => $allocationId]);
@@ -219,6 +242,31 @@ class LotsController extends BaseController
         }
 
         return $error;
+    }
+
+    private function validateRetroactiveAllocation(UsdtLotModel $lotModel, LotAllocationModel $allocationModel, int $lotId, float $usdtAmount, ?string $contractId): ?string
+    {
+        if (!$lotId || $usdtAmount <= 0 || !$contractId) {
+            return 'Dados inválidos.';
+        }
+
+        $available = $lotModel->getAvailable($lotId);
+        if ($usdtAmount > $available) {
+            return "Disponível no lote: {$available} USDT. Solicitado: {$usdtAmount} USDT.";
+        }
+
+        $db       = \Config\Database::connect();
+        $contract = $db->table('contracts')->where('id', $contractId)->get()->getRow();
+        if (!$contract) {
+            return 'Operação não encontrada.';
+        }
+
+        $unlinked = $allocationModel->getUnlinkedDelivered('contract', (int)$contractId, (float)$contract->delivered_usdt);
+        if ($usdtAmount > $unlinked + 0.001) {
+            return 'A operação possui apenas ' . number_format($unlinked, 2, '.', ',') . ' USDT entregue sem lote vinculado.';
+        }
+
+        return null;
     }
 
     public function cancelAllocation(int $id)
@@ -260,6 +308,8 @@ class LotsController extends BaseController
         $supplier       = trim($this->request->getPost('supplier'));
         $deliveryType   = trim($this->request->getPost('delivery_type') ?? '');
         $purchaseHash   = trim($this->request->getPost('purchase_hash') ?? '');
+        $retroactive    = (bool)$this->request->getPost('retroactive');
+        $adminId        = session()->get('user_id');
 
         $validationError = match(true) {
             !$contractId || $usdtAmount <= 0 || $conversionRate <= 0 || empty($supplier)
@@ -278,6 +328,13 @@ class LotsController extends BaseController
             return $this->response->setJSON(['success' => false, 'message' => 'Contrato não encontrado.']);
         }
 
+        if ($retroactive) {
+            $unlinked = $allocationModel->getUnlinkedDelivered('contract', $contractId, (float)$contract->delivered_usdt);
+            if ($usdtAmount > $unlinked + 0.001) {
+                return $this->response->setJSON(['success' => false, 'message' => 'A operação possui apenas ' . number_format($unlinked, 2, '.', ',') . ' USDT entregue sem lote vinculado.']);
+            }
+        }
+
         $autoTotal    = round($usdtAmount * $conversionRate, 2);
         $isOverridden = abs($totalBrl - $autoTotal) > 0.01;
         $finalBrl     = $totalBrl > 0 ? $totalBrl : $autoTotal;
@@ -291,7 +348,7 @@ class LotsController extends BaseController
             'total_brl'            => $finalBrl,
             'total_brl_overridden' => $isOverridden ? 1 : 0,
             'status'               => 'active',
-            'created_by'           => session()->get('user_id'),
+            'created_by'           => $adminId,
         ]);
 
         $logModel->record('lot.created', 'lot', $lotId, [
@@ -303,13 +360,28 @@ class LotsController extends BaseController
             'contract_id'     => $contractId,
         ]);
 
-        $allocationId = $allocationModel->insert([
-            'lot_id'       => $lotId,
-            'contract_id'  => $contractId,
-            'usdt_amount'  => $usdtAmount,
-            'status'       => 'reserved',
-            'allocated_by' => session()->get('user_id'),
-        ]);
+        if ($retroactive) {
+            $revenuePerUsdt = $allocationModel->getRevenuePerUsdt('contract', $contractId);
+            $profitBrl      = round(($revenuePerUsdt - $conversionRate) * $usdtAmount, 2);
+
+            $allocationId = $allocationModel->insert([
+                'lot_id'       => $lotId,
+                'contract_id'  => $contractId,
+                'usdt_amount'  => $usdtAmount,
+                'status'       => 'delivered',
+                'profit_brl'   => $profitBrl,
+                'allocated_by' => $adminId,
+                'delivered_by' => $adminId,
+            ]);
+        } else {
+            $allocationId = $allocationModel->insert([
+                'lot_id'       => $lotId,
+                'contract_id'  => $contractId,
+                'usdt_amount'  => $usdtAmount,
+                'status'       => 'reserved',
+                'allocated_by' => $adminId,
+            ]);
+        }
 
         $lotModel->recalculateTotals($lotId);
 
@@ -319,6 +391,7 @@ class LotsController extends BaseController
             'entity_id'     => $contractId,
             'usdt_amount'   => $usdtAmount,
             'quick_buy'     => true,
+            'retroactive'   => $retroactive,
         ]);
 
         return $this->response->setJSON(['success' => true, 'lot_id' => $lotId]);
