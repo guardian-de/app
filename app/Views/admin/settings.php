@@ -67,17 +67,23 @@
                 </div>
             </div>
             
-            <!-- Permitir operação fora do horário e mostrar aviso -->
+            <!-- Mensagens de Bloqueio de Compra -->
             <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; gap: 15px;">
-                <label style="display: flex; align-items: center; gap: 10px; color: white; cursor: pointer; font-size: 14px;">
-                    <input type="hidden" name="business_hours_allow_outside" value="0">
-                    <input type="checkbox" name="business_hours_allow_outside" value="1" <?= $allow_outside === '1' ? 'checked' : '' ?> style="accent-color: #3b82f6; width: 18px; height: 18px;">
-                    <span>🔓 <strong>Permitir operações fora do horário de funcionamento</strong></span>
-                </label>
+                <h4 style="font-size: 14px; color: #f87171; font-weight: 600; margin: 0;">🚫 Mensagens de Bloqueio de Compra (Fora do Horário)</h4>
+                
                 <div class="form-group" style="display: flex; flex-direction: column; gap: 8px;">
-                    <label style="display: block; color: #94a3b8; font-size: 12px; font-weight: 600;">Mensagem de Alerta ao Usuário (Fora do Horário)</label>
-                    <textarea name="business_hours_outside_message" rows="3" style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none; font-size: 14px; font-family: inherit; resize: vertical;"><?= esc($outside_message) ?></textarea>
-                    <p style="color: #64748b; font-size: 11px; margin: 0;">Se ativado, as transações serão permitidas normalmente mesmo fora do expediente, mas o usuário receberá este aviso informativo no painel.</p>
+                    <label style="display: block; color: #94a3b8; font-size: 12px; font-weight: 600;">Bloqueio D+0</label>
+                    <input type="text" name="business_hours_d0_block_message" value="<?= esc($d0_block_message) ?>" required style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none; font-size: 14px;">
+                </div>
+                
+                <div class="form-group" style="display: flex; flex-direction: column; gap: 8px;">
+                    <label style="display: block; color: #94a3b8; font-size: 12px; font-weight: 600;">Bloqueio D+1</label>
+                    <input type="text" name="business_hours_d1_block_message" value="<?= esc($d1_block_message) ?>" required style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none; font-size: 14px;">
+                </div>
+                
+                <div class="form-group" style="display: flex; flex-direction: column; gap: 8px;">
+                    <label style="display: block; color: #94a3b8; font-size: 12px; font-weight: 600;">Bloqueio D+2</label>
+                    <input type="text" name="business_hours_d2_block_message" value="<?= esc($d2_block_message) ?>" required style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none; font-size: 14px;">
                 </div>
             </div>
         </div>

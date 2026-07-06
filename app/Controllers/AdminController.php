@@ -1035,8 +1035,9 @@ class AdminController extends BaseController
         $data['quotation_flow'] = $settingsModel->getConfig('quotation_flow', 'direct');
         $data['operator_whatsapp'] = $settingsModel->getConfig('operator_whatsapp', '');
         $data['admin_alert_sound'] = $settingsModel->getConfig('admin_alert_sound', 'chime_premium');
-        $data['allow_outside'] = $settingsModel->getConfig('business_hours_allow_outside', '0');
-        $data['outside_message'] = $settingsModel->getConfig('business_hours_outside_message', 'Atenção: Sua operação foi registrada fora do horário de funcionamento e poderá ser processada no próximo dia útil.');
+        $data['d0_block_message'] = $settingsModel->getConfig('business_hours_d0_block_message', 'Transações em tempo real (D+0) fora do horário de funcionamento.');
+        $data['d1_block_message'] = $settingsModel->getConfig('business_hours_d1_block_message', 'Transações D+1 fora do horário de funcionamento.');
+        $data['d2_block_message'] = $settingsModel->getConfig('business_hours_d2_block_message', 'Transações D+2 fora do horário de funcionamento.');
         
         return view('admin/settings', $data);
     }
@@ -1053,8 +1054,9 @@ class AdminController extends BaseController
         $quotationFlow = $this->request->getPost('quotation_flow');
         $operatorWhatsapp = $this->request->getPost('operator_whatsapp');
         $adminAlertSound = $this->request->getPost('admin_alert_sound');
-        $allowOutside = $this->request->getPost('business_hours_allow_outside');
-        $outsideMessage = $this->request->getPost('business_hours_outside_message');
+        $d0BlockMsg = $this->request->getPost('business_hours_d0_block_message');
+        $d1BlockMsg = $this->request->getPost('business_hours_d1_block_message');
+        $d2BlockMsg = $this->request->getPost('business_hours_d2_block_message');
         
         if ($start) $settingsModel->setConfig('business_hours_start', $start);
         if ($end) $settingsModel->setConfig('business_hours_end', $end);
@@ -1065,8 +1067,9 @@ class AdminController extends BaseController
         if ($quotationFlow) $settingsModel->setConfig('quotation_flow', $quotationFlow);
         if ($adminAlertSound) $settingsModel->setConfig('admin_alert_sound', $adminAlertSound);
         $settingsModel->setConfig('operator_whatsapp', $operatorWhatsapp ?? '');
-        $settingsModel->setConfig('business_hours_allow_outside', $allowOutside ?? '0');
-        $settingsModel->setConfig('business_hours_outside_message', $outsideMessage ?? '');
+        $settingsModel->setConfig('business_hours_d0_block_message', $d0BlockMsg ?? '');
+        $settingsModel->setConfig('business_hours_d1_block_message', $d1BlockMsg ?? '');
+        $settingsModel->setConfig('business_hours_d2_block_message', $d2BlockMsg ?? '');
         
         return redirect()->back()->with('success', 'Configurações atualizadas com sucesso!');
     }

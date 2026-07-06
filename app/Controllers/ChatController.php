@@ -458,37 +458,27 @@ class ChatController extends BaseController
         $settingsModel = new \App\Models\SettingsModel();
         $now = $nowObj->format('H:i');
 
-        $allowOutside = $settingsModel->getConfig('business_hours_allow_outside', '0') === '1';
-        $outsideHours = false;
-        $outsideMsg = "";
-
         // Validação de horário por tipo de entrega
         if ($deliveryType === 'D+0') {
             $start = $settingsModel->getConfig('business_hours_start', '08:00');
             $end = $settingsModel->getConfig('business_hours_end', '16:30');
             if ($now < $start || $now > $end) {
-                $outsideHours = true;
-                $outsideMsg = $userLang == 'zh-CN' ? "实时交易 (D+0) 非营业时间 ($start - $end)" : "Transações em tempo real (D+0) fora do horário de funcionamento ($start às $end).";
+                $msg = $settingsModel->getConfig('business_hours_d0_block_message', 'Transações em tempo real (D+0) fora do horário de funcionamento.');
+                return $this->response->setJSON(['error' => $msg])->setStatusCode(403);
             }
         } elseif ($deliveryType === 'D+1') {
             $start = $settingsModel->getConfig('business_hours_d1_start', '08:00');
             $end = $settingsModel->getConfig('business_hours_d1_end', '18:00');
             if ($now < $start || $now > $end) {
-                $outsideHours = true;
-                $outsideMsg = $userLang == 'zh-CN' ? "D+1 交易 non-business hours ($start - $end)" : "Transações D+1 fora do horário de funcionamento ($start às $end).";
+                $msg = $settingsModel->getConfig('business_hours_d1_block_message', 'Transações D+1 fora do horário de funcionamento.');
+                return $this->response->setJSON(['error' => $msg])->setStatusCode(403);
             }
         } elseif ($deliveryType === 'D+2') {
             $start = $settingsModel->getConfig('business_hours_d2_start', '08:00');
             $end = $settingsModel->getConfig('business_hours_d2_end', '18:00');
             if ($now < $start || $now > $end) {
-                $outsideHours = true;
-                $outsideMsg = $userLang == 'zh-CN' ? "D+2 交易 non-business hours ($start - $end)" : "Transações D+2 fora do horário de funcionamento ($start às $end).";
-            }
-        }
-
-        if ($outsideHours) {
-            if (!$allowOutside) {
-                return $this->response->setJSON(['error' => $outsideMsg])->setStatusCode(403);
+                $msg = $settingsModel->getConfig('business_hours_d2_block_message', 'Transações D+2 fora do horário de funcionamento.');
+                return $this->response->setJSON(['error' => $msg])->setStatusCode(403);
             }
         }
         
@@ -630,15 +620,9 @@ class ChatController extends BaseController
             }
         }
 
-        $warning = null;
-        if ($outsideHours && $allowOutside) {
-            $warning = $settingsModel->getConfig('business_hours_outside_message', 'Operação registrada fora do horário de funcionamento.');
-        }
-
         return $this->response->setJSON([
             'status'         => 'success',
-            'transaction_id' => $transactionId,
-            'warning'        => $warning
+            'transaction_id' => $transactionId
         ]);
     }
 
