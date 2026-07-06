@@ -6,10 +6,13 @@ use CodeIgniter\Router\RouteCollection;
  * @var RouteCollection $routes
  */
 $routes->get('/', 'Home::index');
+$routes->get('privacy', 'Home::privacy', ['as' => 'privacy']);
+$routes->get('terms', 'Home::terms', ['as' => 'terms']);
 
 $routes->get('dev', function() {
     return 'Hello World';
 });
+
 
 
 // Auth Routes

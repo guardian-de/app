@@ -525,13 +525,13 @@
                     <div class="footer-links">
                         <a href="#">Central de Ajuda</a>
                         <a href="#">Contato</a>
-                        <a href="#">Termos de Uso</a>
+                        <a href="<?= url_to('terms') ?>">Termos de Uso</a>
                     </div>
                 </div>
                 <div class="footer-col">
                     <h4>Legal</h4>
                     <div class="footer-links">
-                        <a href="#">Privacidade</a>
+                        <a href="<?= url_to('privacy') ?>">Privacidade</a>
                         <a href="#">Compliance</a>
                         <a href="#">Licenças</a>
                     </div>
