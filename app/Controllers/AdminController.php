@@ -9,6 +9,7 @@ class AdminController extends BaseController
 {
     public function index()
     {
+        if ($response = $this->checkPermission('usuarios')) return $response;
         $db = \Config\Database::connect();
         try { $db->query("CREATE TABLE IF NOT EXISTS `suppliers` (`id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, `name` VARCHAR(150) NOT NULL, `enabled` TINYINT(1) NOT NULL DEFAULT 1, `created_at` DATETIME NULL, `updated_at` DATETIME NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"); } catch (\Throwable $e) {}
         try { $db->query("CREATE TABLE IF NOT EXISTS `usdt_lots` (`id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, `supplier` VARCHAR(150) NOT NULL, `purchase_hash` VARCHAR(255) NULL, `delivery_type` VARCHAR(10) NULL, `usdt_amount` DECIMAL(18,4) NOT NULL, `conversion_rate` DECIMAL(18,6) NOT NULL, `total_brl` DECIMAL(18,2) NOT NULL, `total_brl_overridden` TINYINT(1) NOT NULL DEFAULT 0, `usdt_reserved` DECIMAL(18,4) NOT NULL DEFAULT 0, `usdt_delivered` DECIMAL(18,4) NOT NULL DEFAULT 0, `profit_brl` DECIMAL(18,2) NOT NULL DEFAULT 0, `status` ENUM('active','depleted','cancelled') NOT NULL DEFAULT 'active', `created_by` INT UNSIGNED NOT NULL, `created_at` DATETIME NULL, `updated_at` DATETIME NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"); } catch (\Throwable $e) {}
@@ -32,23 +33,29 @@ class AdminController extends BaseController
 
     public function create()
     {
+        if ($response = $this->checkPermission('usuarios')) return $response;
         return view('admin/users/create');
     }
 
     public function store()
     {
+        if ($response = $this->checkPermission('usuarios')) return $response;
         $userModel = new UserModel();
         
+        $role = $this->request->getPost('role') ?: 'user';
+        $permissions = $this->request->getPost('permissions');
+
         $data = [
             'login'                  => $this->request->getPost('login'),
             'password'               => $this->request->getPost('password'),
-            'fee_percent'            => $this->request->getPost('fee_percent') ?: 10.00,
-            'usdt_wallet'            => $this->request->getPost('usdt_wallet'),
-            'score'                  => $this->request->getPost('score') ?: 0.00,
-            'default_contract_type'  => $this->request->getPost('default_contract_type') ?: 'd+1',
-            'daily_interest_rate'    => $this->request->getPost('daily_interest_rate') ?: 0.00,
-            'allowed_delivery_types' => $this->request->getPost('allowed_delivery_types') ?: 'all',
-            'role'                   => $this->request->getPost('role') ?: 'user',
+            'fee_percent'            => $role === 'user' ? ($this->request->getPost('fee_percent') ?: 10.00) : 0.00,
+            'usdt_wallet'            => $role === 'user' ? $this->request->getPost('usdt_wallet') : null,
+            'score'                  => $role === 'user' ? ($this->request->getPost('score') ?: 0.00) : 0.00,
+            'default_contract_type'  => $role === 'user' ? ($this->request->getPost('default_contract_type') ?: 'd+1') : 'd+1',
+            'daily_interest_rate'    => $role === 'user' ? ($this->request->getPost('daily_interest_rate') ?: 0.00) : 0.00,
+            'allowed_delivery_types' => $role === 'user' ? ($this->request->getPost('allowed_delivery_types') ?: 'all') : 'all',
+            'role'                   => $role,
+            'permissions'            => ($role !== 'user' && !empty($permissions)) ? json_encode($permissions) : null,
         ];
 
         if (!$userModel->save($data)) {
@@ -60,6 +67,7 @@ class AdminController extends BaseController
 
     public function edit($id)
     {
+        if ($response = $this->checkPermission('usuarios')) return $response;
         $userModel = new UserModel();
         $data['user'] = $userModel->find($id);
         
@@ -72,17 +80,22 @@ class AdminController extends BaseController
 
     public function update($id)
     {
+        if ($response = $this->checkPermission('usuarios')) return $response;
         $userModel = new UserModel();
         
+        $role = $this->request->getPost('role') ?: 'user';
+        $permissions = $this->request->getPost('permissions');
+
         $data = [
             'login'                  => $this->request->getPost('login'),
-            'fee_percent'            => $this->request->getPost('fee_percent'),
-            'usdt_wallet'            => $this->request->getPost('usdt_wallet'),
-            'score'                  => $this->request->getPost('score'),
-            'default_contract_type'  => $this->request->getPost('default_contract_type'),
-            'daily_interest_rate'    => $this->request->getPost('daily_interest_rate'),
-            'allowed_delivery_types' => $this->request->getPost('allowed_delivery_types'),
-            'role'                   => $this->request->getPost('role') ?: 'user',
+            'fee_percent'            => $role === 'user' ? ($this->request->getPost('fee_percent') ?: 10.00) : 0.00,
+            'usdt_wallet'            => $role === 'user' ? $this->request->getPost('usdt_wallet') : null,
+            'score'                  => $role === 'user' ? ($this->request->getPost('score') ?: 0.00) : 0.00,
+            'default_contract_type'  => $role === 'user' ? ($this->request->getPost('default_contract_type') ?: 'd+1') : 'd+1',
+            'daily_interest_rate'    => $role === 'user' ? ($this->request->getPost('daily_interest_rate') ?: 0.00) : 0.00,
+            'allowed_delivery_types' => $role === 'user' ? ($this->request->getPost('allowed_delivery_types') ?: 'all') : 'all',
+            'role'                   => $role,
+            'permissions'            => ($role !== 'user' && !empty($permissions)) ? json_encode($permissions) : null,
         ];
 
         // Regras de validação customizadas para UPDATE
@@ -107,6 +120,7 @@ class AdminController extends BaseController
 
     public function transactions()
     {
+        if ($response = $this->checkPermission('transacoes')) return $response;
         $financialModel = new \App\Models\FinancialStatementModel();
         
         $transactions = $financialModel->select('financial_statements.*, users.login as user_name, contracts.id as contract_id, contracts.type as contract_type')
@@ -120,6 +134,7 @@ class AdminController extends BaseController
 
     public function updateTransactionStatus($id)
     {
+        if ($response = $this->checkPermission('transacoes')) return $response;
         $transactionModel = new \App\Models\TransactionModel();
         $status = $this->request->getPost('status');
         $amountBrlFulfilled = $this->request->getPost('amount_brl_fulfilled'); 
@@ -495,6 +510,7 @@ class AdminController extends BaseController
 
     public function contracts()
     {
+        if ($response = $this->checkPermission('enviar_usdt')) return $response;
         $contractModel = new \App\Models\ContractModel();
         $settingsModel = new \App\Models\SettingsModel();
 
@@ -605,6 +621,7 @@ class AdminController extends BaseController
 
     public function deliverUsdt($id)
     {
+        if ($response = $this->checkPermission('enviar_usdt')) return $response;
         $contractModel = new \App\Models\ContractModel();
         $amountUsdt = (float)$this->request->getPost('amount_usdt');
         $notes = $this->request->getPost('notes');
@@ -752,6 +769,7 @@ class AdminController extends BaseController
      */
     public function deliverUsdtBulk(int $userId)
     {
+        if ($response = $this->checkPermission('enviar_usdt')) return $response;
         $amountUsdt = round((float)$this->request->getPost('amount_usdt'), 2);
         $notes      = $this->request->getPost('notes');
         $adminId    = session()->get('user_id');
@@ -1025,6 +1043,7 @@ class AdminController extends BaseController
 
     public function settings()
     {
+        if ($response = $this->checkPermission('settings')) return $response;
         $settingsModel = new \App\Models\SettingsModel();
         $data['start'] = $settingsModel->getConfig('business_hours_start', '08:00');
         $data['end'] = $settingsModel->getConfig('business_hours_end', '16:30');
@@ -1041,6 +1060,7 @@ class AdminController extends BaseController
 
     public function updateSettings()
     {
+        if ($response = $this->checkPermission('settings')) return $response;
         $settingsModel = new \App\Models\SettingsModel();
         $start = $this->request->getPost('business_hours_start');
         $end = $this->request->getPost('business_hours_end');
@@ -1476,9 +1496,7 @@ class AdminController extends BaseController
 
     public function userActivity(int $id)
     {
-        if (session()->get('user_role') !== 'admin') {
-            return redirect()->to('/admin/users')->with('error', 'Acesso restrito a administradores.');
-        }
+        if ($response = $this->checkPermission('usuarios')) return $response;
 
         $userModel = new \App\Models\UserModel();
         $operator  = $userModel->find($id);

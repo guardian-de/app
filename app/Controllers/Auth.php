@@ -121,6 +121,7 @@ class Auth extends BaseController
                     'user_lang'  => $user['language'],
                     'user_wallet'=> $user['usdt_wallet'],
                     'user_role'  => $user['role'],
+                    'user_permissions' => !empty($user['permissions']) ? json_decode($user['permissions'], true) : [],
                     'score' => $user['score'],
                     'isLoggedIn' => true,
                 ];

@@ -11,6 +11,7 @@ class LotsController extends BaseController
 {
     public function index()
     {
+        if ($response = $this->checkPermission('lots')) return $response;
         $lotModel      = new UsdtLotModel();
         $supplierModel = new SupplierModel();
 
@@ -58,6 +59,7 @@ class LotsController extends BaseController
 
     public function create()
     {
+        if ($response = $this->checkPermission('lots')) return $response;
         $supplierModel = new SupplierModel();
         return view('admin/lots/new', [
             'suppliers'   => $supplierModel->getEnabled(),
@@ -67,6 +69,7 @@ class LotsController extends BaseController
 
     public function store()
     {
+        if ($response = $this->checkPermission('lots')) return $response;
         $lotModel  = new UsdtLotModel();
         $logModel  = new ActivityLogModel();
 
@@ -106,6 +109,7 @@ class LotsController extends BaseController
 
     public function show(int $id)
     {
+        if ($response = $this->checkPermission('lots')) return $response;
         $lotModel = new UsdtLotModel();
         $logModel = new ActivityLogModel();
 
@@ -149,6 +153,7 @@ class LotsController extends BaseController
 
     public function allocate()
     {
+        if ($response = $this->checkPermission('lots')) return $response;
         $allocationModel = new LotAllocationModel();
         $lotModel        = new UsdtLotModel();
         $logModel        = new ActivityLogModel();
@@ -271,6 +276,7 @@ class LotsController extends BaseController
 
     public function cancelAllocation(int $id)
     {
+        if ($response = $this->checkPermission('lots')) return $response;
         $allocationModel = new LotAllocationModel();
         $lotModel        = new UsdtLotModel();
         $logModel        = new ActivityLogModel();
@@ -297,6 +303,7 @@ class LotsController extends BaseController
 
     public function quickBuy()
     {
+        if ($response = $this->checkPermission('lots')) return $response;
         $lotModel        = new UsdtLotModel();
         $allocationModel = new LotAllocationModel();
         $logModel        = new ActivityLogModel();
