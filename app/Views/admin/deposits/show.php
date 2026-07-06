@@ -96,16 +96,20 @@
         <!-- Comprovante -->
         <div style="margin-top: 24px;">
             <p style="font-size: 12px; color: #94a3b8; text-transform: uppercase; margin-bottom: 12px;">Comprovante</p>
-            <?php $ext = strtolower(pathinfo($deposit['proof_file'], PATHINFO_EXTENSION)); ?>
-            <?php if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])): ?>
-                <a href="<?= base_url($deposit['proof_file']) ?>" target="_blank">
-                    <img src="<?= base_url($deposit['proof_file']) ?>" alt="Comprovante" style="max-width: 100%; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); cursor: zoom-in;">
-                </a>
+            <?php if (empty($deposit['proof_file'])): ?>
+                <p style="color: #64748b; font-size: 13px;">Depósito lançado manualmente pelo admin — sem comprovante.</p>
             <?php else: ?>
-                <a href="<?= base_url($deposit['proof_file']) ?>" target="_blank" class="btn btn-primary" style="display: inline-flex; gap: 8px; align-items: center;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                    Abrir PDF
-                </a>
+                <?php $ext = strtolower(pathinfo($deposit['proof_file'], PATHINFO_EXTENSION)); ?>
+                <?php if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])): ?>
+                    <a href="<?= base_url($deposit['proof_file']) ?>" target="_blank">
+                        <img src="<?= base_url($deposit['proof_file']) ?>" alt="Comprovante" style="max-width: 100%; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); cursor: zoom-in;">
+                    </a>
+                <?php else: ?>
+                    <a href="<?= base_url($deposit['proof_file']) ?>" target="_blank" class="btn btn-primary" style="display: inline-flex; gap: 8px; align-items: center;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        Abrir PDF
+                    </a>
+                <?php endif; ?>
             <?php endif; ?>
         </div>
     </div>

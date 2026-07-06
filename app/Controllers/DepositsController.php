@@ -157,39 +157,8 @@ class DepositsController extends BaseController
             return redirect()->back()->with('error', 'Depósito inválido ou já processado.');
         }
 
-        $financialModel = new FinancialStatementModel();
-        $financialModel->insert([
-            'user_id'          => $deposit['user_id'],
-            'admin_id'         => $operatorId,
-            'operation_type'   => 'deposit',
-            'nature'           => 'C',
-            'amount'           => $deposit['amount'],
-            'description'      => 'Depósito confirmado #' . $id,
-            'transaction_date' => $now,
-        ]);
-
-        // Auto-paga contratos abertos (FIFO). O saldo é derivado do ledger,
-        // então apenas atualizamos paid_amount dos contratos sem criar novos lançamentos.
-        $contractModel = new \App\Models\ContractModel();
-        $openContracts = $db->table('contracts')
-            ->where('user_id', $deposit['user_id'])
-            ->whereIn('status', ['pending', 'partially_paid', 'overdue'])
-            ->orderBy('created_at', 'ASC')
-            ->get()
-            ->getResultArray();
-
-        $toDistribute = (float)$deposit['amount'];
-        foreach ($openContracts as $contract) {
-            if ($toDistribute <= 0) { break; }
-
-            $remaining = (float)$contract['remaining_balance'];
-            if ($remaining <= 0) { continue; }
-
-            $payment = min($toDistribute, $remaining);
-            $contractModel->registerPayment($contract['id'], $payment);
-
-            $toDistribute -= $payment;
-        }
+        // Lança o crédito no extrato e distribui entre contratos em aberto (FIFO).
+        $depositModel->applyAcceptedDeposit($deposit, $operatorId, 'Depósito confirmado #' . $id);
 
         (new ActivityLogModel())->record('deposit.accepted', 'deposit', (int)$id, [
             'amount' => $deposit['amount'],
