@@ -1452,7 +1452,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             initChart();
             initContractsBadge();
 
-            setInterval(updateLiveRate, 500); // 0.5s interval for fast real-time updates
+            setInterval(updateLiveRate, 1000); // 1s interval for fast real-time updates
             setInterval(updateDebtBalance, 30000);
 
         let debtsData = null;
