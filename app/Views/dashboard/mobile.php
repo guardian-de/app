@@ -948,6 +948,22 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                         const brl = usdt * currentExchangeRate;
                         document.getElementById('brl-result').textContent = `R$ ${brl.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                     }
+
+                    if (window.mobileChart) {
+                        const lastVal = window.mobileChart.data.datasets[0].data.slice(-1)[0];
+                        if (lastVal !== currentExchangeRate) {
+                            window.mobileChart.data.labels.push(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+                            window.mobileChart.data.datasets[0].data.push(currentExchangeRate);
+                            if (window.mobileChart.data.labels.length > 100) {
+                                window.mobileChart.data.labels.shift();
+                                window.mobileChart.data.datasets[0].data.shift();
+                            }
+                            const values = window.mobileChart.data.datasets[0].data;
+                            window.mobileChart.options.scales.y.min = Math.min(...values) * 0.9995;
+                            window.mobileChart.options.scales.y.max = Math.max(...values) * 1.0005;
+                            window.mobileChart.update('none');
+                        }
+                    }
                 } catch (e) { }
             }
 

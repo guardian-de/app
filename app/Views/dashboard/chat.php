@@ -674,9 +674,9 @@
                         // Opcional: Atualizar gráfico se houver mudança significativa
                         if (window.myChart) {
                             const lastVal = window.myChart.data.datasets[0].data.slice(-1)[0];
-                            if (lastVal !== data.base_rate) {
+                            if (lastVal !== currentExchangeRate) {
                                 window.myChart.data.labels.push(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-                                window.myChart.data.datasets[0].data.push(data.base_rate);
+                                window.myChart.data.datasets[0].data.push(currentExchangeRate);
                                 if (window.myChart.data.labels.length > 100) {
                                     window.myChart.data.labels.shift();
                                     window.myChart.data.datasets[0].data.shift();

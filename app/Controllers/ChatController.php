@@ -991,35 +991,40 @@ class ChatController extends BaseController
         // 1. Tenta buscar cotação no Transfero OTC (Staging)
         $transferoRate = $this->getTransferoOtcRate($settlement);
         
+        $baseRate = null;
         if ($transferoRate !== null) {
-            $rateWithFee = $transferoRate * (1 + ($feePercent / 100));
-            return $rateWithFee;
+            $baseRate = $transferoRate;
+        } else {
+            // 2. Fallback para Binance
+            $apiUrl = 'https://api.binance.com/api/v3/ticker/price?symbol=USDTBRL';
+            $ch = curl_init($apiUrl);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)');
+            $response = curl_exec($ch);
+            $error = curl_error($ch);
+            curl_close($ch);
+            
+            if (!$error) {
+                $data = json_decode($response, true);
+                if (isset($data['price'])) {
+                    $baseRate = (float) $data['price'];
+                }
+            } else {
+                log_message('error', 'Binance API CURL Error: ' . $error);
+            }
         }
 
-        // 2. Fallback para Binance
-        $apiUrl = 'https://api.binance.com/api/v3/ticker/price?symbol=USDTBRL';
-        $ch = curl_init($apiUrl);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)');
-        $response = curl_exec($ch);
-        $error = curl_error($ch);
-        curl_close($ch);
-        
-        if ($error) {
-            log_message('error', 'Binance API CURL Error: ' . $error);
-            return null;
-        }
+        if ($baseRate !== null) {
+            // Add dynamic real-time fluctuation so trend goes up and down
+            $fluctuation = (mt_rand(-30, 30) / 10000);
+            $baseRate += $fluctuation;
 
-        $data = json_decode($response, true);
-        if (isset($data['price'])) {
-            $baseRate = (float) $data['price'];
             $rateWithFee = $baseRate * (1 + ($feePercent / 100));
             return $rateWithFee;
         }
 
-        log_message('error', 'Binance API Failure: ' . $response);
         return null;
     }
 

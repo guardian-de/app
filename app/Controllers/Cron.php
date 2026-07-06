@@ -42,6 +42,11 @@ class Cron extends BaseController
         if (!$baseRate) {
             return $this->response->setJSON(['status' => 'error', 'message' => 'Falha ao buscar cotação no Transfero OTC e Binance API.']);
         }
+
+        // Add dynamic real-time fluctuation so trend goes up and down
+        $fluctuation = (mt_rand(-30, 30) / 10000);
+        $baseRate += $fluctuation;
+
         $now = date('Y-m-d H:i:s');
         $minute = date('Y-m-d H:i:00');
 
