@@ -1122,6 +1122,10 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 }
                 btn.style.opacity = '1';
                 btn.disabled = false;
+                btn.style.cursor = 'pointer';
+                btn.style.pointerEvents = 'auto';
+
+                checkBusinessHours();
 
                 const input = document.getElementById('usdt-amount');
                 input.value = amount > 0 ? amount : '';
@@ -1138,6 +1142,56 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 document.getElementById('brl-result').textContent = `R$ ${brl.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
             };
 
+            const businessHoursConfig = <?= json_encode($business_hours_config) ?>;
+
+            function getSaoPauloTime() {
+                const d = new Date();
+                const options = { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', hour12: false };
+                return d.toLocaleTimeString('pt-BR', options);
+            }
+
+            function isOutsideBusinessHours(deliveryType) {
+                const config = businessHoursConfig[deliveryType];
+                if (!config) return false;
+                const now = getSaoPauloTime();
+                return now < config.start || now > config.end;
+            }
+
+            function checkBusinessHours() {
+                const config = businessHoursConfig[selectedDeliveryType];
+                const confirmBtn = document.getElementById('confirm-buy-btn');
+                
+                let alertDiv = document.getElementById('modal-business-hours-alert');
+                if (alertDiv) alertDiv.remove();
+                
+                if (isOutsideBusinessHours(selectedDeliveryType)) {
+                    if (!config.allow_outside) {
+                        confirmBtn.disabled = true;
+                        confirmBtn.style.opacity = '0.5';
+                        confirmBtn.style.cursor = 'not-allowed';
+                        confirmBtn.style.pointerEvents = 'none';
+                        
+                        alertDiv = document.createElement('div');
+                        alertDiv.id = 'modal-business-hours-alert';
+                        alertDiv.style.cssText = 'margin-bottom: 20px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25); color: #f87171; padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 600; text-align: center; line-height: 1.4;';
+                        alertDiv.innerHTML = `🚫 ${config.block_message}`;
+                        
+                        const formGroupDelivery = document.querySelector('.delivery-selector').closest('.form-group');
+                        formGroupDelivery.parentNode.insertBefore(alertDiv, formGroupDelivery.nextSibling);
+                    } else {
+                        confirmBtn.disabled = false;
+                        confirmBtn.style.opacity = '1';
+                        confirmBtn.style.cursor = 'pointer';
+                        confirmBtn.style.pointerEvents = 'auto';
+                    }
+                } else {
+                    confirmBtn.disabled = false;
+                    confirmBtn.style.opacity = '1';
+                    confirmBtn.style.cursor = 'pointer';
+                    confirmBtn.style.pointerEvents = 'auto';
+                }
+            }
+
             document.querySelectorAll('.delivery-option').forEach(opt => {
                 opt.onclick = () => {
                     document.querySelectorAll('.delivery-option').forEach(o => o.classList.remove('active'));
@@ -1145,6 +1199,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                     selectedDeliveryType = opt.dataset.value;
                     document.getElementById('conversion-info').style.display = 'block';
                     document.getElementById('quote-info').style.display = selectedDeliveryType === 'D+0' ? 'none' : 'block';
+                    checkBusinessHours();
                     updateLiveRate();
                 };
             });
