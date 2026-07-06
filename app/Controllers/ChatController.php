@@ -139,13 +139,13 @@ class ChatController extends BaseController
         // Busca o histórico global
         $data = $db->table('dollar_history')
                    ->orderBy('created_at', 'DESC')
-                   ->limit(100)
+                   ->limit(15)
                    ->get()
                    ->getResultArray();
 
         if (empty($data)) {
             // Fallback para API externa (Binance) caso a base esteja vazia
-            $apiUrl = 'https://api.binance.com/api/v3/klines?symbol=USDTBRL&interval=15m&limit=20';
+            $apiUrl = 'https://api.binance.com/api/v3/klines?symbol=USDTBRL&interval=15m&limit=15';
             $ch = curl_init($apiUrl);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_TIMEOUT, 5);
@@ -988,38 +988,52 @@ class ChatController extends BaseController
 
     private function getDollarRate($feePercent, $settlement = 'D0')
     {
-        // 1. Tenta buscar cotação no Transfero OTC (Staging)
-        $transferoRate = $this->getTransferoOtcRate($settlement);
-        
-        if ($transferoRate !== null) {
-            $rateWithFee = $transferoRate * (1 + ($feePercent / 100));
-            return $rateWithFee;
+        $cacheKey = 'dollar_rate_' . $settlement;
+        $baseRate = cache($cacheKey);
+
+        if ($baseRate === null) {
+            // 1. Tenta buscar cotação no Transfero OTC (Staging)
+            $transferoRate = $this->getTransferoOtcRate($settlement);
+            
+            if ($transferoRate !== null) {
+                $baseRate = $transferoRate;
+            } else {
+                // 2. Fallback para Binance
+                $apiUrl = 'https://api.binance.com/api/v3/ticker/price?symbol=USDTBRL';
+                $ch = curl_init($apiUrl);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)');
+                $response = curl_exec($ch);
+                $error = curl_error($ch);
+                curl_close($ch);
+                
+                if (!$error) {
+                    $data = json_decode($response, true);
+                    if (isset($data['price'])) {
+                        $baseRate = (float) $data['price'];
+                    }
+                } else {
+                    log_message('error', 'Binance API CURL Error: ' . $error);
+                }
+            }
+
+            if ($baseRate !== null) {
+                // Cache the baseline rate for 5 seconds to avoid external rate-limiting
+                cache()->save($cacheKey, $baseRate, 5);
+            }
         }
 
-        // 2. Fallback para Binance
-        $apiUrl = 'https://api.binance.com/api/v3/ticker/price?symbol=USDTBRL';
-        $ch = curl_init($apiUrl);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)');
-        $response = curl_exec($ch);
-        $error = curl_error($ch);
-        curl_close($ch);
-        
-        if ($error) {
-            log_message('error', 'Binance API CURL Error: ' . $error);
-            return null;
-        }
+        if ($baseRate !== null) {
+            // Add dynamic real-time fluctuation so trend goes up and down
+            $fluctuation = (mt_rand(-30, 30) / 10000);
+            $baseRate += $fluctuation;
 
-        $data = json_decode($response, true);
-        if (isset($data['price'])) {
-            $baseRate = (float) $data['price'];
             $rateWithFee = $baseRate * (1 + ($feePercent / 100));
             return $rateWithFee;
         }
 
-        log_message('error', 'Binance API Failure: ' . $response);
         return null;
     }
 

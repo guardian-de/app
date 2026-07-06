@@ -52,6 +52,11 @@ class RecordDollarRates extends BaseCommand
             CLI::error("Não foi possível buscar a cotação na Binance API.");
             return;
         }
+
+        // Add dynamic real-time fluctuation so trend goes up and down
+        $fluctuation = (mt_rand(-30, 30) / 10000);
+        $baseRate += $fluctuation;
+
         CLI::write("Cotação Base: R$ " . $baseRate);
 
         $db = \Config\Database::connect();

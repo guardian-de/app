@@ -1,5 +1,5 @@
 <?php
-/** @var array $c @var array $history @var array|null $clientProof @var float $totalReservedUsdt @var float $usdtPending @var array $availableLots @var float $currentBaseRate @var array $suppliers @var array $contractAllocations */
+/** @var array $c @var array $history @var array|null $clientProof @var float $totalReservedUsdt @var float $usdtPending @var float $unlinkedDelivered @var array $availableLots @var float $currentBaseRate @var array $suppliers @var array $contractAllocations */
 ?>
 <?= $this->extend('layouts/admin_layout') ?>
 
@@ -96,7 +96,8 @@
             <!-- Título + botões na mesma linha -->
             <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px;">
                 <h3 style="color: #34d399; margin:0;">Registrar Envio de USDT</h3>
-                <?php if ($c['delivered_usdt'] < $c['total_amount']): ?>
+                <?php $canLinkLot = $c['delivered_usdt'] < $c['total_amount'] || $unlinkedDelivered > 0; ?>
+                <?php if ($canLinkLot): ?>
                 <div style="display:flex;gap:10px;">
                     <button onclick="openLotModal()"
                         style="padding:8px 16px;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.3);border-radius:10px;color:#60a5fa;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">
@@ -112,56 +113,58 @@
 
             <?php if ($c['delivered_usdt'] < $c['total_amount']): ?>
                 <?php if ($totalReservedUsdt <= 0): ?>
-                    <div style="padding:20px;border-radius:14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.25);display:flex;gap:14px;align-items:flex-start;margin-bottom:20px;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                        <div>
-                            <p style="font-weight:700;color:#f87171;font-size:14px;margin-bottom:4px;">Nenhum lote vinculado</p>
-                            <p style="font-size:13px;color:#94a3b8;line-height:1.5;">Vincule um lote de USDT a esta operação antes de registrar o envio. Use o botão <strong style="color:#60a5fa;">Vincular Lote</strong> acima.</p>
-                        </div>
+                    <div style="padding:14px 18px;border-radius:12px;background:rgba(251,191,36,0.07);border:1px solid rgba(251,191,36,0.25);margin-bottom:16px;font-size:13px;color:#fbbf24;display:flex;gap:10px;align-items:center;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        Nenhum lote reservado para esta operação. É possível registrar o envio mesmo assim, mas ele ficará sem lote associado.
                     </div>
-                <?php else: ?>
-                    <?php if ($totalReservedUsdt < $usdtPending): ?>
-                        <div style="padding:14px 18px;border-radius:12px;background:rgba(251,191,36,0.07);border:1px solid rgba(251,191,36,0.25);margin-bottom:16px;font-size:13px;color:#fbbf24;display:flex;gap:10px;align-items:center;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                            Apenas <strong style="margin:0 4px;"><?= number_format($totalReservedUsdt, 2, '.', ',') ?> USDT</strong> reservados em lotes. Você pode enviar no máximo esse valor agora.
-                        </div>
-                    <?php endif; ?>
-                    <div style="display:flex;gap:20px;padding:12px 16px;border-radius:12px;background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.2);margin-bottom:16px;font-size:13px;">
-                        <span style="color:#94a3b8;">Pago: <strong style="color:#4ade80;">R$ <?= number_format($c['paid_amount'], 2, ',', '.') ?></strong></span>
-                        <span style="color:#94a3b8;">A enviar: <strong style="color:<?= $usdtPending > 0 ? '#f87171' : '#34d399' ?>;"><?= number_format($usdtPending, 2, '.', ',') ?> USDT</strong></span>
+                <?php elseif ($totalReservedUsdt < $usdtPending): ?>
+                    <div style="padding:14px 18px;border-radius:12px;background:rgba(251,191,36,0.07);border:1px solid rgba(251,191,36,0.25);margin-bottom:16px;font-size:13px;color:#fbbf24;display:flex;gap:10px;align-items:center;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        Apenas <strong style="margin:0 4px;"><?= number_format($totalReservedUsdt, 2, '.', ',') ?> USDT</strong> reservados em lotes para esta operação. Enviar mais que isso deixará parte do envio sem lote associado.
                     </div>
-                    <form action="<?= url_to('admin_contracts_deliver_usdt', $c['id']) ?>" method="POST"
-                        style="display: flex; flex-direction: column; gap: 15px;">
-                        <?= csrf_field() ?>
-                        <div style="display: grid; grid-template-columns: 1fr 150px; gap: 15px; align-items: flex-end;">
-                            <div style="flex: 1;">
-                                <label for="usdt-pay-input" style="display: block; font-size: 12px; color: #94a3b8; margin-bottom: 8px;">Valor USDT Enviado
-                                    <span style="color:#64748b;">(máx. <?= number_format($totalReservedUsdt, 2, '.', ',') ?> USDT reservados)</span>
-                                </label>
-                                <input type="number" name="amount_usdt" step="0.01" id="usdt-pay-input"
-                                    placeholder="Ex: <?= number_format(min($usdtPending, $totalReservedUsdt), 2, '.', '') ?>"
-                                    max="<?= min($usdtPending, $totalReservedUsdt) ?>"
-                                    style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 12px; color: white;"
-                                    required>
-                            </div>
-                            <button type="button"
-                                onclick="document.getElementById('usdt-pay-input').value = '<?= min($usdtPending, $totalReservedUsdt) ?>'"
-                                class="btn"
-                                style="background: rgba(52, 211, 153, 0.1); color: #34d399; border: 1px solid #34d399; height: 45px; width: 100%; justify-content: center;">Total</button>
-                        </div>
-                        <div>
-                            <label for="usdt-deliver-notes" style="display: block; font-size: 12px; color: #94a3b8; margin-bottom: 8px;">Hash da Transação *</label>
-                            <input type="text" name="notes" id="usdt-deliver-notes" placeholder="Ex: Hash da rede TRC-20..." required
-                                style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 12px; color: white;">
-                        </div>
-                        <button type="submit" class="btn"
-                            style="background: #059669; color: white; padding: 12px 30px; height: 50px; font-size: 16px; width: 100%; border-radius: 12px; font-weight: 700; cursor: pointer;">Confirmar Envio USDT</button>
-                    </form>
                 <?php endif; ?>
+                <div style="display:flex;gap:20px;padding:12px 16px;border-radius:12px;background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.2);margin-bottom:16px;font-size:13px;">
+                    <span style="color:#94a3b8;">Pago: <strong style="color:#4ade80;">R$ <?= number_format($c['paid_amount'], 2, ',', '.') ?></strong></span>
+                    <span style="color:#94a3b8;">A enviar: <strong style="color:<?= $usdtPending > 0 ? '#f87171' : '#34d399' ?>;"><?= number_format($usdtPending, 2, '.', ',') ?> USDT</strong></span>
+                </div>
+                <form action="<?= url_to('admin_contracts_deliver_usdt', $c['id']) ?>" method="POST"
+                    style="display: flex; flex-direction: column; gap: 15px;">
+                    <?= csrf_field() ?>
+                    <div style="display: grid; grid-template-columns: 1fr 150px; gap: 15px; align-items: flex-end;">
+                        <div style="flex: 1;">
+                            <label for="usdt-pay-input" style="display: block; font-size: 12px; color: #94a3b8; margin-bottom: 8px;">Valor USDT Enviado</label>
+                            <input type="number" name="amount_usdt" step="0.01" id="usdt-pay-input"
+                                placeholder="Ex: <?= number_format($usdtPending, 2, '.', '') ?>"
+                                max="<?= max(0, (float)($c['total_amount'] - $c['delivered_usdt'])) ?>"
+                                style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 12px; color: white;"
+                                required>
+                        </div>
+                        <button type="button"
+                            onclick="document.getElementById('usdt-pay-input').value = '<?= $usdtPending ?>'"
+                            class="btn"
+                            style="background: rgba(52, 211, 153, 0.1); color: #34d399; border: 1px solid #34d399; height: 45px; width: 100%; justify-content: center;">Total</button>
+                    </div>
+                    <div>
+                        <label for="usdt-deliver-notes" style="display: block; font-size: 12px; color: #94a3b8; margin-bottom: 8px;">Hash da Transação *</label>
+                        <input type="text" name="notes" id="usdt-deliver-notes" placeholder="Ex: Hash da rede TRC-20..." required
+                            style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 12px; color: white;">
+                    </div>
+                    <button type="submit" class="btn"
+                        style="background: #059669; color: white; padding: 12px 30px; height: 50px; font-size: 16px; width: 100%; border-radius: 12px; font-weight: 700; cursor: pointer;">Confirmar Envio USDT</button>
+                </form>
             <?php else: ?>
                 <div style="padding: 20px; border-radius: 16px; background: rgba(52, 211, 153, 0.05); border: 1px solid rgba(52, 211, 153, 0.2); text-align: center; margin-bottom: 16px;">
                     <p style="color: #34d399; font-weight: 700; font-size: 14px;">✓ Todo o USDT desta operação já foi enviado.</p>
                 </div>
+                <?php if ($unlinkedDelivered > 0): ?>
+                    <div style="padding:16px 18px;border-radius:12px;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.4);margin-bottom:16px;font-size:13px;color:#f87171;display:flex;gap:12px;align-items:flex-start;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        <div>
+                            <p style="font-weight:700;margin-bottom:2px;">Atenção: custo de fornecedor pendente</p>
+                            <p style="color:#fca5a5;"><strong style="color:#f87171;"><?= number_format($unlinkedDelivered, 2, '.', ',') ?> USDT</strong> foram enviados sem lote associado — o custo dessa compra ainda não está registrado, o que distorce o lucro real desta operação. Use <strong style="color:#60a5fa;">Vincular Lote</strong> ou <strong style="color:#fbbf24;">Compra Rápida</strong> acima para regularizar.</p>
+                        </div>
+                    </div>
+                <?php endif; ?>
             <?php endif; ?>
 
             <!-- Lotes vinculados (sempre visível) -->
@@ -298,7 +301,11 @@
                                 </div>
                                 <span
                                     style="font-size: 12px; font-weight: 700; color: <?= $h['nature'] == 'C' ? '#34d399' : '#f87171' ?>;">
-                                    <?= $h['nature'] == 'C' ? '+' : '-' ?> R$ <?= number_format($h['amount'], 2, ',', '.') ?>
+                                    <?php if ($h['operation_type'] === 'withdrawal'): ?>
+                                        <?= $h['nature'] == 'C' ? '+' : '-' ?> <?= number_format($h['amount'], 2, '.', ',') ?> USDT
+                                    <?php else: ?>
+                                        <?= $h['nature'] == 'C' ? '+' : '-' ?> R$ <?= number_format($h['amount'], 2, ',', '.') ?>
+                                    <?php endif; ?>
                                 </span>
                             </div>
                             <p style="font-size: 12px; color: #cbd5e1; margin-top: 2px; font-weight: 600;">
@@ -353,6 +360,9 @@
     const usdtForm = document.querySelector('form[action*="deliver-usdt"]');
     const usdtInput = document.getElementById('usdt-pay-input');
     const maxUsdt = <?= (float) ($c['total_amount'] - $c['delivered_usdt']) ?>;
+    const usdtReservedLots = <?= (float) $totalReservedUsdt ?>;
+    const usdtPaidPending = <?= (float) $usdtPending ?>;
+    let usdtSendConfirmed = false;
 
     if (usdtForm) {
         usdtForm.onsubmit = function (e) {
@@ -362,7 +372,27 @@
                 alert('O valor do envio (' + value.toFixed(2) + ' USDT) não pode ser superior ao saldo restante ( ' + maxUsdt.toFixed(2) + ' USDT).');
                 return false;
             }
+            if (!usdtSendConfirmed && (value > usdtReservedLots || value > usdtPaidPending)) {
+                e.preventDefault();
+                const reasons = [];
+                if (value > usdtReservedLots) reasons.push('não há lotes reservados suficientes para cobrir esse valor');
+                if (value > usdtPaidPending) reasons.push('o pagamento total desta operação ainda não foi efetivado');
+                document.getElementById('usdt-send-confirm-text').textContent =
+                    'Este envio está fora do fluxo normal: ' + reasons.join(' e ') + '. Deseja continuar mesmo assim?';
+                document.getElementById('usdt-send-confirm-modal').style.display = 'flex';
+                return false;
+            }
         };
+    }
+
+    function closeUsdtSendConfirmModal() {
+        document.getElementById('usdt-send-confirm-modal').style.display = 'none';
+    }
+
+    function confirmUsdtSend() {
+        usdtSendConfirmed = true;
+        closeUsdtSendConfirmModal();
+        usdtForm.submit();
     }
 
     // Alocação de lotes
@@ -372,6 +402,7 @@
     // Dados para o modal — passados do PHP
     const contractRevenuePerUsdt = <?= ($c['total_amount'] > 0 && $c['comercial_brl'] > 0) ? round((float)$c['comercial_brl'] / (float)$c['total_amount'], 6) : 0 ?>;
     const contractRemainingToAllocate = <?= max(0, (float)$c['total_amount'] - (float)$c['delivered_usdt'] - ($totalReservedUsdt ?? 0)) ?>;
+    const contractUnlinkedDelivered = <?= (float)($unlinkedDelivered ?? 0) ?>;
     const availableLots = <?= json_encode(array_map(fn($l) => [
         'id'            => (int)$l['id'],
         'supplier'      => $l['supplier'],
@@ -456,10 +487,20 @@
         renderStep2();
     }
 
+    function isRetroactiveAllocation() {
+        return contractRemainingToAllocate <= 0 && contractUnlinkedDelivered > 0;
+    }
+
+    function allocationCeiling() {
+        return isRetroactiveAllocation() ? contractUnlinkedDelivered : contractRemainingToAllocate;
+    }
+
     function renderStep2() {
         const lot = selectedLot;
-        const maxAlloc = contractRemainingToAllocate > 0
-            ? Math.min(lot.usdt_available, contractRemainingToAllocate)
+        const ceiling = allocationCeiling();
+        const retro = isRetroactiveAllocation();
+        const maxAlloc = ceiling > 0
+            ? Math.min(lot.usdt_available, ceiling)
             : lot.usdt_available;
         const body = document.getElementById('lot-modal-body');
         body.innerHTML = `
@@ -470,6 +511,7 @@
                     <p style="font-size:12px;color:#64748b;">Disponível: <span style="color:#34d399;font-weight:600;">${lot.usdt_available.toFixed(2)} USDT</span> · Máx. alocável: <span style="color:#fbbf24;font-weight:600;">${maxAlloc.toFixed(2)} USDT</span></p>
                 </div>
             </div>
+            ${retro ? `<div style="padding:12px 16px;border-radius:12px;background:rgba(251,191,36,0.07);border:1px solid rgba(251,191,36,0.25);margin-bottom:20px;font-size:13px;color:#fbbf24;">Vinculação retroativa: este lote será registrado como já entregue, cobrindo USDT enviado anteriormente sem lote associado.</div>` : ''}
 
             <div style="margin-bottom:20px;">
                 <label style="display:block;font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Quantidade USDT a alocar</label>
@@ -562,9 +604,8 @@
         const errEl = document.getElementById('modal-usdt-error');
         errEl.style.display = 'none';
 
-        const maxAlloc = contractRemainingToAllocate > 0
-            ? Math.min(lot.usdt_available, contractRemainingToAllocate)
-            : lot.usdt_available;
+        const retro   = isRetroactiveAllocation();
+        const ceiling = allocationCeiling();
 
         if (!amount || amount <= 0) {
             errEl.textContent = 'Informe a quantidade de USDT.';
@@ -576,8 +617,10 @@
             errEl.style.display = 'block';
             return;
         }
-        if (contractRemainingToAllocate > 0 && amount > contractRemainingToAllocate + 0.0001) {
-            errEl.textContent = `A operação precisa de apenas ${contractRemainingToAllocate.toFixed(4)} USDT.`;
+        if (ceiling > 0 && amount > ceiling + 0.0001) {
+            errEl.textContent = retro
+                ? `A operação possui apenas ${ceiling.toFixed(4)} USDT entregue sem lote vinculado.`
+                : `A operação precisa de apenas ${ceiling.toFixed(4)} USDT.`;
             errEl.style.display = 'block';
             return;
         }
@@ -591,6 +634,7 @@
         body.append('lot_id', lot.id);
         body.append('usdt_amount', amount);
         body.append('contract_id', '<?= $c['id'] ?>');
+        body.append('retroactive', retro ? '1' : '0');
 
         fetch('<?= url_to('admin_lots_allocate') ?>', {method: 'POST', body})
             .then(r => r.json())
@@ -634,10 +678,14 @@
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
 
-        document.getElementById('qb-usdt').value    = quickBuyUsdt > 0 ? quickBuyUsdt.toFixed(4) : '';
+        const retro   = isRetroactiveAllocation();
+        const prefill = retro ? contractUnlinkedDelivered : quickBuyUsdt;
+
+        document.getElementById('qb-usdt').value    = prefill > 0 ? prefill.toFixed(4) : '';
         document.getElementById('qb-rate').value    = quickBuyBaseRate > 0 ? quickBuyBaseRate.toFixed(4) : '';
         document.getElementById('qb-supplier').value = '';
         document.getElementById('qb-error').style.display = 'none';
+        document.getElementById('qb-retro-note').style.display = retro ? 'block' : 'none';
         qbRecalc();
     }
 
@@ -693,6 +741,7 @@
         body.append('conversion_rate', rate);
         body.append('total_brl',       total);
         body.append('delivery_type',   delivery);
+        body.append('retroactive',     isRetroactiveAllocation() ? '1' : '0');
 
         fetch('<?= url_to('admin_lots_quick_buy') ?>', {method: 'POST', body})
             .then(r => r.json())
@@ -759,6 +808,7 @@
         </div>
 
         <div style="display:flex;flex-direction:column;gap:18px;">
+            <div id="qb-retro-note" style="display:none;padding:12px 16px;border-radius:12px;background:rgba(251,191,36,0.07);border:1px solid rgba(251,191,36,0.25);font-size:13px;color:#fbbf24;">Vinculação retroativa: este lote será registrado como já entregue, cobrindo USDT enviado anteriormente sem lote associado.</div>
             <div>
                 <label for="qb-supplier" style="display:block;font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Fornecedor *</label>
                 <select id="qb-supplier"
@@ -817,6 +867,23 @@
                 onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
                 Confirmar Compra e Reservar
             </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Envio Fora do Fluxo -->
+<div id="usdt-send-confirm-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);justify-content:center;align-items:center;padding:20px;">
+    <div style="background:#1e293b;border:1px solid rgba(251,191,36,0.3);border-radius:24px;width:100%;max-width:460px;padding:32px;box-shadow:0 25px 60px rgba(0,0,0,0.5);animation:modalBounce 0.35s cubic-bezier(0.175,0.885,0.32,1.275);">
+        <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:24px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <div>
+                <h2 style="font-size:17px;font-weight:700;color:white;margin-bottom:6px;">Envio fora do fluxo normal</h2>
+                <p id="usdt-send-confirm-text" style="font-size:13px;color:#94a3b8;line-height:1.6;"></p>
+            </div>
+        </div>
+        <div style="display:flex;gap:10px;">
+            <button onclick="closeUsdtSendConfirmModal()" style="flex:1;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;color:#94a3b8;font-size:14px;font-weight:600;cursor:pointer;">Cancelar</button>
+            <button onclick="confirmUsdtSend()" style="flex:1;padding:12px;background:#059669;border:none;border-radius:12px;color:white;font-size:14px;font-weight:700;cursor:pointer;">Concordo</button>
         </div>
     </div>
 </div>

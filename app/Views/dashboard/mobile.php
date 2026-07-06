@@ -612,9 +612,6 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 <?= lang('App.transaction_success_msg') ?>
             </p>
             <div id="success-actions">
-                <button onclick="openProofModal()" class="btn-primary" style="margin-bottom: 10px; width: 100%; background: #22c55e; border: none; padding: 15px; border-radius: 12px; color: white; font-weight: 700;">
-                    <i class="fas fa-upload" style="margin-right: 8px;"></i> <?= $isChinese ? '上传凭证' : 'Enviar Comprovante' ?>
-                </button>
                 <button onclick="closeSuccessModal()" style="width: 100%; background: rgba(255,255,255,0.05); color: #94a3b8; border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; cursor: pointer; font-weight: 600;">
                     <?= lang('App.understood') ?>
                 </button>
@@ -947,6 +944,22 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                         const usdt = parseFloat(usdtInput.value) || 0;
                         const brl = usdt * currentExchangeRate;
                         document.getElementById('brl-result').textContent = `R$ ${brl.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                    }
+
+                    if (window.mobileChart) {
+                        const lastVal = window.mobileChart.data.datasets[0].data.slice(-1)[0];
+                        if (lastVal !== currentExchangeRate) {
+                            window.mobileChart.data.labels.push(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+                            window.mobileChart.data.datasets[0].data.push(currentExchangeRate);
+                            if (window.mobileChart.data.labels.length > 15) {
+                                window.mobileChart.data.labels.shift();
+                                window.mobileChart.data.datasets[0].data.shift();
+                            }
+                            const values = window.mobileChart.data.datasets[0].data;
+                            window.mobileChart.options.scales.y.min = Math.min(...values) * 0.9995;
+                            window.mobileChart.options.scales.y.max = Math.max(...values) * 1.0005;
+                            window.mobileChart.update('none');
+                        }
                     }
                 } catch (e) { }
             }
@@ -1439,7 +1452,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             initChart();
             initContractsBadge();
 
-            setInterval(updateLiveRate, 5000); // 5s interval for lightweight performance
+            setInterval(updateLiveRate, 500); // 0.5s interval for fast real-time updates
             setInterval(updateDebtBalance, 30000);
 
         let debtsData = null;

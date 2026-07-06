@@ -67,6 +67,24 @@ class LotAllocationModel extends Model
         return (float)($row['usdt_amount'] ?? 0);
     }
 
+    /**
+     * USDT já entregue à operação (delivered_usdt) mas ainda sem lote vinculado —
+     * ocorre quando o envio foi registrado fora do fluxo normal, sem lote reservado.
+     */
+    public function getUnlinkedDelivered(string $entityType, int $entityId, float $deliveredUsdt): float
+    {
+        $field = $entityType === 'contract' ? 'contract_id' : 'transaction_id';
+
+        $row = $this->selectSum('usdt_amount')
+            ->where($field, $entityId)
+            ->where('status', 'delivered')
+            ->first();
+
+        $linkedDelivered = (float)($row['usdt_amount'] ?? 0);
+
+        return max(0, round($deliveredUsdt - $linkedDelivered, 4));
+    }
+
     public function markDelivered(int $allocationId, int $deliveredBy): bool
     {
         $allocation = $this->find($allocationId);

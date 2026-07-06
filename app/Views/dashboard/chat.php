@@ -446,9 +446,6 @@
                 <?= lang('App.transaction_success_msg') ?>
             </p>
             <div id="success-actions">
-                <button onclick="openProofModal()" class="btn-primary" style="margin: 0 0 10px 0; width: 100%; background: #22c55e;">
-                    <i class="fas fa-upload" style="margin-right: 8px;"></i> <?= $isChinese ? '上传凭证' : 'Enviar Comprovante' ?>
-                </button>
                 <button onclick="closeSuccessModal()" class="btn-secondary" style="margin: 0; width: 100%; background: rgba(255,255,255,0.05); color: #94a3b8; border: 1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 12px; cursor: pointer; font-weight: 600;">
                     <?= lang('App.understood') ?>
                 </button>
@@ -674,10 +671,10 @@
                         // Opcional: Atualizar gráfico se houver mudança significativa
                         if (window.myChart) {
                             const lastVal = window.myChart.data.datasets[0].data.slice(-1)[0];
-                            if (lastVal !== data.base_rate) {
+                            if (lastVal !== currentExchangeRate) {
                                 window.myChart.data.labels.push(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-                                window.myChart.data.datasets[0].data.push(data.base_rate);
-                                if (window.myChart.data.labels.length > 100) {
+                                window.myChart.data.datasets[0].data.push(currentExchangeRate);
+                                if (window.myChart.data.labels.length > 15) {
                                     window.myChart.data.labels.shift();
                                     window.myChart.data.datasets[0].data.shift();
                                 }
@@ -690,7 +687,7 @@
         }
 
         updateLiveRate();
-        setInterval(updateLiveRate, 5000); // Atualiza a cada 5 segundos para leveza e alta performance
+        setInterval(updateLiveRate, 500); // Atualiza a cada 0.5 segundos para dinâmica ultrarrápida
 
         async function updateDebtBalance() {
             try {
