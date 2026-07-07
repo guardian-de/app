@@ -50,6 +50,9 @@
                 </td>
                 <td style="padding: 20px 25px; color: white; font-weight: 700; font-size: 14px;">
                     Score: R$ <?= number_format($user['score'] ?? 0, 2, ',', '.') ?>
+                    <div style="font-size: 12px; color: #94a3b8; font-weight: 500; margin-top: 4px;">
+                        Saldo: R$ <?= number_format($user['balance'] ?? 0, 2, ',', '.') ?>
+                    </div>
                 </td>
                 <td style="padding: 20px 25px; color: #64748b; font-size: 13px;"><?= date('d/m/Y', strtotime($user['created_at'])) ?></td>
                 <td style="padding: 20px 25px; text-align: right;">

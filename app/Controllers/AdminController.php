@@ -18,7 +18,13 @@ class AdminController extends BaseController
         try { if ($db->fieldExists('credit_limit', 'users') && !$db->fieldExists('score', 'users')) { $db->query("ALTER TABLE `users` CHANGE `credit_limit` `score` DECIMAL(15,2) NOT NULL DEFAULT 0.00"); } } catch (\Throwable $e) {}
 
         $userModel = new UserModel();
-        $data['users'] = $userModel->orderBy('role', 'ASC')->orderBy('login', 'ASC')->findAll();
+        $users = $userModel->orderBy('role', 'ASC')->orderBy('login', 'ASC')->findAll();
+        
+        $financialModel = new \App\Models\FinancialStatementModel();
+        foreach ($users as &$user) {
+            $user['balance'] = $financialModel->getBalance((int)$user['id']);
+        }
+        $data['users'] = $users;
         
         $db = \Config\Database::connect();
         $latestRecord = $db->table('dollar_history')
