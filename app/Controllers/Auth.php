@@ -99,6 +99,15 @@ class Auth extends BaseController
                 $db->query("ALTER TABLE `users` CHANGE `credit_limit` `score` DECIMAL(15,2) NOT NULL DEFAULT 0.00");
             }
         } catch (\Throwable $e) {}
+
+        try {
+            if (!$db->fieldExists('purchase_model', 'users')) {
+                $db->query("ALTER TABLE `users` ADD COLUMN `purchase_model` ENUM('usdt','brl','both') NOT NULL DEFAULT 'usdt' AFTER `allowed_delivery_types`");
+            }
+            if (!$db->fieldExists('last_purchase_mode', 'users')) {
+                $db->query("ALTER TABLE `users` ADD COLUMN `last_purchase_mode` ENUM('usdt','brl') NULL AFTER `purchase_model`");
+            }
+        } catch (\Throwable $e) {}
     }
 
     public function authenticate()
