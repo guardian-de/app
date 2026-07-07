@@ -123,11 +123,22 @@ class DepositsController extends BaseController
         }
         unset($entry);
 
+        $otherPending = $db->table('deposits d')
+            ->select('d.*, u.login as user_login')
+            ->join('users u', 'u.id = d.user_id', 'left')
+            ->where('d.user_id', $deposit['user_id'])
+            ->where('d.status', 'pending')
+            ->where('d.id !=', $id)
+            ->orderBy('d.created_at', 'ASC')
+            ->limit(2)
+            ->get()->getResultArray();
+
         return view('admin/deposits/show', [
-            'title'       => 'Depósito #' . $id,
-            'active_menu' => 'deposits',
-            'deposit'     => $deposit,
-            'history'     => $history,
+            'title'         => 'Depósito #' . $id,
+            'active_menu'   => 'deposits',
+            'deposit'       => $deposit,
+            'history'       => $history,
+            'other_pending' => $otherPending,
         ]);
     }
 
@@ -167,7 +178,7 @@ class DepositsController extends BaseController
             'amount' => $deposit['amount'],
         ]);
 
-        return redirect()->to(url_to('admin_deposits_show', $id))->with('success', 'Depósito aceito e pagamentos automáticos aplicados.');
+        return redirect()->back()->with('success', 'Depósito aceito e pagamentos automáticos aplicados.');
     }
 
     public function reject($id)
@@ -207,7 +218,7 @@ class DepositsController extends BaseController
             'reason' => $reason,
         ]);
 
-        return redirect()->to(url_to('admin_deposits_show', $id))->with('success', 'Depósito rejeitado.');
+        return redirect()->back()->with('success', 'Depósito rejeitado.');
     }
 
     public function reverse($id)

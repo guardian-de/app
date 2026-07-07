@@ -1157,31 +1157,79 @@ class ChatController extends BaseController
         }
 
         $userId = session()->get('user_id');
-        $amount = (float) $this->request->getPost('amount');
-        $notes  = $this->request->getPost('notes') ?? '';
-        $file   = $this->request->getFile('proof');
-
-        if ($amount <= 0) {
-            return $this->response->setJSON(['error' => 'Informe um valor válido.'])->setStatusCode(400);
-        }
-
-        if (!$file || !$file->isValid()) {
-            return $this->response->setJSON(['error' => 'Comprovante obrigatório.'])->setStatusCode(400);
-        }
-
-        $newName   = $file->getRandomName();
-        $file->move(FCPATH . 'uploads/deposits', $newName);
-        $proofPath = 'uploads/deposits/' . $newName;
+        $amounts = $this->request->getPost('amounts');
+        $notesList = $this->request->getPost('notes');
+        $uploadedFiles = $this->request->getFileMultiple('proofs');
 
         $depositModel = new \App\Models\DepositModel();
-        $depositModel->insert([
-            'user_id'    => $userId,
-            'amount'     => $amount,
-            'proof_file' => $proofPath,
-            'status'     => 'pending',
-            'notes'      => $notes,
-        ]);
 
-        return $this->response->setJSON(['status' => 'success', 'message' => 'Depósito enviado e aguardando validação.']);
+        if (is_array($amounts)) {
+            if (empty($amounts)) {
+                return $this->response->setJSON(['error' => 'Adicione pelo menos um depósito.'])->setStatusCode(400);
+            }
+
+            // Validate amounts
+            foreach ($amounts as $val) {
+                if ((float)$val <= 0) {
+                    return $this->response->setJSON(['error' => 'Informe um valor válido em todos os depósitos.'])->setStatusCode(400);
+                }
+            }
+
+            // Check if files array exists
+            if (!$uploadedFiles || count($uploadedFiles) < count($amounts)) {
+                return $this->response->setJSON(['error' => 'Comprovante obrigatório para todos os depósitos.'])->setStatusCode(400);
+            }
+
+            for ($i = 0; $i < count($amounts); $i++) {
+                $amount = (float) $amounts[$i];
+                $notes = $notesList[$i] ?? '';
+                $file = $uploadedFiles[$i] ?? null;
+
+                if (!$file || !$file->isValid()) {
+                    return $this->response->setJSON(['error' => 'Comprovante inválido ou ausente.'])->setStatusCode(400);
+                }
+
+                $newName = $file->getRandomName();
+                $file->move(FCPATH . 'uploads/deposits', $newName);
+                $proofPath = 'uploads/deposits/' . $newName;
+
+                $depositModel->insert([
+                    'user_id'    => $userId,
+                    'amount'     => $amount,
+                    'proof_file' => $proofPath,
+                    'status'     => 'pending',
+                    'notes'      => $notes,
+                ]);
+            }
+
+            return $this->response->setJSON(['status' => 'success', 'message' => 'Depósitos enviados e aguardando validação.']);
+        } else {
+            // Fallback for single item (old API)
+            $amount = (float) $this->request->getPost('amount');
+            $notes  = $this->request->getPost('notes') ?? '';
+            $singleFile = $this->request->getFile('proof');
+
+            if ($amount <= 0) {
+                return $this->response->setJSON(['error' => 'Informe um valor válido.'])->setStatusCode(400);
+            }
+
+            if (!$singleFile || !$singleFile->isValid()) {
+                return $this->response->setJSON(['error' => 'Comprovante obrigatório.'])->setStatusCode(400);
+            }
+
+            $newName = $singleFile->getRandomName();
+            $singleFile->move(FCPATH . 'uploads/deposits', $newName);
+            $proofPath = 'uploads/deposits/' . $newName;
+
+            $depositModel->insert([
+                'user_id'    => $userId,
+                'amount'     => $amount,
+                'proof_file' => $proofPath,
+                'status'     => 'pending',
+                'notes'      => $notes,
+            ]);
+
+            return $this->response->setJSON(['status' => 'success', 'message' => 'Depósito enviado e aguardando validação.']);
+        }
     }
 }

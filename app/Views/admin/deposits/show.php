@@ -96,20 +96,33 @@
         <!-- Comprovante -->
         <div style="margin-top: 24px;">
             <p style="font-size: 12px; color: #94a3b8; text-transform: uppercase; margin-bottom: 12px;">Comprovante</p>
-            <?php if (empty($deposit['proof_file'])): ?>
+            <?php 
+                $proofs = !empty($deposit['proof_file']) ? explode(',', $deposit['proof_file']) : [];
+            ?>
+            <?php if (empty($proofs)): ?>
                 <p style="color: #64748b; font-size: 13px;">Depósito lançado manualmente pelo admin — sem comprovante.</p>
             <?php else: ?>
-                <?php $ext = strtolower(pathinfo($deposit['proof_file'], PATHINFO_EXTENSION)); ?>
-                <?php if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])): ?>
-                    <a href="<?= base_url($deposit['proof_file']) ?>" target="_blank">
-                        <img src="<?= base_url($deposit['proof_file']) ?>" alt="Comprovante" style="max-width: 100%; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); cursor: zoom-in;">
-                    </a>
-                <?php else: ?>
-                    <a href="<?= base_url($deposit['proof_file']) ?>" target="_blank" class="btn btn-primary" style="display: inline-flex; gap: 8px; align-items: center;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                        Abrir PDF
-                    </a>
-                <?php endif; ?>
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    <?php foreach ($proofs as $idx => $proof): ?>
+                        <?php 
+                            $proof = trim($proof);
+                            $ext = strtolower(pathinfo($proof, PATHINFO_EXTENSION)); 
+                        ?>
+                        <div style="background: rgba(15,23,42,0.3); padding: 12px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.04);">
+                            <p style="font-size: 11px; color: #64748b; margin-bottom: 8px;">Arquivo #<?= $idx + 1 ?></p>
+                            <?php if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])): ?>
+                                <a href="<?= base_url($proof) ?>" target="_blank">
+                                    <img src="<?= base_url($proof) ?>" alt="Comprovante" style="max-width: 100%; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); cursor: zoom-in;">
+                                </a>
+                            <?php else: ?>
+                                <a href="<?= base_url($proof) ?>" target="_blank" class="btn btn-primary" style="display: inline-flex; gap: 8px; align-items: center;">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                    Abrir PDF / Arquivo
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
             <?php endif; ?>
         </div>
     </div>
@@ -194,6 +207,81 @@ $historyLabels = [
 </div>
 <?php endif; ?>
 
+<?php if (!empty($other_pending)): ?>
+<div style="grid-column: 1 / -1; margin-top: 30px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 30px;">
+    <h3 style="font-size: 16px; font-weight: 700; color: white; margin-bottom: 16px;">Outros Depósitos Pendentes do Cliente (Máximo 2)</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
+        <?php foreach ($other_pending as $idx => $op): ?>
+            <?php 
+                $opProofs = !empty($op['proof_file']) ? explode(',', $op['proof_file']) : [];
+            ?>
+            <div class="card" style="border: 1px solid rgba(99, 102, 241, 0.25); display: flex; flex-direction: column; justify-content: space-between; background: rgba(30, 41, 59, 0.5); padding: 20px; border-radius: 16px; margin-bottom: 0;">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h4 style="color: white; font-size: 15px; font-weight: 700; margin: 0;">Depósito #<?= $op['id'] ?></h4>
+                        <span style="font-size: 12px; color: #94a3b8;"><?= date('d/m/Y H:i', strtotime($op['created_at'])) ?></span>
+                    </div>
+                    <p style="font-size: 20px; font-weight: 800; color: #34d399; margin-bottom: 12px;">R$ <?= number_format($op['amount'], 2, ',', '.') ?></p>
+                    
+                    <?php if ($op['notes']): ?>
+                        <p style="font-size: 13px; color: #cbd5e1; background: rgba(15,23,42,0.4); padding: 8px 12px; border-radius: 8px; margin-bottom: 12px; font-style: italic;">
+                            "<?= esc($op['notes']) ?>"
+                        </p>
+                    <?php endif; ?>
+
+                    <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
+                        <?php foreach ($opProofs as $opIdx => $opProof): ?>
+                            <?php 
+                                $opProof = trim($opProof);
+                                $opExt = strtolower(pathinfo($opProof, PATHINFO_EXTENSION)); 
+                            ?>
+                            <div style="background: rgba(15,23,42,0.3); padding: 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.04);">
+                                <p style="font-size: 10px; color: #64748b; margin-bottom: 4px;">Arquivo #<?= $opIdx + 1 ?></p>
+                                <?php if (in_array($opExt, ['jpg', 'jpeg', 'png', 'gif', 'webp'])): ?>
+                                    <a href="<?= base_url($opProof) ?>" target="_blank">
+                                        <img src="<?= base_url($opProof) ?>" alt="Comprovante" style="max-height: 120px; border-radius: 8px; cursor: zoom-in;">
+                                    </a>
+                                <?php else: ?>
+                                    <a href="<?= base_url($opProof) ?>" target="_blank" class="btn btn-primary" style="display: inline-flex; gap: 4px; align-items: center; padding: 4px 8px; font-size: 11px;">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                        Abrir PDF
+                                    </a>
+                                <?php endif; ?>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <div>
+                    <div style="display: flex; gap: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px;">
+                        <form action="<?= url_to('admin_deposits_accept', $op['id']) ?>" method="POST" style="flex: 1; margin: 0;">
+                            <?= csrf_field() ?>
+                            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 8px; font-size: 12px;">Confirmar</button>
+                        </form>
+                        
+                        <button onclick="toggleInlineReject(<?= $op['id'] ?>)" class="btn" style="flex: 1; padding: 8px; font-size: 12px; background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3);">
+                            Rejeitar
+                        </button>
+                    </div>
+
+                    <div id="inline-reject-form-<?= $op['id'] ?>" style="display: none; margin-top: 12px; padding: 12px; border-radius: 12px; background: rgba(239,68,68,0.05); border: 1px solid rgba(239,68,68,0.15);">
+                        <form action="<?= url_to('admin_deposits_reject', $op['id']) ?>" method="POST" style="margin: 0;">
+                            <?= csrf_field() ?>
+                            <label style="display: block; font-size: 11px; color: #f87171; margin-bottom: 6px; font-weight: 600;">Motivo da Rejeição</label>
+                            <textarea name="rejection_reason" required style="width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; padding: 8px; font-size: 12px; outline: none; resize: none; margin-bottom: 8px;" placeholder="Ex: Comprovante ilegível..."></textarea>
+                            <div style="display: flex; gap: 6px;">
+                                <button type="submit" class="btn" style="flex: 1; padding: 6px; font-size: 11px; background: #ef4444; color: white; border: none;">Confirmar</button>
+                                <button type="button" onclick="toggleInlineReject(<?= $op['id'] ?>)" class="btn" style="padding: 6px 12px; font-size: 11px; background: rgba(255,255,255,0.05); color: #94a3b8; border: none;">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    </div>
+</div>
+<?php endif; ?>
+
 <!-- Modal de confirmação de aceite -->
 <div id="accept-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(6px);">
     <div style="background: #1e293b; border-radius: 16px; padding: 32px; max-width: 420px; width: 100%; border: 1px solid rgba(99,102,241,0.2);">
@@ -275,6 +363,13 @@ function validateRejectForm() {
         return false;
     }
     return true;
+}
+
+function toggleInlineReject(id) {
+    var el = document.getElementById('inline-reject-form-' + id);
+    if (el) {
+        el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
 }
 </script>
 

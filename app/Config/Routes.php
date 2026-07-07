@@ -9,7 +9,7 @@ $routes->get('/', 'Home::index');
 $routes->get('privacy', 'Home::privacy', ['as' => 'privacy']);
 $routes->get('terms', 'Home::terms', ['as' => 'terms']);
 
-$routes->get('dev', function() {
+$routes->get('dev', function () {
     return 'Hello World';
 });
 
@@ -21,8 +21,8 @@ $routes->post('login', 'Auth::authenticate', ['as' => 'authenticate']);
 $routes->get('logout', 'Auth::logout', ['as' => 'logout']);
 
 // Admin Routes (Substitui o cadastro público)
-$routes->group('admin', ['filter' => 'admin'], function($routes) {
-    $routes->group('users', ['filter' => 'adminonly'], function($routes) {
+$routes->group('admin', ['filter' => 'admin'], function ($routes) {
+    $routes->group('users', ['filter' => 'adminonly'], function ($routes) {
         $routes->get('/', 'AdminController::index', ['as' => 'admin_users']);
         $routes->get('create', 'AdminController::create', ['as' => 'admin_users_create']);
         $routes->post('store', 'AdminController::store', ['as' => 'admin_users_store']);
@@ -45,7 +45,7 @@ $routes->group('admin', ['filter' => 'admin'], function($routes) {
     $routes->get('contracts/updates', 'AdminController::contractsUpdates', ['as' => 'admin_contracts_updates']);
     $routes->get('contracts/row/(:num)', 'AdminController::contractRow/$1', ['as' => 'admin_contracts_row']);
     $routes->get('contracts/show/(:num)', 'AdminController::contractDetails/$1', ['as' => 'admin_contracts_show']);
-$routes->post('contracts/deliver-usdt/(:num)', 'AdminController::deliverUsdt/$1', ['as' => 'admin_contracts_deliver_usdt']);
+    $routes->post('contracts/deliver-usdt/(:num)', 'AdminController::deliverUsdt/$1', ['as' => 'admin_contracts_deliver_usdt']);
     $routes->post('contracts/change-delivery-type/(:num)', 'AdminController::changeContractDeliveryType/$1', ['as' => 'admin_contracts_change_delivery_type']);
     $routes->get('delivery', 'AdminController::deliveryQueue', ['as' => 'admin_delivery']);
     $routes->get('delivery/client/(:num)', 'AdminController::deliveryQueueClient/$1', ['as' => 'admin_delivery_client']);
@@ -77,7 +77,7 @@ $routes->post('contracts/deliver-usdt/(:num)', 'AdminController::deliverUsdt/$1'
 });
 
 // Dashboard (Chat)
-$routes->group('', ['filter' => 'auth'], function($routes) {
+$routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->get('dashboard', 'ChatController::mobile', ['as' => 'dashboard']);
     $routes->get('m', 'ChatController::mobile', ['as' => 'dashboard_mobile']);
     $routes->post('chat/send', 'ChatController::send', ['as' => 'chat_send']);
