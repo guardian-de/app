@@ -24,8 +24,8 @@
             <tr style="background: rgba(255,255,255,0.02);">
                 <th style="padding: 18px 25px; text-align: left; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Login</th>
                 <th style="padding: 18px 25px; text-align: left; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Permissão</th>
-                <th style="padding: 18px 25px; text-align: left; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Taxa (%)</th>
-                <th style="padding: 18px 25px; text-align: left; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Saldo</th>
+                <th style="padding: 18px 25px; text-align: left; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Spread (%)</th>
+                <th style="padding: 18px 25px; text-align: left; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Limite (Saldo)</th>
                 <th style="padding: 18px 25px; text-align: left; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Criado em</th>
                 <th style="padding: 18px 25px; text-align: right; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Ações</th>
             </tr>
@@ -137,7 +137,7 @@
         
         <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
             <div>
-                <span style="color: #64748b; font-size: 12px; display: block;">Taxa do Cliente:</span>
+                <span style="color: #64748b; font-size: 12px; display: block;">Spread do Cliente:</span>
                 <span id="purchase-user-fee" style="color: #3b82f6; font-weight: 700; font-size: 15px;">0,00%</span>
             </div>
             <div style="text-align: right;">

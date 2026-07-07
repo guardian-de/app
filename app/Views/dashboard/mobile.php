@@ -1,4 +1,5 @@
 <?php
+/** @var array $user @var array $business_hours @var string $quotation_flow @var string $operator_whatsapp */
 $userName = session()->get('user_name');
 $firstName = explode(' ', $userName)[0];
 $isChinese = session()->get('user_lang') === 'zh-CN';
@@ -613,7 +614,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                     style="display: block; color: #94a3b8; font-size: 13px; font-weight: 500; margin-bottom: 8px;">Prazo
                     de Entrega</label>
                 <div class="delivery-selector" style="display: flex; gap: 10px; margin-bottom: 20px;">
-                    <?php 
+                    <?php
                     $allowed = $user['allowed_delivery_types'];
                     $options = ['D+0', 'D+1', 'D+2'];
                     $first = true;
@@ -623,9 +624,9 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                     ?>
                         <div class="delivery-option <?= $first ? 'active' : '' ?>" data-value="<?= $opt ?>"><?= $opt ?></div>
                         <?php if ($first) { $first = false; $active_val = $opt; } ?>
-                    <?php 
+                    <?php
                         endif;
-                    endforeach; 
+                    endforeach;
                     ?>
                 </div>
                 <div id="conversion-info"
@@ -634,13 +635,6 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                         <span
                             style="color: #94a3b8; font-size: 13px; font-weight: 500;"><?= lang('App.live_rate') ?>:</span>
                         <span id="modal-base-rate"
-                            style="color: #cbd5e1; font-weight: 600; font-family: 'Outfit', sans-serif;">R$
-                            0,0000</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span style="color: #94a3b8; font-size: 13px; font-weight: 500;"><?= lang('App.fee') ?> (<span
-                                id="modal-fee-percent">0</span>%):</span>
-                        <span id="modal-fee-value"
                             style="color: #cbd5e1; font-weight: 600; font-family: 'Outfit', sans-serif;">R$
                             0,0000</span>
                     </div>
@@ -1094,8 +1088,6 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
 
                     if (document.getElementById('buy-modal') && document.getElementById('buy-modal').style.display === 'flex') {
                         document.getElementById('modal-base-rate').textContent = `R$ ${currentBaseRate.toLocaleString('pt-BR', { minimumFractionDigits: 4 })}`;
-                        document.getElementById('modal-fee-percent').textContent = currentFeePercent.toFixed(2);
-                        document.getElementById('modal-fee-value').textContent = `R$ ${(currentExchangeRate - currentBaseRate).toLocaleString('pt-BR', { minimumFractionDigits: 4 })}`;
                         document.getElementById('modal-rate').textContent = `R$ ${currentExchangeRate.toLocaleString('pt-BR', { minimumFractionDigits: 4 })}`;
                         
                         const usdtInput = document.getElementById('usdt-amount');
@@ -1280,7 +1272,6 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 // Se a taxa passada for significativamente diferente da global atual,
                 // recalculamos o baseRate proporcionalmente para o detalhamento.
                 let baseRate = currentBaseRate;
-                let feePercent = currentFeePercent;
 
                 if (currentExchangeRate > 0 && Math.abs(rate - currentExchangeRate) > 0.0001) {
                     // Estimativa para taxas vindas de mensagens antigas do bot
@@ -1293,8 +1284,6 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 currentExchangeRate = rate;
 
                 document.getElementById('modal-base-rate').textContent = `R$ ${baseRate.toLocaleString('pt-BR', { minimumFractionDigits: 4 })}`;
-                document.getElementById('modal-fee-percent').textContent = feePercent.toFixed(2);
-                document.getElementById('modal-fee-value').textContent = `R$ ${(rate - baseRate).toLocaleString('pt-BR', { minimumFractionDigits: 4 })}`;
                 document.getElementById('modal-rate').textContent = `R$ ${rate.toLocaleString('pt-BR', { minimumFractionDigits: 4 })}`;
 
                 const btn = document.getElementById('confirm-buy-btn');
