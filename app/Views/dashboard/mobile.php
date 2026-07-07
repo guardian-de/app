@@ -69,7 +69,69 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             flex-direction: column;
             height: 100%;
             width: 100vw;
-            background: radial-gradient(circle at top right, #1e3a8a33, transparent);
+            background: radial-gradient(circle at top right, #1e3a8a11, transparent);
+            overflow: hidden;
+        }
+
+        .dashboard-panel-desktop,
+        .chat-panel-desktop {
+            display: contents;
+        }
+
+        /* Responsive Desktop Refinements (screens >= 1024px) */
+        @media (min-width: 1024px) {
+            .mobile-wrapper {
+                flex-direction: row;
+            }
+
+            .dashboard-panel-desktop {
+                display: flex;
+                flex-direction: column;
+                width: 420px;
+                border-right: 1px solid rgba(59, 130, 246, 0.2);
+                height: 100%;
+                background: rgba(15, 23, 42, 0.95);
+                backdrop-filter: blur(15px);
+                flex-shrink: 0;
+                overflow-y: auto;
+            }
+
+            .chat-panel-desktop {
+                display: flex;
+                flex-direction: column;
+                flex: 1;
+                height: 100%;
+                background: #090f21;
+                position: relative;
+                min-width: 0;
+            }
+
+            .chat-container-mobile {
+                padding-bottom: 24px !important;
+            }
+
+            .mobile-input-area {
+                position: relative !important;
+                left: auto !important;
+                right: auto !important;
+                bottom: auto !important;
+                background: #0f172a !important;
+                padding: 20px 30px !important;
+                border-top: 1px solid rgba(59, 130, 246, 0.15) !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            .chart-section {
+                height: 240px !important;
+                opacity: 1 !important;
+                margin: 20px auto !important;
+                display: block !important;
+            }
+
+            .toggle-chart-btn {
+                display: none !important;
+            }
         }
 
         .mobile-header {
@@ -364,7 +426,8 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
     </div>
 
     <div class="mobile-wrapper">
-        <header class="mobile-header">
+        <div class="dashboard-panel-desktop">
+            <header class="mobile-header">
             <div style="display: flex; align-items: center; gap: 12px;">
                 <div class="profile-badge"><?= strtoupper(substr($firstName, 0, 1)) ?></div>
                 <div class="live-rate-mobile">
@@ -477,7 +540,8 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             </button>
         </div>
 
-        <main class="chat-container-mobile" id="chat-messages" style="position: relative;">
+        <div class="chat-panel-desktop">
+            <main class="chat-container-mobile" id="chat-messages" style="position: relative;">
             <div class="message bot">
                 <?= lang('App.welcome_msg', [
                     'name' => $firstName,
@@ -497,6 +561,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 autocomplete="off">
             <button type="submit" class="send-btn-mobile">➤</button>
         </form>
+        </div>
     </div>
 
     <!-- Modals -->
