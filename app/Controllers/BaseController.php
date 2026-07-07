@@ -105,6 +105,10 @@ abstract class BaseController extends Controller
             return '/admin/settings';
         }
 
+        if ($role === 'operator') {
+            return '/logout';
+        }
+
         return '/dashboard';
     }
 }

@@ -127,8 +127,31 @@ class Auth extends BaseController
                 ];
                 $session->set($sessionData);
                 
-                if ($user['role'] === 'operator' || $user['role'] === 'admin') {
+                if ($user['role'] === 'admin') {
                     return redirect()->to('/admin/contracts');
+                } elseif ($user['role'] === 'operator') {
+                    $perms = !empty($user['permissions']) ? json_decode($user['permissions'], true) : [];
+                    if (!is_array($perms)) {
+                        $perms = [];
+                    }
+                    if (in_array('enviar_usdt', $perms)) {
+                        return redirect()->to('/admin/contracts');
+                    } elseif (in_array('transacoes', $perms)) {
+                        return redirect()->to('/admin/transactions');
+                    } elseif (in_array('usuarios', $perms)) {
+                        return redirect()->to('/admin/users');
+                    } elseif (in_array('lots', $perms)) {
+                        return redirect()->to('/admin/lots');
+                    } elseif (in_array('deposits', $perms)) {
+                        return redirect()->to('/admin/deposits');
+                    } elseif (in_array('suppliers', $perms)) {
+                        return redirect()->to('/admin/suppliers');
+                    } elseif (in_array('settings', $perms)) {
+                        return redirect()->to('/admin/settings');
+                    } else {
+                        $session->destroy();
+                        return redirect()->to('/login')->with('error', 'Acesso negado: você não tem permissão para acessar esta área.');
+                    }
                 }
 
                 return redirect()->to('/dashboard');
