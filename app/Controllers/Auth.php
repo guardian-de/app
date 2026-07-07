@@ -181,6 +181,9 @@ class Auth extends BaseController
     public function updatePassword()
     {
         if (!session()->get('isLoggedIn')) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['error' => 'Sessão expirada. Faça login novamente.'])->setStatusCode(401);
+            }
             return redirect()->to('/login');
         }
 
@@ -189,6 +192,9 @@ class Auth extends BaseController
         $user = $userModel->find($userId);
 
         if (!$user) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['error' => 'Usuário não encontrado.'])->setStatusCode(404);
+            }
             return redirect()->to('/login');
         }
 
@@ -198,14 +204,23 @@ class Auth extends BaseController
 
         // Validations
         if (!password_verify($currentPassword, $user['password'])) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['error' => 'Senha atual incorreta.'])->setStatusCode(400);
+            }
             return redirect()->back()->with('error', 'Senha atual incorreta.');
         }
 
         if (strlen($newPassword) < 6) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['error' => 'A nova senha deve ter pelo menos 6 caracteres.'])->setStatusCode(400);
+            }
             return redirect()->back()->with('error', 'A nova senha deve ter pelo menos 6 caracteres.');
         }
 
         if ($newPassword !== $confirmPassword) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['error' => 'A nova senha e a confirmação não coincidem.'])->setStatusCode(400);
+            }
             return redirect()->back()->with('error', 'A nova senha e a confirmação não coincidem.');
         }
 
@@ -213,6 +228,10 @@ class Auth extends BaseController
         $userModel->update($userId, [
             'password' => $newPassword
         ]);
+
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON(['success' => true, 'message' => 'Senha alterada com sucesso!']);
+        }
 
         return redirect()->back()->with('success', 'Senha alterada com sucesso!');
     }

@@ -488,15 +488,15 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                     <span id="notifications-badge" style="display: none; position: absolute; top: -2px; right: -4px; background: #ef4444; color: white; font-size: 9px; font-weight: 800; min-width: 16px; height: 16px; border-radius: 8px; align-items: center; justify-content: center; padding: 0 3px; line-height: 1;"></span>
                 </button>
                 <!-- Alterar Senha -->
-                <a href="<?= url_to('change_password') ?>"
-                    style="text-decoration: none; color: #60a5fa; padding: 4px; display: flex; align-items: center; cursor: pointer;"
+                <button onclick="openChangePasswordModal(event)"
+                    style="background: none; border: none; color: #60a5fa; padding: 4px; display: flex; align-items: center; cursor: pointer;"
                     title="Alterar Senha">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                         <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                     </svg>
-                </a>
+                </button>
                 <!-- Sair -->
                 <a href="<?= url_to('logout') ?>"
                     style="text-decoration: none; color: #f87171; padding: 4px; display: flex; align-items: center; cursor: pointer;"
@@ -951,6 +951,46 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             </button>
             
             <button onclick="closeProofModal()" style="margin-top: 15px; background: none; border: none; color: #64748b; font-size: 13px; cursor: pointer;"><?= $isChinese ? '稍后再说' : 'Fazer isso mais tarde' ?></button>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div id="change-password-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 5001; justify-content: center; align-items: center; padding: 15px; backdrop-filter: blur(10px);">
+        <div
+            style="background: rgba(30, 41, 59, 0.98); width: 100%; max-width: 400px; padding: 25px; border-radius: 24px; position: relative; border: 1px solid rgba(59, 130, 246, 0.25); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6); box-sizing: border-box;">
+            <button onclick="closeChangePasswordModal()"
+                style="position: absolute; right: 20px; top: 20px; background: rgba(255,255,255,0.05); border: none; color: #94a3b8; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer;">&times;</button>
+
+            <h1 style="font-size: 20px; color: white; font-weight: 700; margin-bottom: 4px; padding-right: 40px; text-align: left;">
+                <?= $isChinese ? '修改密码' : 'Alterar Senha' ?>
+            </h1>
+            <p style="font-size: 12px; color: #64748b; margin-bottom: 20px; text-align: left;">
+                <?= $isChinese ? '请输入当前密码进行确认' : 'Forneça a senha atual para confirmar a alteração' ?>
+            </p>
+
+            <div id="pwd-alert" style="display: none; padding: 12px 15px; border-radius: 12px; font-size: 14px; margin-bottom: 20px; border: 1px solid; text-align: left;"></div>
+
+            <form id="change-password-form" onsubmit="submitChangePassword(event)" style="display: flex; flex-direction: column; gap: 15px;">
+                <div style="display: flex; flex-direction: column; gap: 6px; text-align: left;">
+                    <label style="font-size: 12px; font-weight: 600; color: #94a3b8; text-transform: uppercase;"><?= $isChinese ? '当前密码' : 'Senha Atual' ?></label>
+                    <input type="password" id="pwd-current" placeholder="••••••••" required
+                        style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 12px; color: white; outline: none; box-sizing: border-box; font-size: 15px;">
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px; text-align: left;">
+                    <label style="font-size: 12px; font-weight: 600; color: #94a3b8; text-transform: uppercase;"><?= $isChinese ? '新密码' : 'Nova Senha' ?></label>
+                    <input type="password" id="pwd-new" placeholder="••••••••" required
+                        style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 12px; color: white; outline: none; box-sizing: border-box; font-size: 15px;">
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px; text-align: left;">
+                    <label style="font-size: 12px; font-weight: 600; color: #94a3b8; text-transform: uppercase;"><?= $isChinese ? '确认新密码' : 'Confirmar Nova Senha' ?></label>
+                    <input type="password" id="pwd-confirm" placeholder="••••••••" required
+                        style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 12px; color: white; outline: none; box-sizing: border-box; font-size: 15px;">
+                </div>
+                <button type="submit" style="width: 100%; background: #3b82f6; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 600; font-size: 15px; cursor: pointer; transition: background-color 0.2s; margin-top: 10px;">
+                    <?= $isChinese ? '保存新密码' : 'Salvar Nova Senha' ?>
+                </button>
+            </form>
         </div>
     </div>
 
@@ -2169,6 +2209,87 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 btn.textContent = isChinese ? '提交存款' : 'Enviar Depósito';
             }
         }
+
+        window.openChangePasswordModal = function(e) {
+            if (e) {
+                if (typeof e.preventDefault === 'function') e.preventDefault();
+                if (typeof e.stopPropagation === 'function') e.stopPropagation();
+            }
+            const alertBox = document.getElementById('pwd-alert');
+            alertBox.style.display = 'none';
+            alertBox.textContent = '';
+            alertBox.className = '';
+            document.getElementById('pwd-current').value = '';
+            document.getElementById('pwd-new').value = '';
+            document.getElementById('pwd-confirm').value = '';
+            showModal('change-password-modal');
+        };
+
+        window.closeChangePasswordModal = function() {
+            document.getElementById('change-password-modal').style.display = 'none';
+        };
+
+        window.submitChangePassword = async function(e) {
+            if (e) e.preventDefault();
+            const alertBox = document.getElementById('pwd-alert');
+            alertBox.style.display = 'none';
+            alertBox.textContent = '';
+            alertBox.className = '';
+
+            const currentPassword = document.getElementById('pwd-current').value;
+            const newPassword     = document.getElementById('pwd-new').value;
+            const confirmPassword = document.getElementById('pwd-confirm').value;
+
+            if (newPassword.length < 6) {
+                alertBox.textContent = isChinese ? '新密码必须至少包含 6 个字符。' : 'A nova senha deve ter pelo menos 6 caracteres.';
+                alertBox.className = 'alert alert-error';
+                alertBox.style.display = 'block';
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                alertBox.textContent = isChinese ? '新密码和确认密码不匹配。' : 'A nova senha e a confirmação não coincidem.';
+                alertBox.className = 'alert alert-error';
+                alertBox.style.display = 'block';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('current_password', currentPassword);
+            formData.append('new_password', newPassword);
+            formData.append('confirm_password', confirmPassword);
+            
+            // Get CSRF Token
+            const csrfToken = getCsrfToken();
+
+            try {
+                const response = await fetch('<?= url_to('update_password') ?>', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        '<?= csrf_header() ?>': csrfToken
+                    },
+                    body: formData
+                });
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    alertBox.textContent = isChinese ? '密码修改成功！' : 'Senha alterada com sucesso!';
+                    alertBox.className = 'alert alert-success';
+                    alertBox.style.display = 'block';
+                    document.getElementById('pwd-current').value = '';
+                    document.getElementById('pwd-new').value = '';
+                    document.getElementById('pwd-confirm').value = '';
+                } else {
+                    alertBox.textContent = data.error || (isChinese ? '密码更新失败。' : 'Erro ao atualizar a senha.');
+                    alertBox.className = 'alert alert-error';
+                    alertBox.style.display = 'block';
+                }
+            } catch (err) {
+                alertBox.textContent = isChinese ? '发生错误。' : 'Ocorreu um erro ao processar a requisição.';
+                alertBox.className = 'alert alert-error';
+                alertBox.style.display = 'block';
+            }
+        };
 
     </script>
 </body>
