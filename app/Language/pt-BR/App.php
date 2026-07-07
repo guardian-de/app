@@ -29,7 +29,7 @@ return [
     'min' => 'MIN',
     'show' => 'SHOW',
     'chat_placeholder' => 'Digite sua mensagem...',
-    'welcome_msg' => 'Olá {name}! Eu sou a EVO IA. Nosso horário de funcionamento é das {start} às {end}. Como posso te ajudar hoje?',
+    'welcome_msg' => 'Olá {name}! Eu sou a Guardian IA. Nosso horário de funcionamento é das {start} às {end}. Como posso te ajudar hoje?',
     'loading' => 'Carregando...',
     'no_transactions' => 'Nenhuma transação encontrada',
     'date' => 'Data',

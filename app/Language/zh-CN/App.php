@@ -29,7 +29,7 @@ return [
     'min' => '最小化',
     'show' => '显示',
     'chat_placeholder' => '输入您的消息...',
-    'welcome_msg' => '你好 {name}! 我是 EVO IA。我们的营业时间是 {start} 到 {end}。我能为您提供什么帮助？',
+    'welcome_msg' => '你好 {name}! 我是 Guardian IA。我们的营业时间是 {start} 到 {end}。我能为您提供什么帮助？',
     'loading' => '加载中...',
     'no_transactions' => '暂无记录',
     'date' => '日期',

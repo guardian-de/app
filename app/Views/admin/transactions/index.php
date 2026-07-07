@@ -143,7 +143,7 @@
 
 <!-- Print-Only Header -->
 <div class="print-header">
-    <h1>EVO CORRETORA - RELATÓRIO DO EXTRATO FINANCEIRO</h1>
+    <h1>GUARDIAN CORRETORA - RELATÓRIO DO EXTRATO FINANCEIRO</h1>
     <p>Data de Emissão: <?= date('d/m/Y H:i:s') ?> | Documento de Razão Contábil Oficial</p>
 </div>
 
