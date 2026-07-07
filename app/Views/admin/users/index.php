@@ -25,7 +25,7 @@
                 <th style="padding: 18px 25px; text-align: left; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Login</th>
                 <th style="padding: 18px 25px; text-align: left; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Permissão</th>
                 <th style="padding: 18px 25px; text-align: left; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Taxa (%)</th>
-                <th style="padding: 18px 25px; text-align: left; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Limite (Saldo)</th>
+                <th style="padding: 18px 25px; text-align: left; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Saldo</th>
                 <th style="padding: 18px 25px; text-align: left; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Criado em</th>
                 <th style="padding: 18px 25px; text-align: right; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Ações</th>
             </tr>
@@ -49,17 +49,14 @@
                     </span>
                 </td>
                 <td style="padding: 20px 25px; color: white; font-weight: 700; font-size: 14px;">
-                    Score: R$ <?= number_format($user['score'] ?? 0, 2, ',', '.') ?>
-                    <div style="font-size: 12px; color: #94a3b8; font-weight: 500; margin-top: 4px;">
-                        Saldo: R$ <?= number_format($user['balance'] ?? 0, 2, ',', '.') ?>
-                    </div>
+                    Saldo: R$ <?= number_format($user['balance'] ?? 0, 2, ',', '.') ?>
                 </td>
                 <td style="padding: 20px 25px; color: #64748b; font-size: 13px;"><?= date('d/m/Y', strtotime($user['created_at'])) ?></td>
                 <td style="padding: 20px 25px; text-align: right;">
                     <div style="display: inline-flex; gap: 8px; justify-content: flex-end;">
-                        <button class="btn btn-primary" onclick="openAdjustModal(<?= $user['id'] ?>, '<?= htmlspecialchars($user['login'], ENT_QUOTES) ?>', <?= $user['score'] ?? 0 ?>)" style="background: var(--primary); color: white; padding: 8px 14px; font-size: 13px;">Ajustar Saldo</button>
+                        <button class="btn btn-primary" onclick="openAdjustModal(<?= $user['id'] ?>, '<?= htmlspecialchars($user['login'], ENT_QUOTES) ?>', <?= $user['balance'] ?? 0 ?>)" style="background: var(--primary); color: white; padding: 8px 14px; font-size: 13px;">Ajustar Saldo</button>
                         <?php if (session()->get('user_role') === 'admin'): ?>
-                            <button class="btn" onclick="openPurchaseModal(<?= $user['id'] ?>, '<?= htmlspecialchars($user['login'], ENT_QUOTES) ?>', <?= $user['fee_percent'] ?? 0 ?>, <?= $user['score'] ?? 0 ?>)" style="background: rgba(16, 185, 129, 0.1); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); padding: 8px 14px; font-size: 13px;">Comprar</button>
+                            <button class="btn" onclick="openPurchaseModal(<?= $user['id'] ?>, '<?= htmlspecialchars($user['login'], ENT_QUOTES) ?>', <?= $user['fee_percent'] ?? 0 ?>, <?= $user['balance'] ?? 0 ?>)" style="background: rgba(16, 185, 129, 0.1); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); padding: 8px 14px; font-size: 13px;">Comprar</button>
                         <?php endif; ?>
                         <button class="btn" onclick="openStatementModal(<?= $user['id'] ?>, '<?= htmlspecialchars($user['login'], ENT_QUOTES) ?>')" style="background: rgba(251, 191, 36, 0.1); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.2); padding: 8px 14px; font-size: 13px;">Extrato</button>
                         <?php if (session()->get('user_role') === 'admin'): ?>
@@ -79,11 +76,11 @@
     <div class="card" style="max-width: 480px; width: 100%; border: 1px solid rgba(255,255,255,0.1); background: #0f172a; box-shadow: 0 20px 50px rgba(0,0,0,0.5); position: relative; animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;">
         <button onclick="closeAdjustModal()" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: #64748b; font-size: 24px; cursor: pointer; line-height: 1; transition: color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#64748b'">&times;</button>
         
-        <h2 style="font-size: 20px; color: white; margin-bottom: 5px;">Ajustar Limite / Saldo</h2>
+        <h2 style="font-size: 20px; color: white; margin-bottom: 5px;">Ajustar Saldo</h2>
         <p id="adjust-user-name" style="font-size: 14px; color: #94a3b8; margin-bottom: 20px;"></p>
         
         <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
-            <span style="color: #64748b; font-size: 13px;">Saldo/Limite Atual:</span>
+            <span style="color: #64748b; font-size: 13px;">Saldo Atual:</span>
             <span id="adjust-current-limit" style="color: white; font-weight: 700; font-size: 16px;">R$ 0,00</span>
         </div>
         
@@ -118,7 +115,7 @@
             
             <div class="form-group">
                 <label style="display: block; color: #94a3b8; font-size: 12px; font-weight: 600; margin-bottom: 8px;">Motivo / Descrição (Opcional)</label>
-                <input type="text" name="notes" placeholder="Ex: Ajuste de limite comercial" style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none;">
+                <input type="text" name="notes" placeholder="Ex: Ajuste de saldo comercial" style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none;">
             </div>
             
             <div style="display: flex; gap: 15px; margin-top: 10px;">
@@ -144,7 +141,7 @@
                 <span id="purchase-user-fee" style="color: #3b82f6; font-weight: 700; font-size: 15px;">0,00%</span>
             </div>
             <div style="text-align: right;">
-                <span style="color: #64748b; font-size: 12px; display: block;">Limite do Cliente:</span>
+                <span id="purchase-user-limit-label" style="color: #64748b; font-size: 12px; display: block;">Saldo do Cliente:</span>
                 <span id="purchase-user-limit" style="color: white; font-weight: 700; font-size: 15px;">R$ 0,00</span>
             </div>
         </div>
@@ -230,9 +227,9 @@
 </div>
 
 <script>
-function openAdjustModal(userId, name, currentLimit) {
-    document.getElementById('adjust-user-name').innerHTML = `Ajustar limite do cliente <strong>${name}</strong>`;
-    document.getElementById('adjust-current-limit').textContent = `R$ ${currentLimit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+function openAdjustModal(userId, name, currentBalance) {
+    document.getElementById('adjust-user-name').innerHTML = `Ajustar saldo do cliente <strong>${name}</strong>`;
+    document.getElementById('adjust-current-limit').textContent = `R$ ${currentBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
     document.getElementById('adjust-form').action = `<?= site_url('admin/users/adjust-limit') ?>/${userId}`;
     document.getElementById('adjust-amount').value = '';
     selectOperation('add');
@@ -245,15 +242,15 @@ function closeAdjustModal() {
 
 
 let currentClientFee = 0;
-let currentClientLimit = 0;
+let currentClientBalance = 0;
 
-function openPurchaseModal(userId, name, feePercent, creditLimit) {
+function openPurchaseModal(userId, name, feePercent, balance) {
     currentClientFee = feePercent;
-    currentClientLimit = creditLimit;
+    currentClientBalance = balance;
     
     document.getElementById('purchase-user-name').innerHTML = `Registrar compra para <strong>${name}</strong>`;
     document.getElementById('purchase-user-fee').textContent = `${feePercent.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}%`;
-    document.getElementById('purchase-user-limit').textContent = `R$ ${creditLimit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    document.getElementById('purchase-user-limit').textContent = `R$ ${balance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
     document.getElementById('purchase-form').action = `<?= site_url('admin/users/register-purchase') ?>/${userId}`;
     
     document.getElementById('purchase-amount').value = '';
@@ -275,8 +272,8 @@ function calculateBrlEstimation() {
         const totalBrl = usdt * rate;
         document.getElementById('purchase-total-brl').textContent = `R$ ${totalBrl.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
         
-        // Se o cliente possuir limite cadastrado, valida limite em tempo real
-        if (currentClientLimit > 0 && totalBrl > currentClientLimit) {
+        // Se a compra exceder o saldo do cliente, valida saldo em tempo real
+        if (totalBrl > currentClientBalance) {
             document.getElementById('purchase-total-brl').style.color = '#ef4444';
         } else {
             document.getElementById('purchase-total-brl').style.color = '#10b981';
@@ -305,9 +302,9 @@ if (purchaseForm) {
         }
         const rate = baseRate * (1 + (currentClientFee / 100));
         const totalBrl = usdt * rate;
-        if (currentClientLimit > 0 && totalBrl > currentClientLimit) {
+        if (totalBrl > currentClientBalance) {
             e.preventDefault();
-            alert('Erro: Limite de crédito insuficiente para o cliente. Limite disponível: R$ ' + currentClientLimit.toLocaleString('pt-BR', { minimumFractionDigits: 2 }));
+            alert('Erro: Saldo insuficiente para o cliente. Saldo disponível: R$ ' + currentClientBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 }));
             return false;
         }
     };
