@@ -545,6 +545,15 @@ $adminAlertSound = $settingsModel->getConfig('admin_alert_sound', 'chime_premium
             </a>
             <?php endif; ?>
 
+            <a href="<?= url_to('admin_chat') ?>"
+                class="nav-link <?= current_url() == url_to('admin_chat') ? 'active' : '' ?>" style="color: #60a5fa; margin-bottom: 5px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                Atendimento Chat
+            </a>
+
             <?php if ($hasPerm('settings')): ?>
             <a href="<?= url_to('admin_settings') ?>"
                 class="nav-link <?= current_url() == url_to('admin_settings') ? 'active' : '' ?>">
