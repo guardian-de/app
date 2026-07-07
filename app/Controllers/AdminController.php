@@ -56,7 +56,7 @@ class AdminController extends BaseController
             'password'               => $this->request->getPost('password'),
             'fee_percent'            => $role === 'user' ? ($this->request->getPost('fee_percent') ?: 10.00) : 0.00,
             'usdt_wallet'            => $role === 'user' ? $this->request->getPost('usdt_wallet') : null,
-            'score'                  => $role === 'user' ? ($this->request->getPost('score') ?: 0.00) : 0.00,
+            'score'                  => 0.00,
             'default_contract_type'  => $role === 'user' ? ($this->request->getPost('default_contract_type') ?: 'd+1') : 'd+1',
             'daily_interest_rate'    => $role === 'user' ? ($this->request->getPost('daily_interest_rate') ?: 0.00) : 0.00,
             'allowed_delivery_types' => $role === 'user' ? ($this->request->getPost('allowed_delivery_types') ?: 'all') : 'all',
@@ -96,7 +96,7 @@ class AdminController extends BaseController
             'login'                  => $this->request->getPost('login'),
             'fee_percent'            => $role === 'user' ? ($this->request->getPost('fee_percent') ?: 10.00) : 0.00,
             'usdt_wallet'            => $role === 'user' ? $this->request->getPost('usdt_wallet') : null,
-            'score'                  => $role === 'user' ? ($this->request->getPost('score') ?: 0.00) : 0.00,
+            'score'                  => 0.00,
             'default_contract_type'  => $role === 'user' ? ($this->request->getPost('default_contract_type') ?: 'd+1') : 'd+1',
             'daily_interest_rate'    => $role === 'user' ? ($this->request->getPost('daily_interest_rate') ?: 0.00) : 0.00,
             'allowed_delivery_types' => $role === 'user' ? ($this->request->getPost('allowed_delivery_types') ?: 'all') : 'all',
@@ -1187,10 +1187,8 @@ class AdminController extends BaseController
 
         $financialModel = new \App\Models\FinancialStatementModel();
         $sourceBalance = $financialModel->getBalance($id);
-        $sourceScore   = (float)($sourceUser['score'] ?? 0);
-        if (($sourceBalance - $amount) < -$sourceScore) {
-            $available = $sourceBalance + $sourceScore;
-            return redirect()->back()->with('error', 'Score insuficiente para a transferência. Disponível: R$ ' . number_format(max(0, $available), 2, ',', '.') . '.');
+        if (($sourceBalance - $amount) < 0) {
+            return redirect()->back()->with('error', 'Saldo insuficiente para a transferência. Disponível: R$ ' . number_format(max(0, $sourceBalance), 2, ',', '.') . '.');
         }
 
         $notes = $this->request->getPost('notes') ?: 'Transferência de Saldo';
@@ -1292,12 +1290,10 @@ class AdminController extends BaseController
         $contractModel = new \App\Models\ContractModel();
         $financialModel = new \App\Models\FinancialStatementModel();
 
-        // Valida score: balance - compra >= -score (pode ir ao negativo até o limite do score)
-        $score = (float)($user['score'] ?? 0);
+        // Valida saldo: balance - compra >= 0
         $balance = $financialModel->getBalance($id);
-        if ($score > 0 && ($balance - $brlAmount) < -$score) {
-            $available = $balance + $score;
-            return redirect()->back()->with('error', 'Score insuficiente. Disponível para compra: R$ ' . number_format($available, 2, ',', '.') . '.');
+        if (($balance - $brlAmount) < 0) {
+            return redirect()->back()->with('error', 'Saldo insuficiente. Disponível para compra: R$ ' . number_format(max(0, $balance), 2, ',', '.') . '.');
         }
 
         // Calcula a data de vencimento

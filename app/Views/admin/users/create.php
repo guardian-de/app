@@ -42,17 +42,10 @@
 
         <!-- Client specific fields container -->
         <div id="client-fields" style="display: flex; flex-direction: column; gap: 20px;">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <div class="form-group">
-                    <label style="display: block; color: #94a3b8; font-size: 12px; font-weight: 600; margin-bottom: 8px;">Taxa (%)</label>
-                    <input type="number" name="fee_percent" value="<?= old('fee_percent') ?: '10.00' ?>" step="0.01" required
-                        style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none;">
-                </div>
-                <div class="form-group">
-                    <label style="display: block; color: #94a3b8; font-size: 12px; font-weight: 600; margin-bottom: 8px;">Score (Limite de Crédito)</label>
-                    <input type="number" name="score" value="<?= old('score') ?: '0.00' ?>" step="0.01" required
-                        style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none;">
-                </div>
+            <div class="form-group">
+                <label style="display: block; color: #94a3b8; font-size: 12px; font-weight: 600; margin-bottom: 8px;">Taxa (%)</label>
+                <input type="number" name="fee_percent" value="<?= old('fee_percent') ?: '10.00' ?>" step="0.01" required
+                    style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none;">
             </div>
 
             <div class="form-group">

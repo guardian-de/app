@@ -293,7 +293,7 @@ class ChatController extends BaseController
             return $this->response->setJSON(['reply' => $reply]);
         }
 
-        // 1.2 Score / Limite (Credit Limit)
+        // 1.2 Saldo / Limite (Balance / Available Limit)
         $scoreTriggers = ['meu score', 'meu limite', 'quanto posso comprar', 'score', 'limite', '信用', '额度', '我的额度'];
         $isScore = false;
         foreach ($scoreTriggers as $t) { if (str_contains($lowerMessage, $t)) { $isScore = true; break; } }
@@ -301,13 +301,12 @@ class ChatController extends BaseController
         if ($isScore) {
             $financialModel = new \App\Models\FinancialStatementModel();
             $balance = $financialModel->getBalance($userId);
-            $score = (float)($user['score'] ?? 0);
-            $available = $balance + $score;
+            $available = max(0.0, $balance);
 
             if ($userLang == 'zh-CN') {
-                $reply = "您的当前余额为 R$ " . number_format($balance, 2, ',', '.') . "。评分限额为 R$ " . number_format($score, 2, ',', '.') . "。可用于新购买的额度为 R$ " . number_format($available, 2, ',', '.') . "。";
+                $reply = "您的当前余额为 R$ " . number_format($balance, 2, ',', '.') . "。可用于新购买的额度为 R$ " . number_format($available, 2, ',', '.') . "。";
             } else {
-                $reply = "Seu saldo atual é de R$ " . number_format($balance, 2, ',', '.') . ". Score de crédito: R$ " . number_format($score, 2, ',', '.') . ". Disponível para novas compras: R$ " . number_format($available, 2, ',', '.') . ".";
+                $reply = "Seu saldo atual é de R$ " . number_format($balance, 2, ',', '.') . ". Disponível para novas compras: R$ " . number_format($available, 2, ',', '.') . ".";
             }
             $chatMsgModel->save(['user_id' => $userId, 'sender' => 'bot', 'message' => $reply]);
             return $this->response->setJSON(['reply' => $reply]);
@@ -549,15 +548,13 @@ class ChatController extends BaseController
         $contractModel = new \App\Models\ContractModel();
         $financialModel = new \App\Models\FinancialStatementModel();
         if ($type === 'buy') {
-            $score = (float)($user['score'] ?? 0);
             $balance = $financialModel->getBalance($userId);
 
-            // Valida score: balance - compra >= -score
-            if ($score > 0 && ($balance - $brlAmount) < -$score) {
-                $available = $balance + $score;
+            // Valida saldo: balance - compra >= 0
+            if (($balance - $brlAmount) < 0) {
                 $errorMsg = $userLang == 'zh-CN'
-                    ? "信用额度不足。可用额度为 R$ " . number_format($available, 2, ',', '.')
-                    : "Score insuficiente. Disponível para compra: R$ " . number_format($available, 2, ',', '.') . ".";
+                    ? "余额不足。可用余额为 R$ " . number_format(max(0.0, $balance), 2, ',', '.')
+                    : "Saldo insuficiente. Disponível para compra: R$ " . number_format(max(0.0, $balance), 2, ',', '.') . ".";
                 return $this->response->setJSON(['error' => $errorMsg])->setStatusCode(400);
             }
 
