@@ -839,6 +839,25 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
         </div>
     </div>
 
+    <!-- Alert Notification Modal -->
+    <div id="alert-notification-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 6000; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(8px);">
+        <div style="background: rgba(30, 41, 59, 0.98); width: 100%; max-width: 380px; padding: 30px; border-radius: 24px; text-align: center; border: 2px solid #3b82f6; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6); position: relative; animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;">
+            <!-- Icon -->
+            <div id="alert-notif-icon-container" style="width: 56px; height: 56px; background: rgba(59, 130, 246, 0.1); border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 20px; color: #3b82f6;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+            </div>
+            <h2 id="alert-notif-title" style="color: white; font-size: 18px; font-weight: 700; margin-bottom: 12px;"></h2>
+            <p id="alert-notif-message" style="color: #94a3b8; font-size: 14px; line-height: 1.5; margin-bottom: 25px;"></p>
+            
+            <button onclick="closeAlertNotifModal()" style="width: 100%; background: #3b82f6; color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 600; font-size: 14px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#3b82f6'">
+                <?= lang('App.understood') ?>
+            </button>
+        </div>
+    </div>
+
     <!-- Proof Upload Modal -->
     <div id="proof-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 5001; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(10px);">
         <div style="width: 100%; max-width: 400px; background: #1e293b; padding: 30px; border-radius: 24px; text-align: center; border: 1px solid rgba(59, 130, 246, 0.2);">
@@ -1270,6 +1289,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             // ── Notificações (Móbile) ──────────────────────────────────────────
             let notifLoading = false;
             let lastSeenNotifKey = localStorage.getItem('last_read_notification') || '';
+            let lastAlertedNotifKey = '';
 
             window.openNotificationsModal = function() {
                 showModal('notifications-modal');
@@ -1281,6 +1301,98 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 if (modal) modal.style.display = 'none';
             };
 
+            window.closeAlertNotifModal = function() {
+                const modal = document.getElementById('alert-notification-modal');
+                if (modal) modal.style.display = 'none';
+            };
+
+            function triggerAlertModal(item) {
+                const isChinese = <?= $isChinese ? 'true' : 'false' ?>;
+                let title = '';
+                let description = '';
+                let color = '#3b82f6';
+                let iconBg = 'rgba(59, 130, 246, 0.1)';
+                
+                const amount = parseFloat(item.amount).toLocaleString(isChinese ? 'en-US' : 'pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 });
+                const amountStr = item.unit === 'USDT' ? `${amount} USDT` : `R$ ${amount}`;
+
+                if (item.operation_type === 'adjustment_add' || (item.operation_type === 'deposit' && item.description.includes('Ajuste'))) {
+                    title = isChinese ? '账户信用额度增加' : 'Ajuste de Crédito';
+                    description = isChinese 
+                        ? `管理员已向您的账户添加了 ${amountStr}。备注: ${item.description || ''}`
+                        : `O administrador adicionou ${amountStr} ao seu saldo. Obs: ${item.description || ''}`;
+                    color = '#22c55e';
+                    iconBg = 'rgba(34, 197, 94, 0.1)';
+                } else if (item.operation_type === 'adjustment_subtract') {
+                    title = isChinese ? '账户扣款调整' : 'Ajuste de Débito';
+                    description = isChinese 
+                        ? `管理员已从您的账户中扣除了 ${amountStr}。备注: ${item.description || ''}`
+                        : `O administrador removeu ${amountStr} do seu saldo. Obs: ${item.description || ''}`;
+                    color = '#ef4444';
+                    iconBg = 'rgba(239, 68, 68, 0.1)';
+                } else if (item.operation_type === 'withdrawal') {
+                    title = isChinese ? 'USDT 已发送交割' : 'USDT Enviado';
+                    description = isChinese 
+                        ? `已成功向您的钱包发送交割 ${amountStr}。操单 #${item.contract_id || ''}`
+                        : `Foi enviado ${amountStr} para sua carteira. Operação #${item.contract_id || ''}`;
+                    color = '#a78bfa';
+                    iconBg = 'rgba(167, 139, 250, 0.1)';
+                } else if (item.operation_type === 'deposit_pending') {
+                    title = isChinese ? '充值申请审核中' : 'Depósito em Análise';
+                    description = isChinese 
+                        ? `收到您的 ${amountStr} 充值申请，正在等待核对。`
+                        : `Seu depósito de ${amountStr} foi recebido e está aguardando verificação.`;
+                    color = '#fbbf24';
+                    iconBg = 'rgba(251, 191, 36, 0.1)';
+                } else if (item.operation_type === 'deposit_rejected') {
+                    title = isChinese ? '充值已被拒绝' : 'Depósito Rejeitado';
+                    description = isChinese 
+                        ? `您的 ${amountStr} 充值已被拒绝。原因: ${item.rejection_reason || ''}`
+                        : `Seu depósito de ${amountStr} foi rejeitado. Motivo: ${item.rejection_reason || ''}`;
+                    color = '#ef4444';
+                    iconBg = 'rgba(239, 68, 68, 0.1)';
+                } else if (item.operation_type === 'deposit') {
+                    title = isChinese ? '充值已被批准' : 'Depósito Confirmado';
+                    description = isChinese 
+                        ? `您的 ${amountStr} 充值已被批准，已记入您的余额。`
+                        : `Seu depósito de ${amountStr} foi verificado e aprovado com sucesso!`;
+                    color = '#22c55e';
+                    iconBg = 'rgba(34, 197, 94, 0.1)';
+                } else if (item.operation_type === 'buy') {
+                    title = isChinese ? '新操单已启动' : 'Operação Iniciada';
+                    description = isChinese 
+                        ? `您的操单已批准，价值 ${amountStr}。`
+                        : `Sua operação no valor de ${amountStr} foi iniciada com sucesso.`;
+                    color = '#3b82f6';
+                    iconBg = 'rgba(59, 130, 246, 0.1)';
+                } else if (item.operation_type === 'interest') {
+                    title = isChinese ? '产生逾期利息' : 'Juros Aplicados';
+                    description = isChinese 
+                        ? `操单 #${item.contract_id || ''} 产生了 ${amountStr} 的逾期费。`
+                        : `Foram aplicados juros de ${amountStr} na Operação #${item.contract_id || ''}.`;
+                    color = '#f97316';
+                    iconBg = 'rgba(249, 115, 22, 0.1)';
+                } else {
+                    title = isChinese ? '账户活动更新' : 'Movimentação';
+                    description = isChinese 
+                        ? `${item.description || ''} (${amountStr})`
+                        : `${item.description || ''} (${amountStr})`;
+                    color = '#94a3b8';
+                    iconBg = 'rgba(148, 163, 184, 0.1)';
+                }
+
+                document.getElementById('alert-notif-title').textContent = title;
+                document.getElementById('alert-notif-message').textContent = description;
+                
+                const iconContainer = document.getElementById('alert-notif-icon-container');
+                if (iconContainer) {
+                    iconContainer.style.background = iconBg;
+                    iconContainer.style.color = color;
+                }
+                
+                showModal('alert-notification-modal');
+            }
+
             async function checkNotifications() {
                 try {
                     const res = await fetch(`<?= url_to('chat_notifications') ?>`);
@@ -1290,6 +1402,25 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                         const newest = items[0];
                         const newestKey = `${newest.operation_type}_${newest.id}_${newest.transaction_date}`;
                         
+                        if (lastAlertedNotifKey && lastAlertedNotifKey !== newestKey) {
+                            let newItems = [];
+                            for (let i = 0; i < items.length; i++) {
+                                const key = `${items[i].operation_type}_${items[i].id}_${items[i].transaction_date}`;
+                                if (key === lastAlertedNotifKey) {
+                                    break;
+                                }
+                                newItems.push(items[i]);
+                            }
+                            if (newItems.length > 0) {
+                                triggerAlertModal(newItems[0]);
+                                if (typeof updateDebtBalance === 'function') {
+                                    updateDebtBalance();
+                                }
+                            }
+                        }
+                        
+                        lastAlertedNotifKey = newestKey;
+
                         let unseenCount = 0;
                         if (lastSeenNotifKey) {
                             for (let i = 0; i < items.length; i++) {
