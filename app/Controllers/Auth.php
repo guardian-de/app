@@ -168,4 +168,52 @@ class Auth extends BaseController
         session()->destroy();
         return redirect()->to('/login');
     }
+
+    public function changePassword()
+    {
+        if (!session()->get('isLoggedIn')) {
+            return redirect()->to('/login');
+        }
+        $data['role'] = session()->get('user_role');
+        return view('auth/change_password', $data);
+    }
+
+    public function updatePassword()
+    {
+        if (!session()->get('isLoggedIn')) {
+            return redirect()->to('/login');
+        }
+
+        $userId = session()->get('user_id');
+        $userModel = new UserModel();
+        $user = $userModel->find($userId);
+
+        if (!$user) {
+            return redirect()->to('/login');
+        }
+
+        $currentPassword = $this->request->getPost('current_password');
+        $newPassword     = $this->request->getPost('new_password');
+        $confirmPassword = $this->request->getPost('confirm_password');
+
+        // Validations
+        if (!password_verify($currentPassword, $user['password'])) {
+            return redirect()->back()->with('error', 'Senha atual incorreta.');
+        }
+
+        if (strlen($newPassword) < 6) {
+            return redirect()->back()->with('error', 'A nova senha deve ter pelo menos 6 caracteres.');
+        }
+
+        if ($newPassword !== $confirmPassword) {
+            return redirect()->back()->with('error', 'A nova senha e a confirmação não coincidem.');
+        }
+
+        // Save (automatic hashing will be performed by the model callback)
+        $userModel->update($userId, [
+            'password' => $newPassword
+        ]);
+
+        return redirect()->back()->with('success', 'Senha alterada com sucesso!');
+    }
 }

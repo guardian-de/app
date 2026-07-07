@@ -78,6 +78,8 @@ $routes->group('admin', ['filter' => 'admin'], function ($routes) {
 
 // Dashboard (Chat)
 $routes->group('', ['filter' => 'auth'], function ($routes) {
+    $routes->get('change-password', 'Auth::changePassword', ['as' => 'change_password']);
+    $routes->post('change-password', 'Auth::updatePassword', ['as' => 'update_password']);
     $routes->get('dashboard', 'ChatController::mobile', ['as' => 'dashboard']);
     $routes->get('m', 'ChatController::mobile', ['as' => 'dashboard_mobile']);
     $routes->post('chat/send', 'ChatController::send', ['as' => 'chat_send']);

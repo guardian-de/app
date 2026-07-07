@@ -559,6 +559,14 @@ $adminAlertSound = $settingsModel->getConfig('admin_alert_sound', 'chime_premium
             </a>
             <?php endif; ?>
             <div style="margin-top: auto; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
+                <a href="<?= url_to('change_password') ?>" class="nav-link <?= current_url() == url_to('change_password') ? 'active' : '' ?>" style="color: #60a5fa; margin-bottom: 10px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                    Alterar Senha
+                </a>
                 <a href="<?= url_to('logout') ?>" class="nav-link" style="color:#f87171">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

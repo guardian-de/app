@@ -487,6 +487,16 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                     </svg>
                     <span id="notifications-badge" style="display: none; position: absolute; top: -2px; right: -4px; background: #ef4444; color: white; font-size: 9px; font-weight: 800; min-width: 16px; height: 16px; border-radius: 8px; align-items: center; justify-content: center; padding: 0 3px; line-height: 1;"></span>
                 </button>
+                <!-- Alterar Senha -->
+                <a href="<?= url_to('change_password') ?>"
+                    style="text-decoration: none; color: #60a5fa; padding: 4px; display: flex; align-items: center; cursor: pointer;"
+                    title="Alterar Senha">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                </a>
                 <!-- Sair -->
                 <a href="<?= url_to('logout') ?>"
                     style="text-decoration: none; color: #f87171; padding: 4px; display: flex; align-items: center; cursor: pointer;"
