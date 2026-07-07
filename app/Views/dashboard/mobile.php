@@ -10,7 +10,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="csrf-token" content="<?= csrf_hash() ?>">
-    <title>Evo Mobile</title>
+    <title>Guardian Mobile</title>
     <link rel="stylesheet" href="<?= base_url('css/dashboard.css') ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -429,11 +429,10 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
         <div class="dashboard-panel-desktop">
             <header class="mobile-header">
             <div style="display: flex; align-items: center; gap: 12px;">
-                <div class="profile-badge"><?= strtoupper(substr($firstName, 0, 1)) ?></div>
                 <div class="live-rate-mobile">
                     <div class="rate-dot"></div>
                     <span id="live-rate-val" style="color: #3b82f6; font-weight: 700; font-size: 14px;">R$ 0,0000</span>
-            </div>
+                </div>
             </div>
             <div style="display: flex; gap: 14px; align-items: center;">
                 <!-- Tradutor -->
