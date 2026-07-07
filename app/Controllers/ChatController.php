@@ -249,6 +249,43 @@ class ChatController extends BaseController
         $transactionModel = new \App\Models\TransactionModel();
         $chatMsgModel = new \App\Models\ChatMessageModel();
 
+        $isClosed = ($now < $start || $now > $end);
+        if ($isClosed) {
+            // Salva mensagem do usuário
+            $chatMsgModel->save([
+                'user_id' => $userId,
+                'sender'  => 'user',
+                'message' => $userMessage
+            ]);
+
+            // Verifica se enviou o aviso nas últimas 1 hora
+            $oneHourAgo = date('Y-m-d H:i:s', strtotime('-1 hour'));
+            $lastNotice = $chatMsgModel->where('user_id', $userId)
+                ->where('sender', 'bot')
+                ->where('created_at >=', $oneHourAgo)
+                ->groupStart()
+                    ->like('message', 'horário de atendimento')
+                    ->orLike('message', '营业时间')
+                ->groupEnd()
+                ->first();
+
+            if (!$lastNotice) {
+                if ($userLang === 'zh-CN') {
+                    $reply = "我们的营业时间已结束 ($start - $end)，但您的消息已转发给客服人员。您现在正在直接与支持团队沟通。请耐心等待回复。";
+                } else {
+                    $reply = "Nosso horário de atendimento encerrou ($start às $end), mas sua mensagem foi encaminhada para um operador. Você agora está falando diretamente com o suporte. Por favor, aguarde o retorno.";
+                }
+                $chatMsgModel->save([
+                    'user_id' => $userId,
+                    'sender'  => 'bot',
+                    'message' => $reply
+                ]);
+                return $this->response->setJSON(['reply' => $reply]);
+            }
+
+            return $this->response->setJSON(['success' => true]);
+        }
+
         // Salva mensagem do usuário
         $chatMsgModel->save([
             'user_id' => $userId,
@@ -872,11 +909,18 @@ class ChatController extends BaseController
     {
         $db = \Config\Database::connect();
         $userId = session()->get('user_id');
+        $lastId = (int)$this->request->getGet('last_id');
         
-        $messages = $db->table('chat_messages')
-            ->where('user_id', $userId)
-            ->where('created_at >=', date('Y-m-d H:i:s', strtotime('-10 minutes')))
-            ->orderBy('created_at', 'ASC')
+        $builder = $db->table('chat_messages')
+            ->where('user_id', $userId);
+            
+        if ($lastId > 0) {
+            $builder->where('id >', $lastId);
+        } else {
+            $builder->where('created_at >=', date('Y-m-d H:i:s', strtotime('-24 hours')));
+        }
+        
+        $messages = $builder->orderBy('id', 'ASC')
             ->get()
             ->getResultArray();
             

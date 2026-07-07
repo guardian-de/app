@@ -1141,11 +1141,25 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
 
             // Initialization calls moved to the bottom
 
+            let lastMessageId = 0;
             async function loadChatHistory() {
                 try {
-                    const response = await fetch('<?= url_to('chat_messages_history') ?>');
+                    const response = await fetch('<?= url_to('chat_messages_history') ?>?last_id=' + lastMessageId);
                     const data = await response.json();
+                    
+                    const isInitialLoad = (lastMessageId === 0);
+                    
                     data.forEach(msg => {
+                        const msgId = parseInt(msg.id);
+                        if (msgId > lastMessageId) {
+                            lastMessageId = msgId;
+                        }
+                        
+                        // Durante o polling (isInitialLoad === false), não adicionamos mensagens do próprio 'user' para evitar duplicação local
+                        if (!isInitialLoad && msg.sender === 'user') {
+                            return;
+                        }
+                        
                         addMessage(msg.message, msg.sender, msg.show_buy == 1, parseFloat(msg.rate), parseFloat(msg.suggested_amount));
                     });
                 } catch (e) { }
@@ -1234,8 +1248,22 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
 
             function addMessage(text, side, showBuy = false, rate = 0, amount = 0) {
                 const div = document.createElement('div');
-                div.className = `message ${side}`;
-                div.textContent = text;
+                
+                let renderedSide = side;
+                let prefix = '';
+                if (side === 'operator') {
+                    renderedSide = 'bot';
+                    prefix = isChinese ? '👤 客服人员: ' : '👤 Operador: ';
+                } else if (side === 'admin') {
+                    renderedSide = 'bot';
+                    prefix = isChinese ? '🛡️ 管理员: ' : '🛡️ Admin: ';
+                } else if (side === 'bot') {
+                    prefix = '🤖 ';
+                }
+                
+                div.className = `message ${renderedSide}`;
+                div.textContent = prefix + text;
+                
                 if (showBuy && rate > 0) {
                     const btn = document.createElement('button');
                     btn.textContent = isChinese ? '购买 USDT' : 'Comprar USDT';
@@ -1378,18 +1406,25 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 e.preventDefault();
                 const message = userInput.value.trim();
                 if (!message) return;
+                
                 addMessage(message, 'user');
                 userInput.value = '';
                 typingIndicator.style.display = 'block';
                 chatMessages.scrollTop = chatMessages.scrollHeight;
-                const response = await fetch('<?= url_to('chat_send') ?>', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrfToken() },
-                    body: JSON.stringify({ message: message })
-                });
-                const data = await response.json();
-                typingIndicator.style.display = 'none';
-                if (data.reply) addMessage(data.reply, 'bot', data.showBuy, data.currentRate, data.suggestedAmount);
+                
+                try {
+                    const response = await fetch('<?= url_to('chat_send') ?>', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrfToken() },
+                        body: JSON.stringify({ message: message })
+                    });
+                    
+                    await loadChatHistory();
+                } catch (err) {
+                    console.error(err);
+                } finally {
+                    typingIndicator.style.display = 'none';
+                }
             };
 
             // ── Notificações (Móbile) ──────────────────────────────────────────
@@ -1916,6 +1951,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             setInterval(updateLiveRate, 1000); // 1s interval for fast real-time updates
             setInterval(updateDebtBalance, 30000);
             setInterval(checkNotifications, 30000);
+            setInterval(loadChatHistory, 3000); // Poll chat messages every 3 seconds
 
         let debtsData = null;
         let activeDebtsFilter = 'todos';

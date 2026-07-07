@@ -74,6 +74,13 @@ $routes->group('admin', ['filter' => 'admin'], function ($routes) {
     $routes->get('conciliation', 'AdminController::conciliation', ['as' => 'admin_conciliation']);
     $routes->get('settings', 'AdminController::settings', ['as' => 'admin_settings']);
     $routes->post('settings/update', 'AdminController::updateSettings', ['as' => 'admin_settings_update']);
+
+    // Admin Chat Support
+    $routes->get('chat', 'AdminChatController::index', ['as' => 'admin_chat']);
+    $routes->get('chat/users', 'AdminChatController::getUsers', ['as' => 'admin_chat_users']);
+    $routes->get('chat/messages/(:num)', 'AdminChatController::getMessages/$1', ['as' => 'admin_chat_messages']);
+    $routes->post('chat/send', 'AdminChatController::send', ['as' => 'admin_chat_send']);
+    $routes->post('chat/close/(:num)', 'AdminChatController::close/$1', ['as' => 'admin_chat_close']);
 });
 
 // Dashboard (Chat)
