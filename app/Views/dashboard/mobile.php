@@ -413,6 +413,17 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                         <line x1="2" y1="20" x2="22" y2="20"/>
                     </svg>
                 </button>
+                <!-- Notificações -->
+                <button onclick="openNotificationsModal()" id="notifications-btn"
+                    style="background: none; border: none; color: #3b82f6; padding: 4px; display: flex; align-items: center; position: relative; cursor: pointer;"
+                    title="Notificações">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                    <span id="notifications-badge" style="display: none; position: absolute; top: -2px; right: -4px; background: #ef4444; color: white; font-size: 9px; font-weight: 800; min-width: 16px; height: 16px; border-radius: 8px; align-items: center; justify-content: center; padding: 0 3px; line-height: 1;"></span>
+                </button>
                 <!-- Sair -->
                 <a href="<?= url_to('logout') ?>"
                     style="text-decoration: none; color: #f87171; padding: 4px; display: flex; align-items: center; cursor: pointer;"
@@ -803,6 +814,28 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 <?= lang('App.loading') ?>
             </div>
             <div id="statement-pagination" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center;padding-top:12px;flex-shrink:0;"></div>
+        </div>
+    </div>
+
+    <!-- Notifications Modal -->
+    <div id="notifications-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 5001; justify-content: center; align-items: center; padding: 15px; backdrop-filter: blur(10px);">
+        <div
+            style="background: rgba(30, 41, 59, 0.98); width: 100%; max-width: 420px; max-height: 88vh; padding: 25px; border-radius: 24px; position: relative; display: flex; flex-direction: column; border: 1px solid rgba(59, 130, 246, 0.2); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+            <button onclick="closeNotificationsModal()"
+                style="position: absolute; right: 20px; top: 20px; background: rgba(255,255,255,0.05); border: none; color: #94a3b8; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer;">&times;</button>
+
+            <h1 style="font-size: 20px; color: white; font-weight: 700; margin-bottom: 4px; padding-right: 40px;"><?= $isChinese ? '系统通知' : 'Notificações' ?></h1>
+            <p style="font-size: 12px; color: #64748b; margin-bottom: 16px;"><?= $isChinese ? '查看您的最新财务和操单更新。' : 'Acompanhe as atualizações de saldo e operações.' ?></p>
+
+            <!-- List (scrollable) -->
+            <div id="notifications-list" style="overflow-y: auto; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px;"></div>
+            <div id="notifications-loader" style="display:none;text-align:center;padding:12px 0;color:#475569;font-size:13px;flex-shrink:0;">
+                <?= lang('App.loading') ?>
+            </div>
+            <div id="notifications-empty" style="display:none;text-align:center;padding:40px 20px;color:#64748b;font-size:14px;">
+                <?= $isChinese ? '暂无新通知。' : 'Nenhuma notificação por enquanto.' ?>
+            </div>
         </div>
     </div>
 
@@ -1234,6 +1267,195 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 if (data.reply) addMessage(data.reply, 'bot', data.showBuy, data.currentRate, data.suggestedAmount);
             };
 
+            // ── Notificações (Móbile) ──────────────────────────────────────────
+            let notifLoading = false;
+            let lastSeenNotifKey = localStorage.getItem('last_read_notification') || '';
+
+            window.openNotificationsModal = function() {
+                showModal('notifications-modal');
+                fetchNotifications(true);
+            };
+
+            window.closeNotificationsModal = function() {
+                const modal = document.getElementById('notifications-modal');
+                if (modal) modal.style.display = 'none';
+            };
+
+            async function checkNotifications() {
+                try {
+                    const res = await fetch(`<?= url_to('chat_notifications') ?>`);
+                    const data = await res.json();
+                    const items = data.data || [];
+                    if (items.length > 0) {
+                        const newest = items[0];
+                        const newestKey = `${newest.operation_type}_${newest.id}_${newest.transaction_date}`;
+                        
+                        let unseenCount = 0;
+                        if (lastSeenNotifKey) {
+                            for (let i = 0; i < items.length; i++) {
+                                const key = `${items[i].operation_type}_${items[i].id}_${items[i].transaction_date}`;
+                                if (key === lastSeenNotifKey) {
+                                    break;
+                                }
+                                unseenCount++;
+                            }
+                        } else {
+                            unseenCount = items.length;
+                        }
+
+                        const badge = document.getElementById('notifications-badge');
+                        if (badge) {
+                            if (unseenCount > 0) {
+                                badge.textContent = unseenCount;
+                                badge.style.display = 'flex';
+                            } else {
+                                badge.style.display = 'none';
+                            }
+                        }
+                    }
+                } catch(e) {
+                    console.error('Error checking notifications', e);
+                }
+            }
+
+            async function fetchNotifications(markAsRead = false) {
+                if (notifLoading) return;
+                notifLoading = true;
+                const loader = document.getElementById('notifications-loader');
+                const empty = document.getElementById('notifications-empty');
+                if (loader) loader.style.display = 'block';
+                if (empty) empty.style.display = 'none';
+                try {
+                    const res = await fetch(`<?= url_to('chat_notifications') ?>`);
+                    const data = await res.json();
+                    const items = data.data || [];
+                    renderNotificationItems(items);
+                    
+                    if (items.length === 0 && empty) {
+                        empty.style.display = 'block';
+                    }
+
+                    if (markAsRead && items.length > 0) {
+                        const newest = items[0];
+                        const newestKey = `${newest.operation_type}_${newest.id}_${newest.transaction_date}`;
+                        localStorage.setItem('last_read_notification', newestKey);
+                        lastSeenNotifKey = newestKey;
+                        const badge = document.getElementById('notifications-badge');
+                        if (badge) badge.style.display = 'none';
+                    }
+                } catch(e) {
+                    console.error('Notifications fetch error', e);
+                } finally {
+                    notifLoading = false;
+                    if (loader) loader.style.display = 'none';
+                }
+            }
+
+            function renderNotificationItems(items) {
+                const list = document.getElementById('notifications-list');
+                if (!list) return;
+                list.innerHTML = '';
+                const isChinese = <?= $isChinese ? 'true' : 'false' ?>;
+                
+                items.forEach(item => {
+                    let title = '';
+                    let description = '';
+                    let color = '#3b82f6';
+                    let iconBg = 'rgba(59, 130, 246, 0.1)';
+                    
+                    const amount = parseFloat(item.amount).toLocaleString(isChinese ? 'en-US' : 'pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 });
+                    const amountStr = item.unit === 'USDT' ? `${amount} USDT` : `R$ ${amount}`;
+
+                    if (item.operation_type === 'adjustment_add' || (item.operation_type === 'deposit' && item.description.includes('Ajuste'))) {
+                        title = isChinese ? '账户信用额度增加' : 'Ajuste de Crédito';
+                        description = isChinese 
+                            ? `管理员已向您的账户添加了 ${amountStr}。备注: ${item.description || ''}`
+                            : `O administrador adicionou ${amountStr} ao seu saldo. Obs: ${item.description || ''}`;
+                        color = '#22c55e';
+                        iconBg = 'rgba(34, 197, 94, 0.1)';
+                    } else if (item.operation_type === 'adjustment_subtract') {
+                        title = isChinese ? '账户扣款调整' : 'Ajuste de Débito';
+                        description = isChinese 
+                            ? `管理员已从您的账户中扣除了 ${amountStr}。备注: ${item.description || ''}`
+                            : `O administrador removeu ${amountStr} do seu saldo. Obs: ${item.description || ''}`;
+                        color = '#ef4444';
+                        iconBg = 'rgba(239, 68, 68, 0.1)';
+                    } else if (item.operation_type === 'withdrawal') {
+                        title = isChinese ? 'USDT 已发送交割' : 'USDT Enviado';
+                        description = isChinese 
+                            ? `已成功向您的钱包发送交割 ${amountStr}。操单 #${item.contract_id || ''}`
+                            : `Foi enviado ${amountStr} para sua carteira. Operação #${item.contract_id || ''}`;
+                        color = '#a78bfa';
+                        iconBg = 'rgba(167, 139, 250, 0.1)';
+                    } else if (item.operation_type === 'deposit_pending') {
+                        title = isChinese ? '充值申请审核中' : 'Depósito em Análise';
+                        description = isChinese 
+                            ? `收到您的 ${amountStr} 充值申请，正在等待核对。`
+                            : `Seu depósito de ${amountStr} foi recebido e está aguardando verificação.`;
+                        color = '#fbbf24';
+                        iconBg = 'rgba(251, 191, 36, 0.1)';
+                    } else if (item.operation_type === 'deposit_rejected') {
+                        title = isChinese ? '充值已被拒绝' : 'Depósito Rejeitado';
+                        description = isChinese 
+                            ? `您的 ${amountStr} 充值已被拒绝。原因: ${item.rejection_reason || ''}`
+                            : `Seu depósito de ${amountStr} foi rejeitado. Motivo: ${item.rejection_reason || ''}`;
+                        color = '#ef4444';
+                        iconBg = 'rgba(239, 68, 68, 0.1)';
+                    } else if (item.operation_type === 'deposit') {
+                        title = isChinese ? '充值已被批准' : 'Depósito Confirmado';
+                        description = isChinese 
+                            ? `您的 ${amountStr} 充值已被批准，已记入您的余额。`
+                            : `Seu depósito de ${amountStr} foi verificado e aprovado com sucesso!`;
+                        color = '#22c55e';
+                        iconBg = 'rgba(34, 197, 94, 0.1)';
+                    } else if (item.operation_type === 'buy') {
+                        title = isChinese ? '新操单已启动' : 'Operação Iniciada';
+                        description = isChinese 
+                            ? `您的操单已批准，价值 ${amountStr}。`
+                            : `Sua operação no valor de ${amountStr} foi iniciada com sucesso.`;
+                        color = '#3b82f6';
+                        iconBg = 'rgba(59, 130, 246, 0.1)';
+                    } else if (item.operation_type === 'interest') {
+                        title = isChinese ? '产生逾期利息' : 'Juros Aplicados';
+                        description = isChinese 
+                            ? `操单 #${item.contract_id || ''} 产生了 ${amountStr} 的逾期费。`
+                            : `Foram aplicados juros de ${amountStr} na Operação #${item.contract_id || ''}.`;
+                        color = '#f97316';
+                        iconBg = 'rgba(249, 115, 22, 0.1)';
+                    } else {
+                        title = isChinese ? '账户活动更新' : 'Movimentação';
+                        description = isChinese 
+                            ? `${item.description || ''} (${amountStr})`
+                            : `${item.description || ''} (${amountStr})`;
+                        color = '#94a3b8';
+                        iconBg = 'rgba(148, 163, 184, 0.1)';
+                    }
+
+                    const d = new Date(item.transaction_date.replace(' ', 'T'));
+                    const dateStr = d.toLocaleDateString(isChinese ? 'zh-CN' : 'pt-BR', { day:'2-digit', month:'short' })
+                                   + ' ' + d.toLocaleTimeString(isChinese ? 'zh-CN' : 'pt-BR', { hour:'2-digit', minute:'2-digit' });
+
+                    const el = document.createElement('div');
+                    el.style.cssText = 'display:flex;align-items:flex-start;gap:12px;background:rgba(15,23,42,0.4);border:1px solid rgba(255,255,255,0.03);border-radius:16px;padding:12px 14px;';
+                    el.innerHTML = `
+                        <div style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:${iconBg};color:${color};flex-shrink:0;margin-top:2px;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                            </svg>
+                        </div>
+                        <div style="flex:1;min-width:0;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:3px;">
+                                <span style="font-size:13px;font-weight:700;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;">${title}</span>
+                                <span style="font-size:10px;color:#475569;white-space:nowrap;">${dateStr}</span>
+                            </div>
+                            <p style="font-size:11px;color:#94a3b8;line-height:1.4;">${description}</p>
+                        </div>
+                    `;
+                    list.appendChild(el);
+                });
+            }
+
             // ── Statement (Extrato) ──────────────────────────────────────────
             let stmtPage = 1, stmtTotal = 0, stmtLoading = false;
             const stmtPerPage = 20;
@@ -1452,9 +1674,11 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             loadChatHistory();
             initChart();
             initContractsBadge();
+            checkNotifications();
 
             setInterval(updateLiveRate, 1000); // 1s interval for fast real-time updates
             setInterval(updateDebtBalance, 30000);
+            setInterval(checkNotifications, 30000);
 
         let debtsData = null;
         let activeDebtsFilter = 'todos';

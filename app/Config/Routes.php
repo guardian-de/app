@@ -94,6 +94,7 @@ $routes->group('', ['filter' => 'auth'], function($routes) {
     $routes->get('chat/pending-deliveries', 'ChatController::getPendingDeliveries', ['as' => 'chat_pending_deliveries']);
     $routes->get('chat/my-debts', 'ChatController::getMyDebts', ['as' => 'chat_my_debts']);
     $routes->get('chat/statement', 'ChatController::getStatement', ['as' => 'chat_statement']);
+    $routes->get('chat/notifications', 'ChatController::getNotifications', ['as' => 'chat_notifications']);
     $routes->post('deposit/store', 'ChatController::depositStore', ['as' => 'deposit_store']);
 });
 

@@ -856,6 +856,21 @@ class ChatController extends BaseController
         return $this->response->setJSON($result);
     }
 
+    public function getNotifications()
+    {
+        if (!session()->get('isLoggedIn')) {
+            return $this->response->setJSON(['error' => 'Unauthorized'])->setStatusCode(401);
+        }
+
+        $userId = (int) session()->get('user_id');
+        session()->close();
+
+        $model  = new \App\Models\FinancialStatementModel();
+        $result = $model->getUserStatement($userId, 1, 30);
+
+        return $this->response->setJSON($result);
+    }
+
     public function getChatMessages()
     {
         $db = \Config\Database::connect();
