@@ -302,11 +302,14 @@ if (purchaseForm) {
         }
         const rate = baseRate * (1 + (currentClientFee / 100));
         const totalBrl = usdt * rate;
+        // Validação de saldo removida para permitir compra mesmo com saldo abaixo de 0,00
+        /*
         if (totalBrl > currentClientBalance) {
             e.preventDefault();
             alert('Erro: Saldo insuficiente para o cliente. Saldo disponível: R$ ' + currentClientBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 }));
             return false;
         }
+        */
     };
 }
 

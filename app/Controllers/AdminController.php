@@ -1290,11 +1290,13 @@ class AdminController extends BaseController
         $contractModel = new \App\Models\ContractModel();
         $financialModel = new \App\Models\FinancialStatementModel();
 
-        // Valida saldo: balance - compra >= 0
+        // Valida saldo: balance - compra >= 0 (Comentado para permitir compra mesmo com saldo abaixo de 0,00)
         $balance = $financialModel->getBalance($id);
+        /*
         if (($balance - $brlAmount) < 0) {
             return redirect()->back()->with('error', 'Saldo insuficiente. Disponível para compra: R$ ' . number_format(max(0, $balance), 2, ',', '.') . '.');
         }
+        */
 
         // Calcula a data de vencimento
         $days = 0;
