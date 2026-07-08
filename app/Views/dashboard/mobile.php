@@ -1570,8 +1570,9 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 let color = '#3b82f6';
                 let iconBg = 'rgba(59, 130, 246, 0.1)';
                 
-                const amount = parseFloat(item.amount).toLocaleString(isChinese ? 'en-US' : 'pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 });
-                const amountStr = item.unit === 'USDT' ? `${amount} USDT` : `R$ ${amount}`;
+                const hasAmount = item.amount !== null && item.amount !== undefined && !isNaN(parseFloat(item.amount));
+                const amount = hasAmount ? parseFloat(item.amount).toLocaleString(isChinese ? 'en-US' : 'pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 }) : '';
+                const amountStr = hasAmount ? (item.unit === 'USDT' ? `${amount} USDT` : `R$ ${amount}`) : '';
 
                 if (item.operation_type === 'adjustment_add' || (item.operation_type === 'deposit' && item.description.includes('Ajuste'))) {
                     title = isChinese ? '账户信用额度增加' : 'Ajuste de Crédito';
@@ -1597,8 +1598,8 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 } else if (item.operation_type === 'deposit_pending') {
                     title = isChinese ? '充值申请审核中' : 'Depósito em Análise';
                     description = isChinese 
-                        ? `收到您的 ${amountStr} 充值申请，正在等待核对。`
-                        : `Seu depósito de ${amountStr} foi recebido e está aguardando verificação.`;
+                        ? (hasAmount ? `收到您的 ${amountStr} 充值申请，正在等待核对。` : '您的充值申请已收到，正在等待核对。')
+                        : (hasAmount ? `Seu depósito de ${amountStr} foi recebido e está aguardando verificação.` : 'Seu depósito foi recebido e está aguardando verificação.');
                     color = '#fbbf24';
                     iconBg = 'rgba(251, 191, 36, 0.1)';
                 } else if (item.operation_type === 'deposit_rejected') {
@@ -1751,8 +1752,9 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                     let color = '#3b82f6';
                     let iconBg = 'rgba(59, 130, 246, 0.1)';
                     
-                    const amount = parseFloat(item.amount).toLocaleString(isChinese ? 'en-US' : 'pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 });
-                    const amountStr = item.unit === 'USDT' ? `${amount} USDT` : `R$ ${amount}`;
+                    const hasAmount = item.amount !== null && item.amount !== undefined && !isNaN(parseFloat(item.amount));
+                    const amount = hasAmount ? parseFloat(item.amount).toLocaleString(isChinese ? 'en-US' : 'pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 }) : '';
+                    const amountStr = hasAmount ? (item.unit === 'USDT' ? `${amount} USDT` : `R$ ${amount}`) : '';
 
                     if (item.operation_type === 'adjustment_add' || (item.operation_type === 'deposit' && item.description.includes('Ajuste'))) {
                         title = isChinese ? '账户信用额度增加' : 'Ajuste de Crédito';
@@ -1778,8 +1780,8 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                     } else if (item.operation_type === 'deposit_pending') {
                         title = isChinese ? '充值申请审核中' : 'Depósito em Análise';
                         description = isChinese 
-                            ? `收到您的 ${amountStr} 充值申请，正在等待核对。`
-                            : `Seu depósito de ${amountStr} foi recebido e está aguardando verificação.`;
+                            ? (hasAmount ? `收到您的 ${amountStr} 充值申请，正在等待核对。` : '您的充值申请已收到，正在等待核对。')
+                            : (hasAmount ? `Seu depósito de ${amountStr} foi recebido e está aguardando verificação.` : 'Seu depósito foi recebido e está aguardando verificação.');
                         color = '#fbbf24';
                         iconBg = 'rgba(251, 191, 36, 0.1)';
                     } else if (item.operation_type === 'deposit_rejected') {
