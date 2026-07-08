@@ -133,7 +133,7 @@ class Cron extends BaseController
         $pending = $depositModel
             ->where('ocr_status', 'processing')
             ->orderBy('created_at', 'ASC')
-            ->limit(5)
+            ->limit(1)
             ->findAll();
 
         if (empty($pending)) {
@@ -147,13 +147,34 @@ class Cron extends BaseController
             $ocrText  = $ocr->read($deposit['proof_file']);
             $aiResult = $extractor->extract((string) $ocrText);
 
-            $isReadable = $aiResult['is_proof'] && $aiResult['amount'] !== null;
+            $ocrCode = \App\Models\DepositModel::extractAuthCodeFromText((string) $ocrText);
+            $isDuplicate = 0;
+
+            if (!empty($ocrCode)) {
+                $existing = $depositModel->where('id !=', $deposit['id'])
+                    ->where('ocr_code', $ocrCode)
+                    ->first();
+                if ($existing) {
+                    $isDuplicate = 1;
+                }
+            } elseif (!empty($ocrText)) {
+                $existing = $depositModel->where('id !=', $deposit['id'])
+                    ->where('ocr_raw_text', $ocrText)
+                    ->first();
+                if ($existing) {
+                    $isDuplicate = 1;
+                }
+            }
+
+            $isReadable = $aiResult['is_proof'] && $aiResult['amount'] !== null && !$isDuplicate;
 
             $depositModel->update($deposit['id'], [
                 'amount'       => $isReadable ? $aiResult['amount'] : null,
                 'ai_amount'    => $aiResult['amount'],
                 'ocr_status'   => $isReadable ? 'ok' : 'needs_review',
                 'ocr_raw_text' => $ocrText,
+                'ocr_code'     => $ocrCode,
+                'is_duplicate' => $isDuplicate,
             ]);
         }
 
