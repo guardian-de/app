@@ -887,8 +887,18 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                     style="width:100%;background:rgba(15,23,42,0.6);border:1px solid #334155;border-radius:12px;color:white;padding:10px 12px 10px 36px;font-size:14px;outline:none;box-sizing:border-box;">
             </div>
 
+            <!-- Toggle Advanced Filters Button -->
+            <button onclick="toggleAdvancedFilters()"
+                style="display:flex; align-items:center; justify-content:center; gap:6px; width:100%; background:none; border:none; color:#3b82f6; font-size:12px; font-weight:600; cursor:pointer; padding:6px 0; margin-bottom:12px; flex-shrink:0;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                </svg>
+                <span>Filtros Avançados</span>
+                <svg id="stmt-filters-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+
             <!-- Advanced Filters & Exports -->
-            <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px; background:rgba(15,23,42,0.3); padding:12px; border-radius:16px; border:1px solid rgba(51,65,85,0.4); flex-shrink:0;">
+            <div id="statement-advanced-filters" style="display:none; flex-direction:column; gap:10px; margin-bottom:16px; background:rgba(15,23,42,0.3); padding:12px; border-radius:16px; border:1px solid rgba(51,65,85,0.4); flex-shrink:0;">
                 <!-- Dates Grid -->
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                     <div>
@@ -1924,6 +1934,18 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 
                 let baseUrl = format === 'pdf' ? "<?= url_to('chat_statement_pdf') ?>" : "<?= url_to('chat_statement_xlsx') ?>";
                 window.open(`${baseUrl}?${params.toString()}`, '_blank');
+            }
+
+            function toggleAdvancedFilters() {
+                const container = document.getElementById('statement-advanced-filters');
+                const chevron = document.getElementById('stmt-filters-chevron');
+                if (container.style.display === 'none' || container.style.display === '') {
+                    container.style.display = 'flex';
+                    chevron.style.transform = 'rotate(180deg)';
+                } else {
+                    container.style.display = 'none';
+                    chevron.style.transform = 'rotate(0deg)';
+                }
             }
 
             function renderStmtItems(items) {
