@@ -61,8 +61,16 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             overflow: hidden;
             background: #020617;
             /* Deep Blue Night */
-            font-family: 'Outfit', sans-serif;
             color: #f8fafc;
+        }
+
+        body,
+        html,
+        input,
+        select,
+        textarea,
+        button {
+            font-family: 'Outfit', sans-serif !important;
         }
 
         .mobile-wrapper {
@@ -707,10 +715,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
         <div class="chat-panel-desktop">
             <!-- Cabeçalho do Chat Exclusivo do Desktop -->
             <div class="desktop-chat-header">
-                <div>
-                    <h2 style="font-size: 16px; font-weight: 700; color: white; margin: 0;">GUARDIAN IA</h2>
-                    <div style="font-size: 11px; color: #64748b;"><?= $isChinese ? '智能助理' : 'Assistente Inteligente' ?></div>
-                </div>
+                <div></div>
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <!-- Live Rate -->
                     <div class="live-rate-desktop" style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.15); padding: 6px 12px; border-radius: 99px; display: flex; align-items: center; gap: 8px;">
