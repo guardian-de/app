@@ -65,10 +65,10 @@ class ApiController extends BaseController
         if ($usdtSpot === null || $bidPrice === null || $askPrice === null) {
             $db = \Config\Database::connect();
             $lastRecord = $db->table('dollar_history')
-                             ->orderBy('created_at', 'DESC')
-                             ->limit(1)
-                             ->get()
-                             ->getRow();
+                ->orderBy('created_at', 'DESC')
+                ->limit(1)
+                ->get()
+                ->getRow();
 
             $fallbackRate = $lastRecord ? (float) $lastRecord->rate : 5.0;
 
@@ -91,29 +91,117 @@ class ApiController extends BaseController
 
         // 5. Montar estrutura final
         $result = [
-            'lastUpdate'       => $lastUpdate,
+            'lastUpdate' => $lastUpdate,
             'currentValidLink' => 'coinBaseData',
-            'coinBaseData'     => [
+            'coinBaseData' => [
                 'usdtSpot' => $usdtSpot,
-                'usdt'     => 1,
+                'usdt' => 1,
             ],
-            'aditional'        => 0,
-            'investingData'    => [
+            'aditional' => 0,
+            'investingData' => [
                 'usdtSpot' => 0,
-                'usdt'     => 1,
+                'usdt' => 1,
             ],
             'currencyDataFeedAskData' => [
-                'usdt'     => 1,
+                'usdt' => 1,
                 'usdtSpot' => $askPrice,
             ],
             'currencyDataFeedBidData' => [
-                'usdt'     => 1,
+                'usdt' => 1,
                 'usdtSpot' => $bidPrice,
             ],
         ];
 
         // 6. Gravar em cache por 5 segundos
         cache()->save($cacheKey, $result, 5);
+
+        return $this->response->setJSON($result);
+    }
+
+    /**
+     * Retorna a cotação do USD/BRL extraída de currencydatafeed.com,
+     * escolhendo a melhor cotação entre ask e bid (o valor máximo).
+     * Possui cache de 10 segundos e fallback para o histórico do banco de dados.
+     */
+    public function cotacaoUsd()
+    {
+        $cacheKey = 'api_usd_cotacao_data';
+        $cachedData = cache($cacheKey);
+
+        if ($cachedData !== null) {
+            return $this->response->setJSON($cachedData);
+        }
+
+        $cotacao = null;
+        $ask = null;
+        $bid = null;
+
+        $token = 'xex17elzxsaynyiikh7t';
+        $apiUrl = 'https://currencydatafeed.com/api/data.php?currency=USD/BRL&token=' . $token;
+
+        $ch = curl_init($apiUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 4);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)');
+        $response = curl_exec($ch);
+        curl_close($ch);
+
+        if ($response) {
+            $data = json_decode($response, true);
+            if (isset($data['status']) && $data['status'] === true && !empty($data['currency'][0])) {
+                $currency = $data['currency'][0];
+                if (isset($currency['ask']) && is_numeric($currency['ask'])) {
+                    $ask = (float) $currency['ask'];
+                }
+                if (isset($currency['bid']) && is_numeric($currency['bid'])) {
+                    $bid = (float) $currency['bid'];
+                }
+
+                if ($ask !== null && $bid !== null) {
+                    $cotacao = max($ask, $bid);
+                } elseif ($ask !== null) {
+                    $cotacao = $ask;
+                } elseif ($bid !== null) {
+                    $cotacao = $bid;
+                }
+            }
+        }
+
+        // Fallback: se falhar a API externa, buscar no histórico local
+        if ($cotacao === null || $ask === null || $bid === null) {
+            $db = \Config\Database::connect();
+            $lastRecord = $db->table('dollar_history')
+                ->orderBy('created_at', 'DESC')
+                ->limit(1)
+                ->get()
+                ->getRow();
+
+            $fallbackRate = $lastRecord ? (float) $lastRecord->rate : 5.0;
+
+            if ($cotacao === null) {
+                $cotacao = $fallbackRate;
+            }
+            if ($ask === null) {
+                $ask = $cotacao;
+            }
+            if ($bid === null) {
+                $bid = $cotacao;
+            }
+        }
+
+        $now = new \DateTime('now', new \DateTimeZone('UTC'));
+        $lastUpdate = $now->format('Y-m-d\TH:i:s.v\Z');
+
+        $result = [
+            'lastUpdate' => $lastUpdate,
+            'cotacao' => $cotacao,
+            'ask' => $ask,
+            'bid' => $bid,
+        ];
+
+        // Cachear resultado por 10 segundos
+        cache()->save($cacheKey, $result, 10);
 
         return $this->response->setJSON($result);
     }

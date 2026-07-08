@@ -109,6 +109,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
 
 // API Routes
 $routes->get('api/usdt-cotacao', 'ApiController::usdtCotacao');
+$routes->get('api/cotacao-usd', 'ApiController::cotacaoUsd');
 
 // Cron URL
 $routes->get('cron/record', 'Cron::record');
