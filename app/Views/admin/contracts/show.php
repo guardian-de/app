@@ -53,7 +53,14 @@
             <div>
                 <p style="font-size: 12px; color: #94a3b8; text-transform: uppercase;">Spot da Compra</p>
                 <p style="font-size: 18px; font-weight: 700; color: white;">
-                    <?= !empty($clientProof['base_rate']) ? 'R$ ' . number_format($clientProof['base_rate'], 4, ',', '.') : '—' ?></p>
+                    <?php
+                    $spotRate = !empty($clientProof['base_rate']) ? (float)$clientProof['base_rate'] : 0;
+                    if ($spotRate <= 0 && (float)$c['total_amount'] > 0 && (float)$c['comercial_brl'] > 0) {
+                        $spotRate = (float)$c['comercial_brl'] / (float)$c['total_amount'];
+                    }
+                    echo $spotRate > 0 ? 'R$ ' . number_format($spotRate, 4, ',', '.') : '—';
+                    ?>
+                </p>
             </div>
             <div>
                 <p style="font-size: 12px; color: #94a3b8; text-transform: uppercase;">USDT Enviado ao Cliente</p>
