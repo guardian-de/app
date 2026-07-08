@@ -73,6 +73,7 @@
             border-radius: 12px;
             font-size: 15px;
             line-height: 1.5;
+            position: relative;
         }
 
         .message.user {
@@ -87,6 +88,35 @@
             background: #334155;
             color: #f8fafc;
             border-bottom-left-radius: 4px;
+        }
+
+        .message .delete-msg-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #ef4444;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 4px;
+            opacity: 0.15;
+            transition: opacity 0.2s, transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .message.bot .delete-msg-btn {
+            right: -32px;
+        }
+        .message.user .delete-msg-btn {
+            left: -32px;
+        }
+        .message:hover .delete-msg-btn,
+        .message:active .delete-msg-btn,
+        .delete-msg-btn:hover {
+            opacity: 0.95;
+            transform: translateY(-50%) scale(1.15);
         }
 
         .chat-input-area {
@@ -312,9 +342,14 @@
                         <h2 style="font-size: 18px; font-weight: 600;">GUARDIAN IA</h2>
                         <div style="font-size: 12px; color: #94a3b8;">GUARDIAN IA Assistente</div>
                     </div>
-                    <!-- Dropdown de menu mobile (Logout) -->
-                    <div style="display: flex; gap: 10px;" class="mobile-stats">
-                        <!-- Só aparecerá via CSS se não fizermos um script, mas vamos colocar direto -->
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <button type="button" onclick="clearChatMessages()" style="background: none; border: none; color: #ef4444; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;" title="<?= $isChinese ? '清除聊天记录' : 'Limpar Histórico' ?>">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                            <span><?= $isChinese ? '清除历史' : 'Limpar Histórico' ?></span>
+                        </button>
                     </div>
                 </div>
 
@@ -794,10 +829,25 @@
             };
         });
 
-        function addMessage(text, side, showBuy = false, rate = 0, amount = 0) {
+        function addMessage(text, side, showBuy = false, rate = 0, amount = 0, msgId = null) {
             const div = document.createElement('div');
+            if (msgId) {
+                div.dataset.id = msgId;
+            }
             div.className = `message ${side}`;
-            div.textContent = text;
+            
+            const textSpan = document.createElement('span');
+            textSpan.textContent = text;
+            div.appendChild(textSpan);
+
+            if (msgId) {
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-msg-btn';
+                deleteBtn.innerHTML = '🗑️';
+                deleteBtn.title = isChinese ? '删除消息' : 'Apagar mensagem';
+                deleteBtn.onclick = (e) => deleteMessage(e, msgId, div);
+                div.appendChild(deleteBtn);
+            }
 
             if (showBuy && rate > 0) {
                 const btn = document.createElement('button');
@@ -813,6 +863,62 @@
 
             chatMessages.appendChild(div);
             chatMessages.scrollTop = chatMessages.scrollHeight;
+            return div;
+        }
+
+        async function deleteMessage(e, id, element) {
+            if (e) e.stopPropagation();
+            if (!confirm(isChinese ? '确定要删除这条消息吗？' : 'Tem certeza que deseja apagar esta mensagem?')) {
+                return;
+            }
+            try {
+                const response = await fetch('<?= url_to('chat_delete_message') ?>', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json', 
+                        'X-Requested-With': 'XMLHttpRequest', 
+                        '<?= csrf_header() ?>': '<?= csrf_hash() ?>' 
+                    },
+                    body: JSON.stringify({ id: id })
+                });
+                const data = await response.json();
+                if (data.status === 'success') {
+                    element.remove();
+                } else {
+                    alert(data.message || 'Erro ao apagar');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function clearChatMessages() {
+            if (!confirm(isChinese ? '确定要清空所有聊天记录吗？' : 'Tem certeza que deseja apagar TODO o histórico de mensagens?')) {
+                return;
+            }
+            try {
+                const response = await fetch('<?= url_to('chat_clear_messages') ?>', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json', 
+                        'X-Requested-With': 'XMLHttpRequest', 
+                        '<?= csrf_header() ?>': '<?= csrf_hash() ?>' 
+                    }
+                });
+                const data = await response.json();
+                if (data.status === 'success') {
+                    chatMessages.innerHTML = '';
+                    addMessage(`<?= lang('App.welcome_msg', [
+                        'name' => explode(' ', session()->get('user_name'))[0],
+                        'start' => $business_hours['start'],
+                        'end' => $business_hours['end']
+                    ]) ?>`, 'bot');
+                } else {
+                    alert('Erro ao limpar conversa');
+                }
+            } catch (err) {
+                console.error(err);
+            }
         }
 
         function openBuyModal(rate, amount = 0) {
