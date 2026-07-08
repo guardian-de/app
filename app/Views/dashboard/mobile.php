@@ -1252,7 +1252,10 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             // Initialization calls moved to the bottom
 
             let lastMessageId = 0;
+            let isLoadingHistory = false;
             async function loadChatHistory() {
+                if (isLoadingHistory) return;
+                isLoadingHistory = true;
                 try {
                     const response = await fetch('<?= url_to('chat_messages_history') ?>?last_id=' + lastMessageId);
                     const data = await response.json();
@@ -1272,7 +1275,9 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                         
                         addMessage(msg.message, msg.sender, msg.show_buy == 1, parseFloat(msg.rate), parseFloat(msg.suggested_amount));
                     });
-                } catch (e) { }
+                } catch (e) { } finally {
+                    isLoadingHistory = false;
+                }
             }
 
             async function initChart() {
@@ -1518,11 +1523,13 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 }
             };
 
+            let isSendingMessage = false;
             chatForm.onsubmit = async (e) => {
                 e.preventDefault();
                 const message = userInput.value.trim();
-                if (!message) return;
+                if (!message || isSendingMessage) return;
                 
+                isSendingMessage = true;
                 addMessage(message, 'user');
                 userInput.value = '';
                 typingIndicator.style.display = 'block';
@@ -1539,6 +1546,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 } catch (err) {
                     console.error(err);
                 } finally {
+                    isSendingMessage = false;
                     typingIndicator.style.display = 'none';
                 }
             };
