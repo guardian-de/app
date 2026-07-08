@@ -68,7 +68,12 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
         .mobile-wrapper {
             display: flex;
             flex-direction: column;
-            height: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 100dvh;
             width: 100vw;
             background: radial-gradient(circle at top right, #1e3a8a11, transparent);
             overflow: hidden;
@@ -212,6 +217,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
 
         .chat-container-mobile {
             flex: 1;
+            min-height: 0;
             overflow-y: auto;
             padding: 20px;
             display: flex;
