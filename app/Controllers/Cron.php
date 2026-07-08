@@ -141,7 +141,11 @@ class Cron extends BaseController
         }
 
         $ocr       = new \App\Libraries\OcrSpaceClient();
-        $extractor = new \App\Libraries\DeepSeekAmountExtractor();
+        if (!empty(env('GEMINI_API_KEY'))) {
+            $extractor = new \App\Libraries\GeminiAmountExtractor();
+        } else {
+            $extractor = new \App\Libraries\DeepSeekAmountExtractor();
+        }
 
         foreach ($pending as $deposit) {
             $ocrText  = $ocr->read($deposit['proof_file']);
