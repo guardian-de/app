@@ -79,6 +79,18 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             overflow: hidden;
         }
 
+        .desktop-sidebar-menu {
+            display: none !important;
+        }
+
+        .mobile-only-views {
+            display: block;
+        }
+
+        .desktop-chat-header {
+            display: none !important;
+        }
+
         .dashboard-panel-desktop {
             display: flex;
             flex-direction: column;
@@ -96,6 +108,30 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
 
         /* Responsive Desktop Refinements (screens >= 1024px) */
         @media (min-width: 1024px) {
+            .desktop-sidebar-menu {
+                display: flex !important;
+                flex-direction: column;
+                padding: 20px;
+                height: 100%;
+                background: rgba(15, 23, 42, 0.95);
+                overflow-y: auto;
+                box-sizing: border-box;
+            }
+
+            .mobile-only-views {
+                display: none !important;
+            }
+
+            .desktop-chat-header {
+                display: flex !important;
+                justify-content: space-between;
+                align-items: center;
+                padding: 15px 30px;
+                background: rgba(15, 23, 42, 0.8);
+                border-bottom: 1px solid rgba(59, 130, 246, 0.15);
+                flex-shrink: 0;
+            }
+
             .mobile-wrapper {
                 flex-direction: row;
             }
@@ -444,129 +480,252 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
 
     <div class="mobile-wrapper">
         <div class="dashboard-panel-desktop">
-            <header class="mobile-header">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <div class="live-rate-mobile">
-                    <div class="rate-dot"></div>
-                    <span id="live-rate-val" style="color: #3b82f6; font-weight: 700; font-size: 14px;">R$ 0,0000</span>
+            <!-- Menu Lateral Desktop (exibido apenas em telas >= 1024px) -->
+            <div class="desktop-sidebar-menu">
+                <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 25px; padding: 10px 0;">
+                    <?php
+                    $settingsModel = new \App\Models\SettingsModel();
+                    $logoPath = $settingsModel->getConfig('logo_path');
+                    ?>
+                    <?php if ($logoPath): ?>
+                        <img src="<?= base_url($logoPath) ?>" alt="Logo" style="max-height: 45px; max-width: 100%; object-fit: contain;">
+                    <?php else: ?>
+                        <span style="font-size: 22px; font-weight: 800; color: #3b82f6; letter-spacing: 1px;">GUARDIAN ADMIN</span>
+                    <?php endif; ?>
                 </div>
-            </div>
-            <div style="display: flex; gap: 14px; align-items: center;">
-                <!-- Tradutor -->
-                <div id="translator-trigger" onclick="window.openLanguageModal()" ontouchstart="window.openLanguageModal()"
-                    style="color: #3b82f6; padding: 12px; margin: -8px; display: flex; align-items: center; cursor: pointer; -webkit-tap-highlight-color: transparent; position: relative; z-index: 5001; pointer-events: auto;"
-                    title="Traduzir">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="m5 8 6 6" />
-                        <path d="m4 14 6-6 2-3" />
-                        <path d="M2 5h12" />
-                        <path d="M7 2h1" />
-                        <path d="m22 22-5-10-5 10" />
-                        <path d="M14 18h6" />
-                    </svg>
+
+                <!-- Balanço/Saldo do Cliente -->
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                    <p style="font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Meu Saldo</p>
+                    <div id="desktop-balance-badge" style="font-size: 20px; font-weight: 700; color: #4ade80;">R$ 0,00</div>
                 </div>
-                <!-- Operações -->
-                <button onclick="openContractsModal()" id="contracts-btn"
-                    style="background: none; border: none; color: #3b82f6; padding: 4px; display: flex; align-items: center; position: relative; cursor: pointer;"
-                    title="Minhas Operações">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                        <polyline points="14 2 14 8 20 8"/>
-                        <line x1="16" y1="13" x2="8" y2="13"/>
-                        <line x1="16" y1="17" x2="8" y2="17"/>
-                        <polyline points="10 9 9 9 8 9"/>
+
+                <!-- Botões de Ação Rápida -->
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px;">
+                    <button onclick="openBuyModal(currentExchangeRate)"
+                        style="width: 100%; padding: 12px; border-radius: 8px; background: linear-gradient(135deg, #3b82f6, #2563eb); border: none; color: white; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>
+                        </svg>
+                        <?= $isChinese ? '购买 USDT' : 'Comprar USDT' ?>
+                    </button>
+                    <button onclick="openDepositModal()"
+                        style="width: 100%; padding: 12px; border-radius: 8px; background: linear-gradient(135deg, #10b981, #059669); border: none; color: white; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                        </svg>
+                        <?= $isChinese ? '存款' : 'Depositar' ?>
+                    </button>
+                </div>
+
+                <!-- Lista de Itens do Menu -->
+                <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 25px;">
+                    <button onclick="openContractsModal()" style="display: flex; align-items: center; gap: 12px; width: 100%; background: none; border: 1px solid rgba(255,255,255,0.05); color: #cbd5e1; padding: 12px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; text-align: left; transition: all 0.2s;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+                        </svg>
+                        <span style="flex: 1;"><?= $isChinese ? '我的交易' : 'Minhas Operações' ?></span>
+                        <span id="contracts-badge-desktop" style="display: none; background: #ef4444; color: white; font-size: 9px; font-weight: 800; min-width: 16px; height: 16px; border-radius: 8px; align-items: center; justify-content: center; padding: 0 3px; line-height: 1;"></span>
+                    </button>
+
+                    <button onclick="openStatementModal()" style="display: flex; align-items: center; gap: 12px; width: 100%; background: none; border: 1px solid rgba(255,255,255,0.05); color: #cbd5e1; padding: 12px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; text-align: left; transition: all 0.2s;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+                        </svg>
+                        <span><?= $isChinese ? '对账单' : 'Extrato' ?></span>
+                    </button>
+
+                    <button onclick="openNotificationsModal()" style="display: flex; align-items: center; gap: 12px; width: 100%; background: none; border: 1px solid rgba(255,255,255,0.05); color: #cbd5e1; padding: 12px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; text-align: left; transition: all 0.2s;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                        </svg>
+                        <span style="flex: 1;"><?= $isChinese ? '通知' : 'Notificações' ?></span>
+                        <span id="notifications-badge-desktop" style="display: none; background: #ef4444; color: white; font-size: 9px; font-weight: 800; min-width: 16px; height: 16px; border-radius: 8px; align-items: center; justify-content: center; padding: 0 3px; line-height: 1;"></span>
+                    </button>
+
+                    <button onclick="openChangePasswordModal(event)" style="display: flex; align-items: center; gap: 12px; width: 100%; background: none; border: 1px solid rgba(255,255,255,0.05); color: #cbd5e1; padding: 12px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; text-align: left; transition: all 0.2s;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                        <span><?= $isChinese ? '修改密码' : 'Alterar Senha' ?></span>
+                    </button>
+                </div>
+                
+                <!-- Carteira USDT (TRC-20) -->
+                <div style="margin-bottom: 20px;">
+                    <p style="font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Endereço de Carteira</p>
+                    <div style="background: rgba(15, 23, 42, 0.5); padding: 10px; border-radius: 8px; border: 1px dashed #334155; font-family: monospace; font-size: 11px; color: #818cf8; word-break: break-all; line-height: 1.4;">
+                        <?= session()->get('user_wallet') ?: ($isChinese ? '未注册' : 'Não cadastrada') ?>
+                    </div>
+                </div>
+
+                <!-- Idioma Dropdown -->
+                <div style="margin-bottom: 20px;">
+                    <p style="font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Idioma / 语言</p>
+                    <select onchange="changeLanguage(this.value)" style="width: 100%; background: #0f172a; border: 1px solid #334155; color: white; padding: 8px; border-radius: 8px; outline: none; font-size: 12px; cursor: pointer;">
+                        <option value="pt-BR" <?= session()->get('user_lang') == 'pt-BR' ? 'selected' : '' ?>>🇧🇷 Português</option>
+                        <option value="zh-CN" <?= session()->get('user_lang') == 'zh-CN' ? 'selected' : '' ?>>🇨🇳 中文</option>
+                    </select>
+                </div>
+
+                <!-- Botão Sair -->
+                <a href="<?= url_to('logout') ?>" style="display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; border: 1px solid rgba(239, 68, 68, 0.2); background: rgba(239, 68, 68, 0.05); color: #f87171; padding: 12px; border-radius: 8px; font-size: 13px; text-decoration: none; font-weight: 700; cursor: pointer; text-align: center; transition: all 0.2s;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />
                     </svg>
-                    <span id="contracts-badge" style="display: none; position: absolute; top: -2px; right: -4px; background: #ef4444; color: white; font-size: 9px; font-weight: 800; min-width: 16px; height: 16px; border-radius: 8px; align-items: center; justify-content: center; padding: 0 3px; line-height: 1;"></span>
-                </button>
-                <!-- Extrato -->
-                <button onclick="openStatementModal()"
-                    style="background: none; border: none; color: #3b82f6; padding: 4px; display: flex; align-items: center; cursor: pointer;"
-                    title="Extrato">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="18" y1="20" x2="18" y2="10"/>
-                        <line x1="12" y1="20" x2="12" y2="4"/>
-                        <line x1="6" y1="20" x2="6" y2="14"/>
-                        <line x1="2" y1="20" x2="22" y2="20"/>
-                    </svg>
-                </button>
-                <!-- Notificações -->
-                <button onclick="openNotificationsModal()" id="notifications-btn"
-                    style="background: none; border: none; color: #3b82f6; padding: 4px; display: flex; align-items: center; position: relative; cursor: pointer;"
-                    title="Notificações">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                    </svg>
-                    <span id="notifications-badge" style="display: none; position: absolute; top: -2px; right: -4px; background: #ef4444; color: white; font-size: 9px; font-weight: 800; min-width: 16px; height: 16px; border-radius: 8px; align-items: center; justify-content: center; padding: 0 3px; line-height: 1;"></span>
-                </button>
-                <!-- Alterar Senha -->
-                <button onclick="openChangePasswordModal(event)"
-                    style="background: none; border: none; color: #60a5fa; padding: 4px; display: flex; align-items: center; cursor: pointer;"
-                    title="Alterar Senha">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                    </svg>
-                </button>
-                <!-- Sair -->
-                <a href="<?= url_to('logout') ?>"
-                    style="text-decoration: none; color: #f87171; padding: 4px; display: flex; align-items: center; cursor: pointer;"
-                    title="Sair">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                        <polyline points="16 17 21 12 16 7" />
-                        <line x1="21" y1="12" x2="9" y2="12" />
-                    </svg>
+                    <span><?= $isChinese ? '退出' : 'Sair' ?></span>
                 </a>
             </div>
-        </header>
 
-        <!-- Saldo -->
-        <div style="background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); padding: 10px 20px; border-bottom: 1px solid rgba(59, 130, 246, 0.2);">
-            <p style="font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">
-                Saldo
-            </p>
-            <div id="balance-badge"
-                style="padding: 6px 12px; border-radius: 6px; font-size: 20px; font-weight: 700; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); color: #4ade80; display: inline-block;">
-                R$ 0,00
+            <!-- Views Exclusivas do Mobile (Ocultadas em telas >= 1024px) -->
+            <div class="mobile-only-views">
+                <header class="mobile-header">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div class="live-rate-mobile">
+                        <div class="rate-dot"></div>
+                        <span id="live-rate-val" style="color: #3b82f6; font-weight: 700; font-size: 14px;">R$ 0,0000</span>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 14px; align-items: center;">
+                    <!-- Tradutor -->
+                    <div id="translator-trigger" onclick="window.openLanguageModal()" ontouchstart="window.openLanguageModal()"
+                        style="color: #3b82f6; padding: 12px; margin: -8px; display: flex; align-items: center; cursor: pointer; -webkit-tap-highlight-color: transparent; position: relative; z-index: 5001; pointer-events: auto;"
+                        title="Traduzir">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m5 8 6 6" />
+                            <path d="m4 14 6-6 2-3" />
+                            <path d="M2 5h12" />
+                            <path d="M7 2h1" />
+                            <path d="m22 22-5-10-5 10" />
+                            <path d="M14 18h6" />
+                        </svg>
+                    </div>
+                    <!-- Operações -->
+                    <button onclick="openContractsModal()" id="contracts-btn"
+                        style="background: none; border: none; color: #3b82f6; padding: 4px; display: flex; align-items: center; position: relative; cursor: pointer;"
+                        title="Minhas Operações">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                            <polyline points="10 9 9 9 8 9"/>
+                        </svg>
+                        <span id="contracts-badge" style="display: none; position: absolute; top: -2px; right: -4px; background: #ef4444; color: white; font-size: 9px; font-weight: 800; min-width: 16px; height: 16px; border-radius: 8px; align-items: center; justify-content: center; padding: 0 3px; line-height: 1;"></span>
+                    </button>
+                    <!-- Extrato -->
+                    <button onclick="openStatementModal()"
+                        style="background: none; border: none; color: #3b82f6; padding: 4px; display: flex; align-items: center; cursor: pointer;"
+                        title="Extrato">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="20" x2="18" y2="10"/>
+                            <line x1="12" y1="20" x2="12" y2="4"/>
+                            <line x1="6" y1="20" x2="6" y2="14"/>
+                            <line x1="2" y1="20" x2="22" y2="20"/>
+                        </svg>
+                    </button>
+                    <!-- Notificações -->
+                    <button onclick="openNotificationsModal()" id="notifications-btn"
+                        style="background: none; border: none; color: #3b82f6; padding: 4px; display: flex; align-items: center; position: relative; cursor: pointer;"
+                        title="Notificações">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                        </svg>
+                        <span id="notifications-badge" style="display: none; position: absolute; top: -2px; right: -4px; background: #ef4444; color: white; font-size: 9px; font-weight: 800; min-width: 16px; height: 16px; border-radius: 8px; align-items: center; justify-content: center; padding: 0 3px; line-height: 1;"></span>
+                    </button>
+                    <!-- Alterar Senha -->
+                    <button onclick="openChangePasswordModal(event)"
+                        style="background: none; border: none; color: #60a5fa; padding: 4px; display: flex; align-items: center; cursor: pointer;"
+                        title="Alterar Senha">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                    </button>
+                    <!-- Sair -->
+                    <a href="<?= url_to('logout') ?>"
+                        style="text-decoration: none; color: #f87171; padding: 4px; display: flex; align-items: center; cursor: pointer;"
+                        title="Sair">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" y1="12" x2="9" y2="12" />
+                        </svg>
+                    </a>
+                </div>
+                </header>
+
+                <!-- Saldo Mobile -->
+                <div style="background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); padding: 10px 20px; border-bottom: 1px solid rgba(59, 130, 246, 0.2);">
+                    <p style="font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">
+                        Saldo
+                    </p>
+                    <div id="balance-badge"
+                        style="padding: 6px 12px; border-radius: 6px; font-size: 20px; font-weight: 700; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); color: #4ade80; display: inline-block;">
+                        R$ 0,00
+                    </div>
+                </div>
+
+                <!-- Botão Comprar + Depositar Mobile -->
+                <div style="padding: 8px 15px; background: rgba(15, 23, 42, 0.8); border-bottom: 1px solid rgba(59, 130, 246, 0.1); display: flex; gap: 8px;">
+                    <button onclick="openBuyModal(currentExchangeRate)"
+                        style="flex: 1; padding: 12px; border-radius: 12px; background: linear-gradient(135deg, #3b82f6, #2563eb); border: none; color: white; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>
+                        </svg>
+                        <?= $isChinese ? '购买 USDT' : 'Comprar USDT' ?>
+                    </button>
+                    <button onclick="openDepositModal()"
+                        style="flex: 1; padding: 12px; border-radius: 12px; background: linear-gradient(135deg, #10b981, #059669); border: none; color: white; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                        </svg>
+                        <?= $isChinese ? '存款' : 'Depositar' ?>
+                    </button>
+                </div>
             </div>
-        </div>
 
-        <!-- Botão Comprar + Depositar (Acima do Gráfico) -->
-        <div style="padding: 8px 15px; background: rgba(15, 23, 42, 0.8); border-bottom: 1px solid rgba(59, 130, 246, 0.1); display: flex; gap: 8px;">
-            <button onclick="openBuyModal(currentExchangeRate)"
-                style="flex: 1; padding: 12px; border-radius: 12px; background: linear-gradient(135deg, #3b82f6, #2563eb); border: none; color: white; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>
-                </svg>
-                <?= $isChinese ? '购买 USDT' : 'Comprar USDT' ?>
-            </button>
-            <button onclick="openDepositModal()"
-                style="flex: 1; padding: 12px; border-radius: 12px; background: linear-gradient(135deg, #10b981, #059669); border: none; color: white; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-                </svg>
-                <?= $isChinese ? '存款' : 'Depositar' ?>
-            </button>
-        </div>
-
-        <div class="chart-section" id="chart-section">
-            <div class="chart-info">
-                <span><?= lang('App.real_time_tendency') ?></span>
+            <!-- Gráfico (Exibido no rodapé do menu no desktop, e no fluxo no mobile) -->
+            <div class="chart-section" id="chart-section">
+                <div class="chart-info">
+                    <span><?= lang('App.real_time_tendency') ?></span>
+                </div>
+                <canvas id="historyChart"></canvas>
+                <button class="toggle-chart-btn" onclick="toggleChart()">
+                    <span id="toggle-text"><?= lang('App.min') ?></span>
+                </button>
             </div>
-            <canvas id="historyChart"></canvas>
-            <button class="toggle-chart-btn" onclick="toggleChart()">
-                <span id="toggle-text"><?= lang('App.min') ?></span>
-            </button>
-        </div>
+        </div> <!-- End of dashboard-panel-desktop -->
 
         <div class="chat-panel-desktop">
+            <!-- Cabeçalho do Chat Exclusivo do Desktop -->
+            <div class="desktop-chat-header">
+                <div>
+                    <h2 style="font-size: 16px; font-weight: 700; color: white; margin: 0;">GUARDIAN IA</h2>
+                    <div style="font-size: 11px; color: #64748b;"><?= $isChinese ? '智能助理' : 'Assistente Inteligente' ?></div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <!-- Live Rate -->
+                    <div class="live-rate-desktop" style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.15); padding: 6px 12px; border-radius: 99px; display: flex; align-items: center; gap: 8px;">
+                        <span class="rate-dot" style="width: 8px; height: 8px; background: #3b82f6; border-radius: 50%; display: inline-block;"></span>
+                        <span id="live-rate-val-desktop" style="color: #3b82f6; font-weight: 700; font-size: 13px;">R$ 0,0000</span>
+                    </div>
+                    <!-- Tradutor -->
+                    <div onclick="window.openLanguageModal()" style="color: #3b82f6; cursor: pointer; display: flex; align-items: center;" title="Traduzir">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m5 8 6 6" /><path d="m4 14 6-6 2-3" /><path d="M2 5h12" /><path d="M7 2h1" /><path d="m22 22-5-10-5 10" /><path d="M14 18h6" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
             <main class="chat-container-mobile" id="chat-messages" style="position: relative;">
             <div class="message bot">
                 <?= lang('App.welcome_msg', [
@@ -1219,7 +1378,12 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                     const response = await fetch('<?= url_to('chat_rate') ?>?delivery_type=' + encodeURIComponent(selectedDeliveryType));
                     const data = await response.json();
                     // Mostrar cotação SEM taxas no header
-                    document.getElementById('live-rate-val').textContent = `R$ ${parseFloat(data.base_rate).toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`;
+                    const formattedRate = `R$ ${parseFloat(data.base_rate).toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`;
+                    const liveRateVal = document.getElementById('live-rate-val');
+                    if (liveRateVal) liveRateVal.textContent = formattedRate;
+                    const liveRateValDesktop = document.getElementById('live-rate-val-desktop');
+                    if (liveRateValDesktop) liveRateValDesktop.textContent = formattedRate;
+
                     currentExchangeRate = parseFloat(data.rate);
                     currentBaseRate = parseFloat(data.base_rate);
                     currentFeePercent = parseFloat(data.fee_percent);
@@ -1254,13 +1418,21 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                     const data = await response.json();
                     if (data.balance !== undefined) {
                         const badge = document.getElementById('balance-badge');
-                        if (!badge) return;
                         const value = data.balance.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                         const isNeg = data.balance < 0;
-                        badge.textContent = `R$ ${value}`;
-                        badge.style.background = isNeg ? 'rgba(239,68,68,0.1)' : 'rgba(34,197,94,0.1)';
-                        badge.style.border = isNeg ? '1px solid rgba(239,68,68,0.2)' : '1px solid rgba(34,197,94,0.2)';
-                        badge.style.color = isNeg ? '#f87171' : '#4ade80';
+
+                        if (badge) {
+                            badge.textContent = `R$ ${value}`;
+                            badge.style.background = isNeg ? 'rgba(239,68,68,0.1)' : 'rgba(34,197,94,0.1)';
+                            badge.style.border = isNeg ? '1px solid rgba(239,68,68,0.2)' : '1px solid rgba(34,197,94,0.2)';
+                            badge.style.color = isNeg ? '#f87171' : '#4ade80';
+                        }
+
+                        const desktopBadge = document.getElementById('desktop-balance-badge');
+                        if (desktopBadge) {
+                            desktopBadge.textContent = `R$ ${value}`;
+                            desktopBadge.style.color = isNeg ? '#f87171' : '#4ade80';
+                        }
                     }
                 } catch (e) { console.error("Erro ao atualizar saldo"); }
             }
@@ -1716,15 +1888,19 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                             unseenCount = items.length;
                         }
 
-                        const badge = document.getElementById('notifications-badge');
-                        if (badge) {
-                            if (unseenCount > 0) {
-                                badge.textContent = unseenCount;
-                                badge.style.display = 'flex';
-                            } else {
-                                badge.style.display = 'none';
+                        const updateBadge = (id) => {
+                            const badge = document.getElementById(id);
+                            if (badge) {
+                                if (unseenCount > 0) {
+                                    badge.textContent = unseenCount;
+                                    badge.style.display = 'flex';
+                                } else {
+                                    badge.style.display = 'none';
+                                }
                             }
-                        }
+                        };
+                        updateBadge('notifications-badge');
+                        updateBadge('notifications-badge-desktop');
                     }
                 } catch(e) {
                     console.error('Error checking notifications', e);
@@ -1755,6 +1931,8 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                         lastSeenNotifKey = newestKey;
                         const badge = document.getElementById('notifications-badge');
                         if (badge) badge.style.display = 'none';
+                        const badgeDesktop = document.getElementById('notifications-badge-desktop');
+                        if (badgeDesktop) badgeDesktop.style.display = 'none';
                     }
                 } catch(e) {
                     console.error('Notifications fetch error', e);
@@ -2195,16 +2373,20 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 debtsData = await response.json();
 
                 // Update header badge using geral count
-                const badge = document.getElementById('contracts-badge');
-                if (badge) {
-                    const count = debtsData.geral?.count ?? 0;
-                    if (count > 0) {
-                        badge.textContent = count;
-                        badge.style.display = 'flex';
-                    } else {
-                        badge.style.display = 'none';
+                const count = debtsData.geral?.count ?? 0;
+                const updateBadge = (id) => {
+                    const badge = document.getElementById(id);
+                    if (badge) {
+                        if (count > 0) {
+                            badge.textContent = count;
+                            badge.style.display = 'flex';
+                        } else {
+                            badge.style.display = 'none';
+                        }
                     }
-                }
+                };
+                updateBadge('contracts-badge');
+                updateBadge('contracts-badge-desktop');
 
                 renderDebts(debtsData[activeDebtsFilter]);
             } catch (e) {
@@ -2228,12 +2410,16 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             try {
                 const response = await fetch('<?= url_to('chat_my_debts') ?>');
                 const data = await response.json();
-                const badge = document.getElementById('contracts-badge');
                 const count = data.geral?.count ?? 0;
-                if (badge && count > 0) {
-                    badge.textContent = count;
-                    badge.style.display = 'flex';
-                }
+                const updateBadge = (id) => {
+                    const badge = document.getElementById(id);
+                    if (badge && count > 0) {
+                        badge.textContent = count;
+                        badge.style.display = 'flex';
+                    }
+                };
+                updateBadge('contracts-badge');
+                updateBadge('contracts-badge-desktop');
             } catch (e) {}
         }
 
