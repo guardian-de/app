@@ -45,7 +45,10 @@ class DepositsController extends BaseController
         try { $db->query("ALTER TABLE `deposits` ADD COLUMN `amount_edited_by` INT UNSIGNED NULL"); } catch (\Throwable $e) {}
         try { $db->query("ALTER TABLE `deposits` ADD COLUMN `amount_edited_at` DATETIME NULL"); } catch (\Throwable $e) {}
 
-        $status    = $this->request->getGet('status') ?? '';
+        $status    = $this->request->getGet('status');
+        if ($status === null) {
+            $status = 'pending';
+        }
         $search    = $this->request->getGet('search') ?? '';
         $startDate = $this->request->getGet('start_date') ?? '';
         $endDate   = $this->request->getGet('end_date') ?? '';
@@ -56,7 +59,7 @@ class DepositsController extends BaseController
             ->join('users u', 'u.id = deposits.user_id', 'left')
             ->orderBy('deposits.created_at', 'DESC');
 
-        if ($status !== '') {
+        if ($status !== 'all' && $status !== '') {
             $builder->where('deposits.status', $status);
         }
         if ($search !== '') {
