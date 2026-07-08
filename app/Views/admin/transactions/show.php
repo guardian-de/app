@@ -51,7 +51,7 @@
                         $fee = (float)$t['fee_percent'];
                         $baseRate = $t['type'] == 'buy' ? $t['rate'] / (1 + ($fee / 100)) : $t['rate'] / (1 - ($fee / 100));
                     ?>
-                    Base: R$ <?= number_format($baseRate, 4, ',', '.') ?> (Taxa: <?= number_format($fee, 2, ',', '.') ?>%)
+                    Base: R$ <?= number_format($baseRate, 4, ',', '.') ?> (Spread: <?= number_format($fee, 2, ',', '.') ?>%)
                 </div>
             </div>
             <div>

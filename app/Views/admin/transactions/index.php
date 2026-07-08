@@ -245,7 +245,7 @@
                 <th style="padding: 18px 25px; text-align: left; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap;">Operação</th>
                 <th class="col-desc" style="padding: 18px 25px; text-align: left; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Descrição do Lançamento</th>
                 <th class="col-comercial" style="padding: 18px 25px; text-align: left; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap;">Vl. Comercial</th>
-                <th class="col-fee" style="padding: 18px 25px; text-align: left; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap;">Taxa (BRL)</th>
+                <th class="col-fee" style="padding: 18px 25px; text-align: left; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap;">Spread (BRL)</th>
                 <th style="padding: 18px 25px; text-align: left; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap;">Valor</th>
                 <th class="col-status" style="padding: 18px 25px; text-align: left; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap;">Status</th>
                 <th style="padding: 18px 25px; text-align: right; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap;">Ações</th>
@@ -299,7 +299,7 @@
                         <span style="color: #475569; font-style: italic;">N/A</span>
                     <?php endif; ?>
                 </td>
-                <!-- Valor da Taxa (BRL) -->
+                <!-- Valor do Spread (BRL) -->
                 <td class="col-fee" style="padding: 20px 25px; color: #94a3b8; font-size: 13px;">
                     <?php if (!empty($t['fee_brl']) && $t['fee_brl'] > 0): ?>
                         <span style="color: #eab308; font-weight: 600;">R$ <?= number_format($t['fee_brl'], 2, ',', '.') ?></span>

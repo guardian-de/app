@@ -1,3 +1,6 @@
+<?php
+/** @var array $user @var array $business_hours @var string $quotation_flow @var string $operator_whatsapp */
+?>
 <!DOCTYPE html>
 <html lang="pt-br">
 <?php $isChinese = session()->get('user_lang') === 'zh-CN'; ?>
@@ -400,10 +403,6 @@
                     <span style="color: #94a3b8; font-size: 13px; font-weight: 500;"><?= lang('App.live_rate') ?>:</span>
                     <span id="modal-base-rate" style="color: #cbd5e1; font-weight: 600;">R$ 0,0000</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                    <span style="color: #94a3b8; font-size: 13px; font-weight: 500;"><?= lang('App.fee') ?> (<span id="modal-fee-percent">0</span>%):</span>
-                    <span id="modal-fee-value" style="color: #cbd5e1; font-weight: 600;">R$ 0,0000</span>
-                </div>
                 <div style="display: flex; justify-content: space-between; margin-bottom: 15px; padding-top: 10px; border-top: 1px solid #334155;">
                     <span style="color: #94a3b8; font-size: 14px; font-weight: 600;"><?= lang('App.final_rate') ?>:</span>
                     <span id="modal-rate" style="color: #a78bfa; font-weight: 700; font-size: 18px;">R$ 0,0000</span>
@@ -646,8 +645,6 @@
 
                     if (document.getElementById('buy-modal') && document.getElementById('buy-modal').style.display === 'flex') {
                         document.getElementById('modal-base-rate').textContent = `R$ ${currentBaseRate.toLocaleString('pt-BR', { minimumFractionDigits: 4 })}`;
-                        document.getElementById('modal-fee-percent').textContent = currentFeePercent.toFixed(2);
-                        document.getElementById('modal-fee-value').textContent = `R$ ${(currentExchangeRate - currentBaseRate).toLocaleString('pt-BR', { minimumFractionDigits: 4 })}`;
                         document.getElementById('modal-rate').textContent = `R$ ${currentExchangeRate.toLocaleString('pt-BR', { minimumFractionDigits: 4 })}`;
                         
                         const usdtInput = document.getElementById('usdt-amount');
@@ -797,8 +794,6 @@
             }
 
             document.getElementById('modal-base-rate').textContent = `R$ ${baseRate.toLocaleString('pt-BR', { minimumFractionDigits: 4 })}`;
-            document.getElementById('modal-fee-percent').textContent = feePercent.toFixed(2);
-            document.getElementById('modal-fee-value').textContent = `R$ ${(rate - baseRate).toLocaleString('pt-BR', { minimumFractionDigits: 4 })}`;
             document.getElementById('modal-rate').textContent = `R$ ${rate.toLocaleString('pt-BR', { minimumFractionDigits: 4 })}`;
             const input = document.getElementById('usdt-amount');
             input.value = amount > 0 ? amount : '';
