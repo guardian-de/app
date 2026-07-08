@@ -118,6 +118,9 @@
                             <?php if ($d['status'] === 'pending' && ($d['ocr_status'] ?? 'needs_review') === 'needs_review'): ?>
                                 <span title="IA não confirmou este comprovante — revisar manualmente" style="color:#fbbf24; margin-left:6px;">&#9888;</span>
                             <?php endif; ?>
+                            <?php if (!empty($d['is_duplicate'])): ?>
+                                <span title="Possível comprovante duplicado" style="background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-left: 6px; text-transform: uppercase;">Duplicado</span>
+                            <?php endif; ?>
                         </td>
                         <td>
                             <?php if ($d['status'] === 'pending'): ?>
