@@ -11,7 +11,7 @@ class SupplierModel extends Model
     protected $returnType = 'array';
     protected $useTimestamps = true;
 
-    protected $allowedFields = ['name', 'enabled'];
+    protected $allowedFields = ['name', 'enabled', 'wallet'];
 
     public function getEnabled(): array
     {
