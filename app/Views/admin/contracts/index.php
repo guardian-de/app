@@ -7,8 +7,19 @@
 <?= $this->extend('layouts/admin_layout') ?>
 
 <?= $this->section('content') ?>
-<div class="header" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
-    <h1 style="font-size: 24px; color: white;">Gerenciar Operações</h1>
+<div class="header" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap: wrap; gap: 15px;">
+    <div style="display:flex; align-items:center; gap:20px; flex-wrap: wrap;">
+        <h1 style="font-size: 24px; color: white; margin: 0;"><?= ($is_completed ?? false) ? 'Operações Concluídas' : 'Gerenciar Operações' ?></h1>
+        <?php if ($is_completed ?? false): ?>
+            <a href="<?= url_to('admin_contracts') ?>" class="btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); color: #94a3b8; font-size: 13px; padding: 8px 16px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">
+                <span>Mostrar Ativas</span>
+            </a>
+        <?php else: ?>
+            <a href="<?= url_to('admin_contracts_completed') ?>" class="btn btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; padding: 8px 16px; border-radius: 6px;">
+                <span>Mostrar Concluídas</span>
+            </a>
+        <?php endif; ?>
+    </div>
     <span id="sse-status" title="Atualizações em tempo real"
         style="display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:0.05em;">
         <span id="sse-dot" style="width:7px; height:7px; border-radius:50%; background:#475569; display:inline-block;"></span>

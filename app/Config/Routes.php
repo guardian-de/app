@@ -42,6 +42,7 @@ $routes->group('admin', ['filter' => 'admin'], function ($routes) {
     $routes->get('transactions/unlock/(:num)', 'AdminController::unlockTransaction/$1', ['as' => 'admin_transactions_unlock']);
     $routes->post('transactions/update/(:num)', 'AdminController::updateTransactionStatus/$1', ['as' => 'admin_transactions_update']);
     $routes->get('contracts', 'AdminController::contracts', ['as' => 'admin_contracts']);
+    $routes->get('contracts/completed', 'AdminController::contractsCompleted', ['as' => 'admin_contracts_completed']);
     $routes->get('contracts/updates', 'AdminController::contractsUpdates', ['as' => 'admin_contracts_updates']);
     $routes->get('contracts/row/(:num)', 'AdminController::contractRow/$1', ['as' => 'admin_contracts_row']);
     $routes->get('contracts/show/(:num)', 'AdminController::contractDetails/$1', ['as' => 'admin_contracts_show']);
