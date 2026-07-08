@@ -704,6 +704,12 @@ $adminAlertSound = $settingsModel->getConfig('admin_alert_sound', 'chime_premium
             }
 
             function triggerNotification(tx) {
+                // Apenas para compra de USDT (type === 'buy') e apenas para os operadores (user_role === 'operator')
+                const currentUserRole = '<?= session()->get('user_role') ?>';
+                if (tx.type !== 'buy' || currentUserRole !== 'operator') {
+                    return;
+                }
+
                 // 1. Som de notificação premium usando Web Audio API
                 playNotificationSound();
 
