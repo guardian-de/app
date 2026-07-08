@@ -23,6 +23,12 @@
     </div>
 <?php endif; ?>
 
+<?php if (!empty($deposit['is_duplicate'])): ?>
+<div style="background: rgba(239,68,68,0.1); color: #f87171; padding: 15px; border-radius: 12px; margin-bottom: 25px; border: 1px solid rgba(239,68,68,0.25); font-size: 14px;">
+    ⚠ <strong>Atenção:</strong> Este comprovante foi identificado como duplicado! Outro depósito com a mesma autenticação ou dados de imagem já foi registrado no sistema.
+</div>
+<?php endif; ?>
+
 <?php if ($deposit['status'] === 'pending' && ($deposit['ocr_status'] ?? 'needs_review') === 'needs_review'): ?>
 <div style="background: rgba(251,191,36,0.1); color: #fbbf24; padding: 15px; border-radius: 12px; margin-bottom: 25px; border: 1px solid rgba(251,191,36,0.25); font-size: 14px;">
     ⚠ A IA não conseguiu confirmar este comprovante automaticamente. Revise cuidadosamente antes de aceitar.
@@ -143,6 +149,13 @@
                 </div>
             <?php endif; ?>
         </div>
+
+        <?php if (!empty($deposit['ocr_code'])): ?>
+        <div style="margin-top: 24px;">
+            <p style="font-size: 12px; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;">Código de Autenticação / TXID</p>
+            <p style="font-weight: 700; color: #818cf8; font-family: monospace; background: rgba(129,140,248,0.1); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(129,140,248,0.2); width: fit-content; margin: 0;"><?= esc($deposit['ocr_code']) ?></p>
+        </div>
+        <?php endif; ?>
 
         <?php if (!empty($deposit['ocr_raw_text'])): ?>
         <div style="margin-top: 24px;">
