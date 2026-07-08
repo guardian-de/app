@@ -4,7 +4,18 @@
 <?php
 /** @var array $users */
 /** @var float|null $latest_rate */
+/** @var array $filters */
 ?>
+<style>
+    .filters-row { display: flex; gap: 12px; margin-bottom: 25px; flex-wrap: wrap; align-items: flex-end; }
+    .filter-group { display: flex; flex-direction: column; gap: 6px; }
+    .filter-group label { font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: 600; }
+    .filter-group input, .filter-group select {
+        background: rgba(15,23,42,0.6); border: 1px solid rgba(255,255,255,0.08);
+        color: white; padding: 8px 12px; border-radius: 8px; font-size: 13px; outline: none;
+    }
+</style>
+
 <div class="header">
     <h1 style="font-size: 24px; color: white;">Gerenciar Usuários</h1>
     <a href="<?= url_to('admin_users_create') ?>" class="btn btn-primary">+ Novo Usuário</a>
@@ -21,6 +32,26 @@
         <?= session()->getFlashdata('error') ?>
     </div>
 <?php endif; ?>
+
+<form method="get" action="<?= url_to('admin_users') ?>">
+    <div class="filters-row">
+        <div class="filter-group">
+            <label>Login / Nome</label>
+            <input type="text" name="search" value="<?= esc($filters['search'] ?? '') ?>" placeholder="Pesquisar usuário...">
+        </div>
+        <div class="filter-group">
+            <label>Tipo de Usuário</label>
+            <select name="role">
+                <option value="">Todos</option>
+                <option value="user" <?= ($filters['role'] ?? '') === 'user' ? 'selected' : '' ?>>Cliente</option>
+                <option value="operator" <?= ($filters['role'] ?? '') === 'operator' ? 'selected' : '' ?>>Operador</option>
+                <option value="admin" <?= ($filters['role'] ?? '') === 'admin' ? 'selected' : '' ?>>Admin</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary" style="padding: 9px 20px; height: fit-content; align-self: flex-end;">Filtrar</button>
+        <a href="<?= url_to('admin_users') ?>" class="btn" style="padding: 9px 20px; height: fit-content; align-self: flex-end; background: rgba(255,255,255,0.05); color: #94a3b8; text-decoration: none;">Limpar</a>
+    </div>
+</form>
 
 <div class="card" style="padding: 0; overflow: hidden;">
     <table style="width: 100%; border-collapse: collapse;">

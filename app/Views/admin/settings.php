@@ -14,8 +14,35 @@
         </div>
     <?php endif; ?>
 
-    <form action="<?= url_to('admin_settings_update') ?>" method="POST" style="display: flex; flex-direction: column; gap: 25px;">
+    <form action="<?= url_to('admin_settings_update') ?>" method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 25px;">
         <?= csrf_field() ?>
+
+        <div style="padding: 20px; background: rgba(15, 23, 42, 0.3); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);">
+            <h3 style="font-size: 16px; color: white; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                🖼️ Logo do Sistema
+            </h3>
+            
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <?php
+                $settingsModel = new \App\Models\SettingsModel();
+                $logoPath = $settingsModel->getConfig('logo_path');
+                ?>
+                <?php if ($logoPath): ?>
+                    <div>
+                        <label style="display: block; color: #94a3b8; font-size: 12px; font-weight: 600; margin-bottom: 8px;">Logo Atual</label>
+                        <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); padding: 15px; border-radius: 10px; display: inline-block;">
+                            <img src="<?= base_url($logoPath) ?>" alt="Logo Atual" style="max-height: 50px; max-width: 200px; object-fit: contain;">
+                        </div>
+                    </div>
+                <?php endif; ?>
+                
+                <div class="form-group">
+                    <label style="display: block; color: #94a3b8; font-size: 12px; font-weight: 600; margin-bottom: 8px;">Upload de nova imagem (PNG, JPG, JPEG, SVG ou WEBP)</label>
+                    <input type="file" name="logo" accept="image/*" style="width: 100%; color: #94a3b8; font-size: 14px;">
+                </div>
+            </div>
+            <p style="margin-top: 15px; color: #64748b; font-size: 12px;">Esta imagem será aplicada na tela de login, no cabeçalho do menu lateral e em outras áreas administrativas.</p>
+        </div>
         
         <div style="padding: 20px; background: rgba(15, 23, 42, 0.3); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);">
             <h3 style="font-size: 16px; color: white; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">

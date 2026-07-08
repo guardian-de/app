@@ -21,14 +21,27 @@ class AdminController extends BaseController
             if (!$db->fieldExists('last_purchase_mode', 'users')) { $db->query("ALTER TABLE `users` ADD COLUMN `last_purchase_mode` ENUM('usdt','brl') NULL AFTER `purchase_model`"); }
         } catch (\Throwable $e) {}
 
+        $search = $this->request->getGet('search') ?? '';
+        $role   = $this->request->getGet('role') ?? '';
+
         $userModel = new UserModel();
-        $users = $userModel->orderBy('role', 'ASC')->orderBy('login', 'ASC')->findAll();
+        $builder = $userModel->orderBy('role', 'ASC')->orderBy('login', 'ASC');
+
+        if ($search !== '') {
+            $builder->like('login', $search);
+        }
+        if ($role !== '') {
+            $builder->where('role', $role);
+        }
+
+        $users = $builder->findAll();
         
         $financialModel = new \App\Models\FinancialStatementModel();
         foreach ($users as &$user) {
             $user['balance'] = $financialModel->getBalance((int)$user['id']);
         }
         $data['users'] = $users;
+        $data['filters'] = compact('search', 'role');
         
         $db = \Config\Database::connect();
         $latestRecord = $db->table('dollar_history')
@@ -1098,6 +1111,34 @@ class AdminController extends BaseController
         if ($quotationFlow) $settingsModel->setConfig('quotation_flow', $quotationFlow);
         if ($adminAlertSound) $settingsModel->setConfig('admin_alert_sound', $adminAlertSound);
         $settingsModel->setConfig('operator_whatsapp', $operatorWhatsapp ?? '');
+
+        // Upload de Logo
+        $logoFile = $this->request->getFile('logo');
+        if ($logoFile && $logoFile->isValid() && !$logoFile->hasMoved()) {
+            $validationRule = [
+                'logo' => [
+                    'label' => 'Logo',
+                    'rules' => [
+                        'uploaded[logo]',
+                        'is_image[logo]',
+                        'mime_in[logo,image/png,image/jpg,image/jpeg,image/svg+xml,image/webp]',
+                        'max_size[logo,2048]',
+                    ],
+                ],
+            ];
+            if ($this->validate($validationRule)) {
+                $uploadDir = FCPATH . 'uploads';
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0755, true);
+                }
+                
+                $newName = $logoFile->getRandomName();
+                $logoFile->move($uploadDir, $newName);
+                $settingsModel->setConfig('logo_path', 'uploads/' . $newName);
+            } else {
+                return redirect()->back()->withInput()->with('error', 'Erro no upload da imagem: ' . implode(', ', $this->validator->getErrors()));
+            }
+        }
         
         return redirect()->back()->with('success', 'Configurações atualizadas com sucesso!');
     }

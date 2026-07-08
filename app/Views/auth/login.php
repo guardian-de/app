@@ -11,6 +11,16 @@
 </head>
 <body>
     <div class="auth-container">
+        <?php
+        $settingsModel = new \App\Models\SettingsModel();
+        $logoPath = $settingsModel->getConfig('logo_path');
+        ?>
+        <?php if ($logoPath): ?>
+            <div style="text-align: center; margin-bottom: 25px;">
+                <img src="<?= base_url($logoPath) ?>" alt="Logo" style="max-height: 60px; max-width: 100%; object-fit: contain;">
+            </div>
+        <?php endif; ?>
+
         <div class="auth-header">
             <h1>Bem-vindo</h1>
             <p>Faça login para continuar</p>
