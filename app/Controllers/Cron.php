@@ -112,8 +112,52 @@ class Cron extends BaseController
     {
         $contractModel = new \App\Models\ContractModel();
         $contractModel->applyDailyInterest();
-        
+
         return $this->response->setJSON(['status' => 'success', 'message' => 'Juros diários aplicados com sucesso!']);
+    }
+
+    /**
+     * Lê (OCR + IA) os comprovantes de depósito enviados pelo cliente. Roda em
+     * lote pequeno por chamada para não estourar o tempo de execução — chame
+     * este endpoint a cada ~20-30s (mesmo padrão de /cron/record) para que a
+     * fila esvazie rapidamente mesmo com muitos comprovantes enviados de vez.
+     * ponytail: varredura simples sem lock distribuído — se duas chamadas
+     * concorrentes pegarem o mesmo depósito, o pior caso é reprocessar (sem
+     * dano, já que só ajusta amount/ocr_status, nunca lança no ledger).
+     */
+    public function processDepositOcr()
+    {
+        set_time_limit(120);
+
+        $depositModel = new \App\Models\DepositModel();
+        $pending = $depositModel
+            ->where('ocr_status', 'processing')
+            ->orderBy('created_at', 'ASC')
+            ->limit(5)
+            ->findAll();
+
+        if (empty($pending)) {
+            return $this->response->setJSON(['status' => 'success', 'processed' => 0]);
+        }
+
+        $ocr       = new \App\Libraries\OcrSpaceClient();
+        $extractor = new \App\Libraries\DeepSeekAmountExtractor();
+
+        foreach ($pending as $deposit) {
+            $ocrText  = $ocr->read($deposit['proof_file']);
+            $aiResult = $extractor->extract((string) $ocrText);
+
+            $isReadable = $aiResult['is_proof'] && $aiResult['amount'] !== null;
+
+            $depositModel->update($deposit['id'], [
+                'amount'       => $isReadable ? $aiResult['amount'] : null,
+                'ai_amount'    => $aiResult['amount'],
+                'ocr_status'   => $isReadable ? 'ok' : 'needs_review',
+                'ocr_raw_text' => $ocrText,
+            ]);
+        }
+
+        return $this->response->setJSON(['status' => 'success', 'processed' => count($pending)]);
     }
 
     private function getTransferoOtcRate($settlement = 'D0')

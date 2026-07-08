@@ -1282,56 +1282,7 @@ class ChatController extends BaseController
 
     private function performOCR($filePath)
     {
-        $fullPath = realpath(FCPATH . $filePath);
-        if (!$fullPath || !file_exists($fullPath)) {
-            log_message('error', 'OCR: Arquivo não encontrado em ' . FCPATH . $filePath);
-            return null;
-        }
-
-        // Utilizando OCR.space Free API
-        // Nota: 'helloworld' é uma chave de demonstração com limites estritos.
-        // Registre-se em https://ocr.space/ocrapi para obter uma chave gratuita.
-        $apiKey = 'helloworld'; 
-        
-        try {
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, 'https://api.ocr.space/parse/image');
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, [
-                'apikey' => $apiKey,
-                'file' => new \CURLFile($fullPath),
-                'language' => 'por',
-                'isOverlayRequired' => 'false',
-                'isTable' => 'true',
-                'OCREngine' => '2' // Engine 2 é melhor para recibos
-            ]);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-            
-            $response = curl_exec($ch);
-            $err = curl_error($ch);
-            curl_close($ch);
-            
-            if ($err) {
-                log_message('error', 'OCR cURL Error: ' . $err);
-                return null;
-            }
-
-            $result = json_decode($response, true);
-            
-            if (isset($result['ParsedResults'][0]['ParsedText'])) {
-                return $result['ParsedResults'][0]['ParsedText'];
-            }
-            
-            if (isset($result['ErrorMessage'])) {
-                log_message('error', 'OCR API Error: ' . implode(', ', (array)$result['ErrorMessage']));
-            }
-        } catch (\Throwable $e) {
-            log_message('error', 'OCR Exception: ' . $e->getMessage());
-        }
-        
-        return null;
+        return (new \App\Libraries\OcrSpaceClient())->read($filePath);
     }
 
     private function getLatestRateFromDb($feePercent)
@@ -1510,80 +1461,60 @@ class ChatController extends BaseController
             return $this->response->setJSON(['error' => 'Unauthorized'])->setStatusCode(401);
         }
 
-        $userId = session()->get('user_id');
-        $amounts = $this->request->getPost('amounts');
-        $notesList = $this->request->getPost('notes');
+        $userId        = session()->get('user_id');
+        $notesList     = $this->request->getPost('notes') ?? [];
         $uploadedFiles = $this->request->getFileMultiple('proofs');
 
+        if (!$uploadedFiles || count($uploadedFiles) === 0) {
+            return $this->response->setJSON(['error' => 'Envie ao menos um comprovante.'])->setStatusCode(400);
+        }
+
+        $allowedMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'];
+        $maxBytes     = 10 * 1024 * 1024;
+
+        foreach ($uploadedFiles as $file) {
+            if (!$file || !$file->isValid()) {
+                return $this->response->setJSON(['error' => 'Um dos arquivos é inválido.'])->setStatusCode(400);
+            }
+            if ($file->getSize() > $maxBytes) {
+                return $this->response->setJSON(['error' => 'Cada comprovante deve ter no máximo 10MB.'])->setStatusCode(400);
+            }
+            if (!in_array($file->getMimeType(), $allowedMimes, true)) {
+                return $this->response->setJSON(['error' => 'Formato de arquivo não suportado. Envie imagem ou PDF.'])->setStatusCode(400);
+            }
+        }
+
         $depositModel = new \App\Models\DepositModel();
+        $created      = 0;
 
-        if (is_array($amounts)) {
-            if (empty($amounts)) {
-                return $this->response->setJSON(['error' => 'Adicione pelo menos um depósito.'])->setStatusCode(400);
-            }
+        // A leitura do comprovante (OCR + IA) é lenta (pode levar dezenas de
+        // segundos por arquivo) e roda em lote no cron /cron/process-deposit-ocr,
+        // não aqui — senão o upload de vários comprovantes de uma vez estoura o
+        // timeout da requisição. Aqui só salvamos o arquivo e criamos o registro
+        // como 'processing'; o valor aparece em instantes, assim que o cron rodar.
+        foreach ($uploadedFiles as $i => $file) {
+            $notes = trim($notesList[$i] ?? '');
 
-            // Validate amounts
-            foreach ($amounts as $val) {
-                if ((float)$val <= 0) {
-                    return $this->response->setJSON(['error' => 'Informe um valor válido em todos os depósitos.'])->setStatusCode(400);
-                }
-            }
-
-            // Check if files array exists
-            if (!$uploadedFiles || count($uploadedFiles) < count($amounts)) {
-                return $this->response->setJSON(['error' => 'Comprovante obrigatório para todos os depósitos.'])->setStatusCode(400);
-            }
-
-            for ($i = 0; $i < count($amounts); $i++) {
-                $amount = (float) $amounts[$i];
-                $notes = $notesList[$i] ?? '';
-                $file = $uploadedFiles[$i] ?? null;
-
-                if (!$file || !$file->isValid()) {
-                    return $this->response->setJSON(['error' => 'Comprovante inválido ou ausente.'])->setStatusCode(400);
-                }
-
-                $newName = $file->getRandomName();
-                $file->move(FCPATH . 'uploads/deposits', $newName);
-                $proofPath = 'uploads/deposits/' . $newName;
-
-                $depositModel->insert([
-                    'user_id'    => $userId,
-                    'amount'     => $amount,
-                    'proof_file' => $proofPath,
-                    'status'     => 'pending',
-                    'notes'      => $notes,
-                ]);
-            }
-
-            return $this->response->setJSON(['status' => 'success', 'message' => 'Depósitos enviados e aguardando validação.']);
-        } else {
-            // Fallback for single item (old API)
-            $amount = (float) $this->request->getPost('amount');
-            $notes  = $this->request->getPost('notes') ?? '';
-            $singleFile = $this->request->getFile('proof');
-
-            if ($amount <= 0) {
-                return $this->response->setJSON(['error' => 'Informe um valor válido.'])->setStatusCode(400);
-            }
-
-            if (!$singleFile || !$singleFile->isValid()) {
-                return $this->response->setJSON(['error' => 'Comprovante obrigatório.'])->setStatusCode(400);
-            }
-
-            $newName = $singleFile->getRandomName();
-            $singleFile->move(FCPATH . 'uploads/deposits', $newName);
+            $newName = $file->getRandomName();
+            $file->move(FCPATH . 'uploads/deposits', $newName);
             $proofPath = 'uploads/deposits/' . $newName;
 
             $depositModel->insert([
                 'user_id'    => $userId,
-                'amount'     => $amount,
+                'amount'     => null,
+                'ocr_status' => 'processing',
                 'proof_file' => $proofPath,
                 'status'     => 'pending',
                 'notes'      => $notes,
             ]);
-
-            return $this->response->setJSON(['status' => 'success', 'message' => 'Depósito enviado e aguardando validação.']);
+            $created++;
         }
+
+        return $this->response->setJSON([
+            'status'  => 'success',
+            'message' => $created > 1
+                ? "{$created} depósitos enviados e aguardando validação."
+                : 'Depósito enviado e aguardando validação.',
+        ]);
     }
 }
