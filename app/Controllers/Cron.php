@@ -145,9 +145,7 @@ class Cron extends BaseController
 
         foreach ($pending as $deposit) {
             $ocrText  = $ocr->read($deposit['proof_file']);
-            $aiResult = $extractor->extract((string) $ocrText);
-
-            $ocrCode = \App\Models\DepositModel::extractAuthCodeFromText((string) $ocrText);
+            $ocrCode  = \App\Models\DepositModel::extractAuthCodeFromText((string) $ocrText);
             $isDuplicate = 0;
 
             if (!empty($ocrCode)) {
@@ -164,6 +162,13 @@ class Cron extends BaseController
                 if ($existing) {
                     $isDuplicate = 1;
                 }
+            }
+
+            if ($isDuplicate) {
+                // Se for duplicado, pula a consulta de IA para economizar tokens/tempo
+                $aiResult = ['is_proof' => false, 'amount' => null];
+            } else {
+                $aiResult = $extractor->extract((string) $ocrText);
             }
 
             $amountToSet = ($aiResult['amount'] !== null && !$isDuplicate) ? $aiResult['amount'] : null;
