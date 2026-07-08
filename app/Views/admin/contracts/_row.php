@@ -22,6 +22,9 @@ $isClosed = $totalAmount > 0 && $totalLotAllocated >= $totalAmount;
         <div style="font-size: 11px; color: #60a5fa; font-weight: normal;">Enviado: <?= number_format($contract['delivered_usdt'], 2, ',', '.') ?></div>
         <div style="font-size: 10px; color: #f87171; font-weight: normal;">Faltando: <?= number_format($contract['total_amount'] - $contract['delivered_usdt'], 2, ',', '.') ?></div>
     </td>
+    <td style="padding: 15px; font-size: 13px;">
+        <?= isset($contract['spot_rate']) && $contract['spot_rate'] !== null ? 'R$ ' . number_format($contract['spot_rate'], 4, ',', '.') : '—' ?>
+    </td>
     <td style="padding: 15px;">
         <span style="color: #f87171; font-weight: 700;">
             R$ <?= number_format($contract['remaining_balance'], 2, ',', '.') ?>
