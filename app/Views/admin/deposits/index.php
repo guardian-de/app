@@ -31,8 +31,17 @@
     .badge-reversed { background: rgba(239,68,68,0.12);   color: #f87171; border: 1px solid rgba(239,68,68,0.25); }
 </style>
 
-<div class="header">
+<div class="header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <h1 style="font-size: 24px; color: white;">Depósitos</h1>
+    <?php if ($filters['status'] === 'pending'): ?>
+        <a href="<?= url_to('admin_deposits') ?>?status=all" class="btn btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+            <span>Mostrar Todos</span>
+        </a>
+    <?php else: ?>
+        <a href="<?= url_to('admin_deposits') ?>?status=pending" class="btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); color: #94a3b8;">
+            <span>Mostrar Apenas Pendentes</span>
+        </a>
+    <?php endif; ?>
 </div>
 
 <?php if(session()->getFlashdata('success')): ?>
@@ -55,7 +64,7 @@
         <div class="filter-group">
             <label>Status</label>
             <select name="status">
-                <option value="">Todos</option>
+                <option value="all"      <?= $filters['status'] === 'all' || $filters['status'] === '' ? 'selected' : '' ?>>Todos</option>
                 <option value="pending"  <?= $filters['status'] === 'pending'  ? 'selected' : '' ?>>Pendente</option>
                 <option value="accepted" <?= $filters['status'] === 'accepted' ? 'selected' : '' ?>>Aceito</option>
                 <option value="reversed" <?= $filters['status'] === 'reversed' ? 'selected' : '' ?>>Revertido</option>
