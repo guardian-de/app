@@ -1,6 +1,10 @@
 <?= $this->extend('layouts/admin_layout') ?>
 
 <?= $this->section('content') ?>
+<?php
+/** @var array $users */
+/** @var float|null $latest_rate */
+?>
 <div class="header">
     <h1 style="font-size: 24px; color: white;">Gerenciar Usuários</h1>
     <a href="<?= url_to('admin_users_create') ?>" class="btn btn-primary">+ Novo Usuário</a>

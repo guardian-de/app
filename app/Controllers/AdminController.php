@@ -77,7 +77,7 @@ class AdminController extends BaseController
         return redirect()->to('/admin/users')->with('success', 'Usuário criado com sucesso!');
     }
 
-    public function edit($id)
+    public function edit(int $id)
     {
         if ($response = $this->checkPermission('usuarios')) return $response;
         $userModel = new UserModel();
@@ -90,7 +90,7 @@ class AdminController extends BaseController
         return view('admin/users/edit', $data);
     }
 
-    public function update($id)
+    public function update(int $id)
     {
         if ($response = $this->checkPermission('usuarios')) return $response;
         $userModel = new UserModel();
@@ -149,7 +149,7 @@ class AdminController extends BaseController
         return view('admin/transactions/index', ['transactions' => $transactions]);
     }
 
-    public function updateTransactionStatus($id)
+    public function updateTransactionStatus(int $id)
     {
         if ($response = $this->checkPermission('transacoes')) return $response;
         $transactionModel = new \App\Models\TransactionModel();
@@ -367,7 +367,7 @@ class AdminController extends BaseController
         return redirect()->to('/admin/transactions')->with('error', 'Status inválido.');
     }
 
-    public function transactionDetails($id)
+    public function transactionDetails(int $id)
     {
         $transactionModel = new \App\Models\TransactionModel();
         $contractModel = new \App\Models\ContractModel();
@@ -403,14 +403,14 @@ class AdminController extends BaseController
         ]);
     }
 
-    public function unlockTransaction($id)
+    public function unlockTransaction(int $id)
     {
         $transactionModel = new \App\Models\TransactionModel();
         $transactionModel->update($id, ['locked_by' => null, 'locked_at' => null]);
         return redirect()->to('/admin/transactions');
     }
 
-    public function contractDetails($id)
+    public function contractDetails(int $id)
     {
         $db = \Config\Database::connect();
         $currentUserId = session()->get('user_id');
@@ -636,7 +636,7 @@ class AdminController extends BaseController
         return view('admin/contracts/_row', ['contract' => $contract]);
     }
 
-    public function deliverUsdt($id)
+    public function deliverUsdt(int $id)
     {
         if ($response = $this->checkPermission('enviar_usdt')) return $response;
         $contractModel = new \App\Models\ContractModel();
@@ -1122,7 +1122,7 @@ class AdminController extends BaseController
         return $this->response->setJSON($newAlerts);
     }
 
-    public function adjustLimit($id)
+    public function adjustLimit(int $id)
     {
         $userModel = new UserModel();
         $user = $userModel->find($id);
@@ -1173,7 +1173,7 @@ class AdminController extends BaseController
         return redirect()->back()->with('success', 'Ajuste aplicado para ' . $user['login'] . '. Novo saldo: R$ ' . number_format($newBalance, 2, ',', '.') . '.');
     }
 
-    public function transferLimit($id)
+    public function transferLimit(int $id)
     {
         $userModel = new UserModel();
         $sourceUser = $userModel->find($id);
@@ -1240,7 +1240,7 @@ class AdminController extends BaseController
         return redirect()->back()->with('success', 'Transferência de R$ ' . number_format($amount, 2, ',', '.') . ' realizada com sucesso de ' . $sourceUser['login'] . ' para ' . $targetUser['login'] . '!');
     }
 
-    public function changeContractDeliveryType($id)
+    public function changeContractDeliveryType(int $id)
     {
         $contractModel = new \App\Models\ContractModel();
         $contract = $contractModel->find($id);
@@ -1265,7 +1265,7 @@ class AdminController extends BaseController
         return redirect()->back()->with('success', 'Prazo de entrega do contrato #' . $id . ' atualizado com sucesso para ' . strtoupper($newType) . '!');
     }
 
-    public function registerPurchase($id)
+    public function registerPurchase(int $id)
     {
         if (session()->get('user_role') !== 'admin') {
             return redirect()->back()->with('error', 'Apenas administradores podem registrar compras para clientes.');
@@ -1401,7 +1401,7 @@ class AdminController extends BaseController
         return redirect()->back()->with('success', 'Compra de ' . number_format($usdtAmount, 2, ',', '.') . ' USDT registrada com sucesso para o cliente ' . $user['login'] . '!');
     }
 
-    public function lockHeartbeat($id)
+    public function lockHeartbeat(int $id)
     {
         $db = \Config\Database::connect();
         $currentUserId = session()->get('user_id');
@@ -1438,7 +1438,7 @@ class AdminController extends BaseController
         }
     }
 
-    public function getUserStatement($id)
+    public function getUserStatement(int $id)
     {
         $userModel = new UserModel();
         $user = $userModel->find($id);
@@ -1459,7 +1459,7 @@ class AdminController extends BaseController
         ]);
     }
 
-    public function exportUserStatementCsv($id)
+    public function exportUserStatementCsv(int $id)
     {
         $userModel = new UserModel();
         $user = $userModel->find($id);
