@@ -51,6 +51,11 @@
                     <?= number_format($c['total_amount'], 2, '.', ',') ?> USDT</p>
             </div>
             <div>
+                <p style="font-size: 12px; color: #94a3b8; text-transform: uppercase;">Spot da Compra</p>
+                <p style="font-size: 18px; font-weight: 700; color: white;">
+                    <?= !empty($clientProof['base_rate']) ? 'R$ ' . number_format($clientProof['base_rate'], 4, ',', '.') : '—' ?></p>
+            </div>
+            <div>
                 <p style="font-size: 12px; color: #94a3b8; text-transform: uppercase;">USDT Enviado ao Cliente</p>
                 <p style="font-size: 18px; font-weight: 700; color: #60a5fa;">
                     <?= number_format($c['delivered_usdt'], 2, '.', ',') ?> USDT</p>
