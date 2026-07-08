@@ -261,35 +261,6 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             border-bottom-right-radius: 4px;
         }
 
-        .message .delete-msg-btn {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            color: #ef4444;
-            font-size: 14px;
-            cursor: pointer;
-            padding: 4px;
-            opacity: 0.15;
-            transition: opacity 0.2s, transform 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .message.bot .delete-msg-btn {
-            right: -32px;
-        }
-        .message.user .delete-msg-btn {
-            left: -32px;
-        }
-        .message:hover .delete-msg-btn,
-        .message:active .delete-msg-btn,
-        .delete-msg-btn:hover {
-            opacity: 0.95;
-            transform: translateY(-50%) scale(1.15);
-        }
-
         .lang-option {
             display: flex;
             align-items: center;
@@ -540,16 +511,6 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                         stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                         <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                    </svg>
-                </button>
-                <!-- Limpar Conversa -->
-                <button onclick="clearChatMessages()"
-                    style="background: none; border: none; color: #ef4444; padding: 4px; display: flex; align-items: center; cursor: pointer;"
-                    title="<?= $isChinese ? '清除聊天记录' : 'Limpar Conversa' ?>">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="3 6 5 6 21 6"></polyline>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                     </svg>
                 </button>
                 <!-- Sair -->
@@ -1323,75 +1284,15 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                             lastMessageId = msgId;
                         }
                         
-                        if (msg.sender === 'user') {
-                            const existingBubbles = Array.from(chatMessages.querySelectorAll('.message.user'));
-                            const matchingBubble = existingBubbles.find(el => !el.dataset.id && el.textContent.includes(msg.message));
-                            if (matchingBubble) {
-                                matchingBubble.dataset.id = msgId;
-                                if (!matchingBubble.querySelector('.delete-msg-btn')) {
-                                    const deleteBtn = document.createElement('button');
-                                    deleteBtn.className = 'delete-msg-btn';
-                                    deleteBtn.innerHTML = '🗑️';
-                                    deleteBtn.title = isChinese ? '删除消息' : 'Apagar mensagem';
-                                    deleteBtn.onclick = (e) => deleteMessage(e, msgId, matchingBubble);
-                                    matchingBubble.appendChild(deleteBtn);
-                                }
-                                return;
-                            }
+                        // Durante o polling (isInitialLoad === false), não adicionamos mensagens do próprio 'user' para evitar duplicação local
+                        if (!isInitialLoad && msg.sender === 'user') {
+                            return;
                         }
                         
-                        addMessage(msg.message, msg.sender, msg.show_buy == 1, parseFloat(msg.rate), parseFloat(msg.suggested_amount), msg.id);
+                        addMessage(msg.message, msg.sender, msg.show_buy == 1, parseFloat(msg.rate), parseFloat(msg.suggested_amount));
                     });
                 } catch (e) { } finally {
                     isLoadingHistory = false;
-                }
-            }
-
-            async function deleteMessage(e, id, element) {
-                if (e) e.stopPropagation();
-                if (!confirm(isChinese ? '确定要删除这条消息吗？' : 'Tem certeza que deseja apagar esta mensagem?')) {
-                    return;
-                }
-                try {
-                    const response = await fetch('<?= url_to('chat_delete_message') ?>', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrfToken() },
-                        body: JSON.stringify({ id: id })
-                    });
-                    const data = await response.json();
-                    if (data.status === 'success') {
-                        element.remove();
-                    } else {
-                        alert(data.message || 'Erro ao apagar');
-                    }
-                } catch (err) {
-                    console.error(err);
-                }
-            }
-
-            async function clearChatMessages() {
-                if (!confirm(isChinese ? '确定要清空所有聊天记录吗？' : 'Tem certeza que deseja apagar TODO o histórico de mensagens?')) {
-                    return;
-                }
-                try {
-                    const response = await fetch('<?= url_to('chat_clear_messages') ?>', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrfToken() }
-                    });
-                    const data = await response.json();
-                    if (data.status === 'success') {
-                        chatMessages.innerHTML = '';
-                        lastMessageId = 0;
-                        addMessage(`<?= lang('App.welcome_msg', [
-                            'name' => $firstName,
-                            'start' => $business_hours['start'],
-                            'end' => $business_hours['end']
-                        ]) ?>`, 'bot');
-                    } else {
-                        alert('Erro ao limpar conversa');
-                    }
-                } catch (err) {
-                    console.error(err);
                 }
             }
 
@@ -1476,11 +1377,8 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             }
             initChart();
 
-            function addMessage(text, side, showBuy = false, rate = 0, amount = 0, msgId = null) {
+            function addMessage(text, side, showBuy = false, rate = 0, amount = 0) {
                 const div = document.createElement('div');
-                if (msgId) {
-                    div.dataset.id = msgId;
-                }
                 
                 let renderedSide = side;
                 let prefix = '';
@@ -1495,19 +1393,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 }
                 
                 div.className = `message ${renderedSide}`;
-                
-                const textSpan = document.createElement('span');
-                textSpan.textContent = prefix + text;
-                div.appendChild(textSpan);
-                
-                if (msgId) {
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.className = 'delete-msg-btn';
-                    deleteBtn.innerHTML = '🗑️';
-                    deleteBtn.title = isChinese ? '删除消息' : 'Apagar mensagem';
-                    deleteBtn.onclick = (e) => deleteMessage(e, msgId, div);
-                    div.appendChild(deleteBtn);
-                }
+                div.textContent = prefix + text;
                 
                 if (showBuy && rate > 0) {
                     const btn = document.createElement('button');
@@ -1519,7 +1405,6 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 }
                 chatMessages.appendChild(div);
                 chatMessages.scrollTop = chatMessages.scrollHeight;
-                return div;
             }
 
             function openBuyModal(rate, amount = 0) {

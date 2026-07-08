@@ -110,8 +110,6 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->get('chat/statement/xlsx', 'ChatController::exportStatementXlsx', ['as' => 'chat_statement_xlsx']);
     $routes->get('chat/notifications', 'ChatController::getNotifications', ['as' => 'chat_notifications']);
     $routes->post('deposit/store', 'ChatController::depositStore', ['as' => 'deposit_store']);
-    $routes->post('chat/delete-message', 'ChatController::deleteMessage', ['as' => 'chat_delete_message']);
-    $routes->post('chat/clear-messages', 'ChatController::clearMessages', ['as' => 'chat_clear_messages']);
 });
 
 // API Routes
