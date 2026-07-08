@@ -540,6 +540,16 @@ class AdminController extends BaseController
 
     public function contracts()
     {
+        return $this->renderContractsList(false);
+    }
+
+    public function contractsCompleted()
+    {
+        return $this->renderContractsList(true);
+    }
+
+    private function renderContractsList(bool $completedOnly)
+    {
         if ($response = $this->checkPermission('enviar_usdt')) return $response;
         $contractModel = new \App\Models\ContractModel();
         $settingsModel = new \App\Models\SettingsModel();
@@ -563,6 +573,20 @@ class AdminController extends BaseController
                                  ->join('users', 'users.id = contracts.user_id')
                                  ->join('transactions', 'transactions.id = contracts.transaction_id', 'left')
                                  ->join("(SELECT contract_id, SUM(usdt_amount) AS total_lot_allocated FROM lot_allocations WHERE status IN ('reserved', 'delivered') GROUP BY contract_id) la_totals", 'la_totals.contract_id = contracts.id', 'left');
+
+        // Filtrar concluídos ou não concluídos
+        if ($completedOnly) {
+            $builder->where('contracts.status', 'paid')
+                    ->where('contracts.delivered_usdt >= contracts.total_amount', null, false)
+                    ->where('COALESCE(la_totals.total_lot_allocated, 0) >= contracts.total_amount', null, false);
+        } else {
+            // Excluir concluídos: (status != 'paid' OR enviado < total OR lote < total)
+            $builder->groupStart()
+                        ->where('contracts.status !=', 'paid')
+                        ->orWhere('contracts.delivered_usdt < contracts.total_amount', null, false)
+                        ->orWhere('COALESCE(la_totals.total_lot_allocated, 0) < contracts.total_amount', null, false)
+                    ->groupEnd();
+        }
 
         if (!empty($filters['id'])) {
             $builder->where('contracts.id', (int)$filters['id']);
@@ -609,6 +633,7 @@ class AdminController extends BaseController
         $data['filters']          = $filters;
         $data['per_page']         = $perPage;
         $data['active_menu']      = 'contracts';
+        $data['is_completed']     = $completedOnly;
 
         return view('admin/contracts/index', $data);
     }
