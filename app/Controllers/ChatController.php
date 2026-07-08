@@ -1517,4 +1517,34 @@ class ChatController extends BaseController
                 : 'Depósito enviado e aguardando validação.',
         ]);
     }
+
+    public function deleteMessage()
+    {
+        $db = \Config\Database::connect();
+        $userId = session()->get('user_id');
+        
+        $rawInput = $this->request->getJSON(true);
+        $msgId = (int)($rawInput['id'] ?? $this->request->getPost('id'));
+
+        if ($msgId > 0) {
+            $db->table('chat_messages')
+                ->where('id', $msgId)
+                ->where('user_id', $userId)
+                ->delete();
+            return $this->response->setJSON(['status' => 'success']);
+        }
+        return $this->response->setJSON(['status' => 'error', 'message' => 'ID inválido']);
+    }
+
+    public function clearMessages()
+    {
+        $db = \Config\Database::connect();
+        $userId = session()->get('user_id');
+
+        $db->table('chat_messages')
+            ->where('user_id', $userId)
+            ->delete();
+
+        return $this->response->setJSON(['status' => 'success']);
+    }
 }
