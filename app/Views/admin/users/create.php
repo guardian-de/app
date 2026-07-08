@@ -132,6 +132,10 @@
                     <input type="checkbox" name="permissions[]" value="purchase_model" style="accent-color: #6366f1; width: 18px; height: 18px; cursor: pointer;">
                     Gerenciar Modelo de Compra de Clientes
                 </label>
+                <label style="display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 14px; cursor: pointer; user-select: none;">
+                    <input type="checkbox" name="permissions[]" value="edit_deposit_amount" style="accent-color: #6366f1; width: 18px; height: 18px; cursor: pointer;">
+                    Corrigir Valor de Depósitos (IA)
+                </label>
             </div>
         </div>
 

@@ -36,6 +36,14 @@ class DepositsController extends BaseController
         try { $db->query("ALTER TABLE `deposits` ADD COLUMN `rejected_by` INT UNSIGNED NULL"); } catch (\Throwable $e) {}
         try { $db->query("ALTER TABLE `deposits` ADD COLUMN `rejected_at` DATETIME NULL"); } catch (\Throwable $e) {}
         try { $db->query("ALTER TABLE `deposits` ADD COLUMN `rejection_reason` TEXT NULL"); } catch (\Throwable $e) {}
+        try { $db->query("ALTER TABLE `deposits` MODIFY COLUMN `amount` DECIMAL(15,2) NULL"); } catch (\Throwable $e) {}
+        try { $db->query("ALTER TABLE `deposits` ADD COLUMN `ai_amount` DECIMAL(15,2) NULL"); } catch (\Throwable $e) {}
+        try { $db->query("ALTER TABLE `deposits` ADD COLUMN `ocr_status` ENUM('processing','ok','needs_review') NOT NULL DEFAULT 'processing'"); } catch (\Throwable $e) {}
+        try { $db->query("ALTER TABLE `deposits` MODIFY COLUMN `ocr_status` ENUM('processing','ok','needs_review') NOT NULL DEFAULT 'processing'"); } catch (\Throwable $e) {}
+        try { $db->query("ALTER TABLE `deposits` ADD COLUMN `ocr_raw_text` TEXT NULL"); } catch (\Throwable $e) {}
+        try { $db->query("ALTER TABLE `deposits` ADD COLUMN `amount_edited_reason` TEXT NULL"); } catch (\Throwable $e) {}
+        try { $db->query("ALTER TABLE `deposits` ADD COLUMN `amount_edited_by` INT UNSIGNED NULL"); } catch (\Throwable $e) {}
+        try { $db->query("ALTER TABLE `deposits` ADD COLUMN `amount_edited_at` DATETIME NULL"); } catch (\Throwable $e) {}
 
         $status    = $this->request->getGet('status') ?? '';
         $search    = $this->request->getGet('search') ?? '';
@@ -123,22 +131,11 @@ class DepositsController extends BaseController
         }
         unset($entry);
 
-        $otherPending = $db->table('deposits d')
-            ->select('d.*, u.login as user_login')
-            ->join('users u', 'u.id = d.user_id', 'left')
-            ->where('d.user_id', $deposit['user_id'])
-            ->where('d.status', 'pending')
-            ->where('d.id !=', $id)
-            ->orderBy('d.created_at', 'ASC')
-            ->limit(2)
-            ->get()->getResultArray();
-
         return view('admin/deposits/show', [
-            'title'         => 'Depósito #' . $id,
-            'active_menu'   => 'deposits',
-            'deposit'       => $deposit,
-            'history'       => $history,
-            'other_pending' => $otherPending,
+            'title'       => 'Depósito #' . $id,
+            'active_menu' => 'deposits',
+            'deposit'     => $deposit,
+            'history'     => $history,
         ]);
     }
 
@@ -150,6 +147,10 @@ class DepositsController extends BaseController
 
         if (!$deposit) {
             return redirect()->back()->with('error', 'Depósito inválido ou já processado.');
+        }
+
+        if ($deposit['amount'] === null) {
+            return redirect()->back()->with('error', 'Defina o valor do depósito antes de aceitar (o valor não pôde ser identificado automaticamente).');
         }
 
         $operatorId = session()->get('user_id');
@@ -171,8 +172,13 @@ class DepositsController extends BaseController
             return redirect()->back()->with('error', 'Depósito inválido ou já processado.');
         }
 
+        $description = 'Depósito confirmado #' . $id;
+        if (!empty($deposit['amount_edited_reason'])) {
+            $description .= ' (valor corrigido: ' . $deposit['amount_edited_reason'] . ')';
+        }
+
         // Lança o crédito no extrato e distribui entre contratos em aberto (FIFO).
-        $depositModel->applyAcceptedDeposit($deposit, $operatorId, 'Depósito confirmado #' . $id);
+        $depositModel->applyAcceptedDeposit($deposit, $operatorId, $description);
 
         (new ActivityLogModel())->record('deposit.accepted', 'deposit', (int)$id, [
             'amount' => $deposit['amount'],
@@ -219,6 +225,62 @@ class DepositsController extends BaseController
         ]);
 
         return redirect()->back()->with('success', 'Depósito rejeitado.');
+    }
+
+    public function updateAmount($id)
+    {
+        if ($response = $this->checkPermission('deposits')) return $response;
+
+        $role  = session()->get('user_role');
+        $perms = session()->get('user_permissions') ?? [];
+        if ($role !== 'admin' && !in_array('edit_deposit_amount', is_array($perms) ? $perms : [], true)) {
+            return redirect()->back()->with('error', 'Você não tem permissão para corrigir o valor deste depósito.');
+        }
+
+        $depositModel = new DepositModel();
+        $deposit = $depositModel->find($id);
+        if (!$deposit) {
+            return redirect()->back()->with('error', 'Depósito não encontrado.');
+        }
+
+        $newAmount = $this->request->getPost('amount');
+        $reason    = trim($this->request->getPost('reason') ?? '');
+
+        if ($newAmount === null || $newAmount === '' || (float) $newAmount <= 0) {
+            return redirect()->back()->with('error', 'Informe um valor válido.');
+        }
+        if ($reason === '') {
+            return redirect()->back()->with('error', 'O motivo da correção é obrigatório.');
+        }
+
+        $newAmount  = round((float) $newAmount, 2);
+        $oldAmount  = $deposit['amount'];
+        $operatorId = session()->get('user_id');
+        $now        = date('Y-m-d H:i:s');
+
+        $db = \Config\Database::connect();
+        $db->table('deposits')
+            ->where('id', $id)
+            ->where('status', 'pending')
+            ->update([
+                'amount'               => $newAmount,
+                'amount_edited_reason' => $reason,
+                'amount_edited_by'     => $operatorId,
+                'amount_edited_at'     => $now,
+                'updated_at'           => $now,
+            ]);
+
+        if ($db->affectedRows() === 0) {
+            return redirect()->back()->with('error', 'Só é possível corrigir o valor de depósitos ainda pendentes.');
+        }
+
+        (new ActivityLogModel())->record('deposit.amount_edited', 'deposit', (int) $id, [
+            'old_amount' => $oldAmount,
+            'new_amount' => $newAmount,
+            'reason'     => $reason,
+        ]);
+
+        return redirect()->back()->with('success', 'Valor do depósito corrigido.');
     }
 
     public function reverse($id)
