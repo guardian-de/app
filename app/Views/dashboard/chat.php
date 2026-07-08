@@ -930,11 +930,13 @@
         };
 
 
+        let isSendingMessage = false;
         chatForm.onsubmit = async (e) => {
             e.preventDefault();
             const message = userInput.value.trim();
-            if (!message) return;
+            if (!message || isSendingMessage) return;
 
+            isSendingMessage = true;
             addMessage(message, 'user');
             userInput.value = '';
             typingIndicator.style.display = 'block';
@@ -969,6 +971,8 @@
                 console.error('Fetch error:', error);
                 typingIndicator.style.display = 'none';
                 addMessage(isChinese ? '连接或安全错误。请尝试刷新页面。' : 'Erro de conexão ou segurança. Tente atualizar a página.', 'bot');
+            } finally {
+                isSendingMessage = false;
             }
         };
         function openProofModal() {
