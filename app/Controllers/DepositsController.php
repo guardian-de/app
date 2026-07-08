@@ -41,8 +41,6 @@ class DepositsController extends BaseController
         try { $db->query("ALTER TABLE `deposits` ADD COLUMN `ocr_status` ENUM('processing','ok','needs_review') NOT NULL DEFAULT 'processing'"); } catch (\Throwable $e) {}
         try { $db->query("ALTER TABLE `deposits` MODIFY COLUMN `ocr_status` ENUM('processing','ok','needs_review') NOT NULL DEFAULT 'processing'"); } catch (\Throwable $e) {}
         try { $db->query("ALTER TABLE `deposits` ADD COLUMN `ocr_raw_text` TEXT NULL"); } catch (\Throwable $e) {}
-        try { $db->query("ALTER TABLE `deposits` ADD COLUMN `ocr_code` VARCHAR(255) NULL AFTER `ocr_raw_text`"); } catch (\Throwable $e) {}
-        try { $db->query("ALTER TABLE `deposits` ADD COLUMN `is_duplicate` TINYINT NOT NULL DEFAULT 0 AFTER `ocr_code`"); } catch (\Throwable $e) {}
         try { $db->query("ALTER TABLE `deposits` ADD COLUMN `amount_edited_reason` TEXT NULL"); } catch (\Throwable $e) {}
         try { $db->query("ALTER TABLE `deposits` ADD COLUMN `amount_edited_by` INT UNSIGNED NULL"); } catch (\Throwable $e) {}
         try { $db->query("ALTER TABLE `deposits` ADD COLUMN `amount_edited_at` DATETIME NULL"); } catch (\Throwable $e) {}
