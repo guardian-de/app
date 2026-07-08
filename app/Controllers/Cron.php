@@ -141,7 +141,11 @@ class Cron extends BaseController
         }
 
         $ocr       = new \App\Libraries\OcrSpaceClient();
-        $extractor = new \App\Libraries\DeepSeekAmountExtractor();
+        if (!empty(env('GEMINI_API_KEY'))) {
+            $extractor = new \App\Libraries\GeminiAmountExtractor();
+        } else {
+            $extractor = new \App\Libraries\DeepSeekAmountExtractor();
+        }
 
         foreach ($pending as $deposit) {
             $ocrText  = $ocr->read($deposit['proof_file']);
@@ -166,12 +170,13 @@ class Cron extends BaseController
                 }
             }
 
-            $isReadable = $aiResult['is_proof'] && $aiResult['amount'] !== null && !$isDuplicate;
+            $amountToSet = ($aiResult['amount'] !== null && !$isDuplicate) ? $aiResult['amount'] : null;
+            $isFullyValidated = $aiResult['is_proof'] && $aiResult['amount'] !== null && !$isDuplicate;
 
             $depositModel->update($deposit['id'], [
-                'amount'       => $isReadable ? $aiResult['amount'] : null,
+                'amount'       => $amountToSet,
                 'ai_amount'    => $aiResult['amount'],
-                'ocr_status'   => $isReadable ? 'ok' : 'needs_review',
+                'ocr_status'   => $isFullyValidated ? 'ok' : 'needs_review',
                 'ocr_raw_text' => $ocrText,
                 'ocr_code'     => $ocrCode,
                 'is_duplicate' => $isDuplicate,
