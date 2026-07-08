@@ -133,7 +133,7 @@ class Cron extends BaseController
         $pending = $depositModel
             ->where('ocr_status', 'processing')
             ->orderBy('created_at', 'ASC')
-            ->limit(5)
+            ->limit(1)
             ->findAll();
 
         if (empty($pending)) {
