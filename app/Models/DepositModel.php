@@ -17,6 +17,8 @@ class DepositModel extends Model
         'accepted_by', 'accepted_at',
         'reversed_by', 'reversed_at', 'reversal_reason',
         'rejected_by', 'rejected_at', 'rejection_reason',
+        'ai_amount', 'ocr_status', 'ocr_raw_text',
+        'amount_edited_reason', 'amount_edited_by', 'amount_edited_at',
     ];
 
     protected $useTimestamps = true;

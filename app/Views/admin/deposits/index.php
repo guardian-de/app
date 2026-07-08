@@ -105,7 +105,20 @@
                     <tr>
                         <td style="color: #94a3b8;">#<?= $d['id'] ?></td>
                         <td style="font-weight: 600; color: white;"><?= esc($d['user_login']) ?></td>
-                        <td style="font-weight: 700; color: #34d399;">R$ <?= number_format($d['amount'], 2, ',', '.') ?></td>
+                        <td style="font-weight: 700; color: #34d399;">
+                            <?php if ($d['amount'] === null): ?>
+                                <?php if (($d['ocr_status'] ?? 'needs_review') === 'processing'): ?>
+                                    <span style="color: #94a3b8;">Processando...</span>
+                                <?php else: ?>
+                                    <span style="color: #fbbf24;">Não identificado</span>
+                                <?php endif; ?>
+                            <?php else: ?>
+                                R$ <?= number_format($d['amount'], 2, ',', '.') ?>
+                            <?php endif; ?>
+                            <?php if ($d['status'] === 'pending' && ($d['ocr_status'] ?? 'needs_review') === 'needs_review'): ?>
+                                <span title="IA não confirmou este comprovante — revisar manualmente" style="color:#fbbf24; margin-left:6px;">&#9888;</span>
+                            <?php endif; ?>
+                        </td>
                         <td>
                             <?php if ($d['status'] === 'pending'): ?>
                                 <span class="badge badge-pending">Pendente</span>
