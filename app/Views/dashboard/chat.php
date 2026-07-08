@@ -360,9 +360,18 @@
             style="max-width: 450px; position: relative; background: #1e293b; padding: 30px; border-radius: 16px;">
             <button onclick="closeModal()"
                 style="position: absolute; right: 20px; top: 20px; background: none; border: none; color: #94a3b8; font-size: 24px; cursor: pointer;">&times;</button>
+            <?php
+                $purchaseModel = $user['purchase_model'] ?? 'usdt';
+                $initialMode = $purchaseModel === 'both' ? ($user['last_purchase_mode'] ?: 'usdt') : $purchaseModel;
+            ?>
             <div class="auth-header">
                 <h1><?= lang('App.buy') ?></h1>
-                <p><?= lang('App.amount_brl') ?></p>
+                <?php if ($purchaseModel === 'both'): ?>
+                <div id="mode-toggle" style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
+                    <button type="button" class="mode-toggle-btn" data-mode="usdt" style="flex:1; padding: 8px; border-radius: 8px; border: 1px solid #334155; background: rgba(99,102,241,0.15); color: #cbd5e1; cursor: pointer; font-size: 13px; font-weight: 600;"><?= lang('App.amount_usdt') ?></button>
+                    <button type="button" class="mode-toggle-btn" data-mode="brl" style="flex:1; padding: 8px; border-radius: 8px; border: 1px solid #334155; background: rgba(99,102,241,0.15); color: #cbd5e1; cursor: pointer; font-size: 13px; font-weight: 600;"><?= lang('App.amount_brl') ?></button>
+                </div>
+                <?php endif; ?>
             </div>
 
             <div class="form-group">
@@ -373,9 +382,14 @@
                 </div>
             </div>
 
-            <div class="form-group">
+            <div class="form-group" id="usdt-input-group" style="<?= $initialMode === 'brl' ? 'display:none;' : '' ?>">
                 <label for="usdt-amount"><?= lang('App.amount_usdt') ?> (USDT)</label>
                 <input type="number" id="usdt-amount" placeholder="Ex: 5000" step="0.01" min="5000">
+            </div>
+
+            <div class="form-group" id="brl-input-group" style="<?= $initialMode !== 'brl' ? 'display:none;' : '' ?>">
+                <label for="brl-amount"><?= lang('App.amount_brl') ?> (R$)</label>
+                <input type="number" id="brl-amount" placeholder="Ex: 30000" step="0.01">
             </div>
 
             <div class="form-group">
@@ -407,8 +421,9 @@
                     <span style="color: #94a3b8; font-size: 14px; font-weight: 600;"><?= lang('App.final_rate') ?>:</span>
                     <span id="modal-rate" style="color: #a78bfa; font-weight: 700; font-size: 18px;">R$ 0,0000</span>
                 </div>
-                <div id="result-label" style="display: flex; justify-content: space-between; align-items: center; background: rgba(99, 102, 241, 0.1); padding: 12px; border-radius: 8px; border: 1px solid rgba(99, 102, 241, 0.2);">
-                    <span style="color: #94a3b8; font-size: 14px; font-weight: 700;"><?= lang('App.total_brl') ?>:</span>
+                <div id="result-label" style="display: flex; justify-content: space-between; align-items: center; background: rgba(99, 102, 241, 0.1); padding: 12px; border-radius: 8px; border: 1px solid rgba(99, 102, 241, 0.2);"
+                    data-label-usdt="<?= lang('App.total_brl') ?>" data-label-brl="<?= lang('App.receive_usdt') ?>">
+                    <span id="result-label-text" style="color: #94a3b8; font-size: 14px; font-weight: 700;"><?= $initialMode === 'brl' ? lang('App.receive_usdt') : lang('App.total_brl') ?>:</span>
                     <span id="brl-result" style="color: #818cf8; font-weight: 800; font-size: 22px;">R$ 0,00</span>
                 </div>
             </div>
@@ -628,6 +643,34 @@
         let selectedDeliveryType = '<?= $active_val ?>';
         const quotationFlow = '<?= $quotation_flow ?>';
         const operatorWhatsapp = '<?= $operator_whatsapp ?>';
+        const purchaseModel = '<?= $purchaseModel ?>';
+        let currentInputMode = '<?= $initialMode ?>';
+
+        function updateResultDisplay() {
+            const resultLabelDiv = document.getElementById('result-label');
+            const resultText = document.getElementById('result-label-text');
+            const resultValue = document.getElementById('brl-result');
+            if (currentInputMode === 'brl') {
+                const brl = parseFloat(document.getElementById('brl-amount').value) || 0;
+                const usdt = currentExchangeRate > 0 ? brl / currentExchangeRate : 0;
+                resultText.textContent = resultLabelDiv.dataset.labelBrl + ':';
+                resultValue.textContent = `${usdt.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT`;
+            } else {
+                const usdt = parseFloat(document.getElementById('usdt-amount').value) || 0;
+                const brl = usdt * currentExchangeRate;
+                resultText.textContent = resultLabelDiv.dataset.labelUsdt + ':';
+                resultValue.textContent = `R$ ${brl.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            }
+        }
+
+        document.querySelectorAll('.mode-toggle-btn').forEach(btn => {
+            btn.onclick = () => {
+                currentInputMode = btn.dataset.mode;
+                document.getElementById('usdt-input-group').style.display = currentInputMode === 'usdt' ? '' : 'none';
+                document.getElementById('brl-input-group').style.display = currentInputMode === 'brl' ? '' : 'none';
+                updateResultDisplay();
+            };
+        });
 
         async function updateLiveRate() {
             try {
@@ -646,11 +689,7 @@
                     if (document.getElementById('buy-modal') && document.getElementById('buy-modal').style.display === 'flex') {
                         document.getElementById('modal-base-rate').textContent = `R$ ${currentBaseRate.toLocaleString('pt-BR', { minimumFractionDigits: 4 })}`;
                         document.getElementById('modal-rate').textContent = `R$ ${currentExchangeRate.toLocaleString('pt-BR', { minimumFractionDigits: 4 })}`;
-                        
-                        const usdtInput = document.getElementById('usdt-amount');
-                        const usdt = parseFloat(usdtInput.value) || 0;
-                        const brl = usdt * currentExchangeRate;
-                        document.getElementById('brl-result').textContent = `R$ ${brl.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                        updateResultDisplay();
                     }
 
                     if (oldRate !== newRate) {
@@ -795,9 +834,13 @@
 
             document.getElementById('modal-base-rate').textContent = `R$ ${baseRate.toLocaleString('pt-BR', { minimumFractionDigits: 4 })}`;
             document.getElementById('modal-rate').textContent = `R$ ${rate.toLocaleString('pt-BR', { minimumFractionDigits: 4 })}`;
-            const input = document.getElementById('usdt-amount');
-            input.value = amount > 0 ? amount : '';
-            // Disparar o cálculo do BRL
+            const input = currentInputMode === 'brl' ? document.getElementById('brl-amount') : document.getElementById('usdt-amount');
+            if (amount > 0) {
+                input.value = currentInputMode === 'brl' ? (amount * rate) : amount;
+            } else {
+                input.value = '';
+            }
+            // Disparar o cálculo
             input.dispatchEvent(new Event('input'));
             
             const btn = document.getElementById('confirm-buy-btn');
@@ -818,29 +861,32 @@
             document.getElementById('buy-modal').style.display = 'none';
         }
 
-        document.getElementById('usdt-amount').oninput = (e) => {
-            const usdt = parseFloat(e.target.value) || 0;
-            const brl = usdt * currentExchangeRate;
-            document.getElementById('brl-result').textContent = `R$ ${brl.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-        };
+        document.getElementById('usdt-amount').oninput = () => updateResultDisplay();
+        document.getElementById('brl-amount').oninput = () => updateResultDisplay();
 
         function closeSuccessModal() {
             document.getElementById('success-modal').style.display = 'none';
         }
 
         document.getElementById('confirm-buy-btn').onclick = async () => {
-            const amountUsdt = document.getElementById('usdt-amount').value;
-            if (!amountUsdt || amountUsdt <= 0) {
+            let amountUsdt, amountBrl;
+            if (currentInputMode === 'brl') {
+                amountBrl = parseFloat(document.getElementById('brl-amount').value) || 0;
+                amountUsdt = currentExchangeRate > 0 ? amountBrl / currentExchangeRate : 0;
+            } else {
+                amountUsdt = parseFloat(document.getElementById('usdt-amount').value) || 0;
+                amountBrl = amountUsdt * currentExchangeRate;
+            }
+
+            if (amountUsdt <= 0 || amountBrl <= 0) {
                 alert(isChinese ? '请输入有效金额' : 'Por favor, insira um valor válido');
                 return;
             }
 
-            if (parseFloat(amountUsdt) < 5000) {
+            if (amountUsdt < 5000) {
                 alert(isChinese ? '最低购买金额为 5000 USDT' : 'O valor mínimo de compra é 5.000 USDT');
                 return;
             }
-
-            const amountBrl = parseFloat(amountUsdt) * currentExchangeRate;
 
             try {
                 const response = await fetch('<?= url_to('chat_buy') ?>', {
@@ -852,8 +898,9 @@
                     },
                     body: JSON.stringify({
                         amount_brl: amountBrl,
-                        amount_usdt: parseFloat(amountUsdt),
-                        delivery_type: selectedDeliveryType
+                        amount_usdt: amountUsdt,
+                        delivery_type: selectedDeliveryType,
+                        input_mode: currentInputMode
                     })
                 });
                 const data = await response.json();

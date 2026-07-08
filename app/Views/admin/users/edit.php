@@ -19,6 +19,7 @@
         if (!is_array($savedPermissions)) {
             $savedPermissions = [];
         }
+        $canSetPurchaseModel = session()->get('user_role') === 'admin' || in_array('purchase_model', session()->get('user_permissions') ?? []);
     ?>
 
     <form action="<?= url_to('admin_users_update', $user['id']) ?>" method="POST" style="display: flex; flex-direction: column; gap: 20px;">
@@ -87,6 +88,18 @@
                     </select>
                 </div>
             </div>
+
+            <?php if ($canSetPurchaseModel): ?>
+            <div class="form-group">
+                <label for="purchase_model" style="display: block; color: #94a3b8; font-size: 12px; font-weight: 600; margin-bottom: 8px;">Modelo de Compra</label>
+                <select id="purchase_model" name="purchase_model"
+                    style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none;">
+                    <option value="usdt" <?= old('purchase_model', $user['purchase_model']) == 'usdt' ? 'selected' : '' ?>>Compra informando USDT</option>
+                    <option value="brl" <?= old('purchase_model', $user['purchase_model']) == 'brl' ? 'selected' : '' ?>>Compra informando BRL</option>
+                    <option value="both" <?= old('purchase_model', $user['purchase_model']) == 'both' ? 'selected' : '' ?>>Ambos (cliente escolhe)</option>
+                </select>
+            </div>
+            <?php endif; ?>
         </div>
 
         <!-- Permissions container (for Admin / Operator) -->
@@ -120,6 +133,10 @@
                 <label style="display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 14px; cursor: pointer; user-select: none;">
                     <input type="checkbox" name="permissions[]" value="settings" <?= in_array('settings', $savedPermissions) ? 'checked' : '' ?> style="accent-color: #6366f1; width: 18px; height: 18px; cursor: pointer;">
                     Configurações Gerais
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 14px; cursor: pointer; user-select: none;">
+                    <input type="checkbox" name="permissions[]" value="purchase_model" <?= in_array('purchase_model', $savedPermissions) ? 'checked' : '' ?> style="accent-color: #6366f1; width: 18px; height: 18px; cursor: pointer;">
+                    Gerenciar Modelo de Compra de Clientes
                 </label>
             </div>
         </div>

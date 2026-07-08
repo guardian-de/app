@@ -477,6 +477,11 @@ class ChatController extends BaseController
         $usdtAmountReq = $json->amount_usdt ?? 0;
         $deliveryType = $json->delivery_type ?? 'D+0';
         $type = $json->type ?? 'buy'; // 'buy' ou 'sell'
+        $inputMode = $json->input_mode ?? ($usdtAmountReq > 0 ? 'usdt' : 'brl');
+        if ($inputMode === 'brl') {
+            // Recalcula o USDT a partir do BRL informado, ignorando qualquer amount_usdt pré-calculado no cliente
+            $usdtAmountReq = 0;
+        }
 
         $userLang = session()->get('user_lang') ?? 'pt-BR';
         $userId = session()->get('user_id');
@@ -523,13 +528,6 @@ class ChatController extends BaseController
             return $this->response->setJSON(['error' => $errorMsg])->setStatusCode(400);
         }
 
-        if ($type === 'buy' && $usdtAmountReq > 0 && $usdtAmountReq < self::MIN_BUY_USDT) {
-            $errMsg = $userLang == 'zh-CN'
-                ? '最低购买金额为 ' . self::MIN_BUY_USDT . ' USDT。'
-                : 'O valor mínimo de compra é ' . self::MIN_BUY_USDT . ' USDT.';
-            return $this->response->setJSON(['error' => $errMsg])->setStatusCode(400);
-        }
-
         $userId = session()->get('user_id');
         $userModel = new \App\Models\UserModel();
         $user = $userModel->find($userId);
@@ -572,6 +570,13 @@ class ChatController extends BaseController
             $brlAmount = round($usdtAmount * $rate, 2);
         } else {
             $usdtAmount = round($brlAmount / $rate, 2);
+        }
+
+        if ($type === 'buy' && $usdtAmount < self::MIN_BUY_USDT) {
+            $errMsg = $userLang == 'zh-CN'
+                ? '最低购买金额为 ' . self::MIN_BUY_USDT . ' USDT。'
+                : 'O valor mínimo de compra é ' . self::MIN_BUY_USDT . ' USDT.';
+            return $this->response->setJSON(['error' => $errMsg])->setStatusCode(400);
         }
 
         // Calcula valor comercial (sem taxa) e valor da taxa em BRL
@@ -654,6 +659,10 @@ class ChatController extends BaseController
             if ($autoPayAmount > 0.01) {
                 $contractModel->registerPayment($contractId, $autoPayAmount);
             }
+        }
+
+        if (($user['purchase_model'] ?? 'usdt') === 'both' && $user['last_purchase_mode'] !== $inputMode) {
+            $userModel->update($userId, ['last_purchase_mode' => $inputMode]);
         }
 
         return $this->response->setJSON(['status' => 'success', 'transaction_id' => $transactionId]);
