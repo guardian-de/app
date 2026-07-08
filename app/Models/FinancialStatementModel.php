@@ -42,15 +42,27 @@ class FinancialStatementModel extends Model
     protected $skipValidation       = false;
     protected $cleanValidationRules = true;
 
-    public function getUserStatement(int $userId, int $page = 1, int $perPage = 20, string $nature = '', string $search = ''): array
+    public function getUserStatement(int $userId, int $page = 1, int $perPage = 20, string $nature = '', string $search = '', array $filters = []): array
     {
         $offset = ($page - 1) * $perPage;
         $like   = '%' . $search . '%';
 
-        // Linhas de USDT no ledger (entregas e recebimentos) ficam marcadas
-        // com unit = USDT para o front não exibi-las como R$.
-        // CONVERT(... USING utf8mb4) em todas as colunas de texto: as tabelas
-        // ledger e deposits podem ter collations diferentes e a UNION falharia.
+        $startDate = $filters['start_date'] ?? '';
+        $endDate   = $filters['end_date'] ?? '';
+        $type      = $filters['type'] ?? '';
+        $status    = $filters['status'] ?? '';
+
+        $includeLedger = true;
+        $includeDeposits = ($nature === '');
+
+        if ($status === 'completed') {
+            $includeDeposits = false;
+        } elseif ($status === 'pending' || $status === 'rejected') {
+            $includeLedger = false;
+            $includeDeposits = true;
+        }
+
+        // --- Build Ledger SQL ---
         $ledgerSql = "SELECT fs.id,
                 CONVERT(fs.operation_type USING utf8mb4) AS operation_type,
                 CONVERT(fs.nature USING utf8mb4) AS nature,
@@ -82,14 +94,24 @@ class FinancialStatementModel extends Model
             $ledgerSql .= " AND fs.description LIKE ?";
             $ledgerParams[] = $like;
         }
+        if ($startDate !== '') {
+            $ledgerSql .= " AND fs.transaction_date >= ?";
+            $ledgerParams[] = $startDate . ' 00:00:00';
+        }
+        if ($endDate !== '') {
+            $ledgerSql .= " AND fs.transaction_date <= ?";
+            $ledgerParams[] = $endDate . ' 23:59:59';
+        }
+        if ($type !== '') {
+            if ($type === 'adjustment') {
+                $ledgerSql .= " AND fs.operation_type IN ('adjustment_add', 'adjustment_subtract')";
+            } else {
+                $ledgerSql .= " AND fs.operation_type = ?";
+                $ledgerParams[] = $type;
+            }
+        }
 
-        // Depósitos pendentes/rejeitados não são lançamentos contábeis (não afetam
-        // o saldo), mas precisam aparecer no extrato. Aceitos já entram via ledger.
-        // O filtro de natureza (C/D) exclui essas linhas informativas.
-        $includeDeposits = ($nature === '');
-        $sql    = $ledgerSql;
-        $params = $ledgerParams;
-
+        // --- Build Deposits SQL ---
         if ($includeDeposits) {
             $depositSql = "SELECT d.id,
                     CONVERT(CASE WHEN d.status = 'pending' THEN 'deposit_pending' ELSE 'deposit_rejected' END USING utf8mb4) AS operation_type,
@@ -104,17 +126,52 @@ class FinancialStatementModel extends Model
                     CONVERT(NULL USING utf8mb4) AS purchase_hash,
                     CONVERT(NULL USING utf8mb4) AS notes
                 FROM deposits d
-                WHERE d.user_id = ? AND d.status IN ('pending','rejected')";
+                WHERE d.user_id = ?";
             $depositParams = [$userId];
+
+            if ($status === 'pending') {
+                $depositSql .= " AND d.status = 'pending'";
+            } elseif ($status === 'rejected') {
+                $depositSql .= " AND d.status = 'rejected'";
+            } else {
+                $depositSql .= " AND d.status IN ('pending','rejected')";
+            }
 
             if ($search !== '') {
                 $depositSql .= " AND (d.notes LIKE ? OR d.rejection_reason LIKE ?)";
                 $depositParams[] = $like;
                 $depositParams[] = $like;
             }
+            if ($startDate !== '') {
+                $depositSql .= " AND d.created_at >= ?";
+                $depositParams[] = $startDate . ' 00:00:00';
+            }
+            if ($endDate !== '') {
+                $depositSql .= " AND d.created_at <= ?";
+                $depositParams[] = $endDate . ' 23:59:59';
+            }
+            if ($type !== '') {
+                if ($type !== 'deposit') {
+                    $depositSql .= " AND 1 = 0";
+                }
+            }
+        }
 
-            $sql    = "($ledgerSql) UNION ALL ($depositSql)";
+        // --- Union SQL Assemble ---
+        $sql = "";
+        $params = [];
+
+        if ($includeLedger && $includeDeposits) {
+            $sql = "($ledgerSql) UNION ALL ($depositSql)";
             $params = array_merge($ledgerParams, $depositParams);
+        } elseif ($includeLedger) {
+            $sql = $ledgerSql;
+            $params = $ledgerParams;
+        } elseif ($includeDeposits) {
+            $sql = $depositSql;
+            $params = $depositParams;
+        } else {
+            return ['total' => 0, 'data' => [], 'has_more' => false];
         }
 
         $runQuery = function (string $innerSql, array $innerParams) use ($perPage, $offset): array {
@@ -123,10 +180,17 @@ class FinancialStatementModel extends Model
                 $innerParams
             )->getRowArray()['total'];
 
-            $rows = $this->db->query(
-                "SELECT * FROM ($innerSql) t ORDER BY t.transaction_date DESC, t.id DESC LIMIT ? OFFSET ?",
-                array_merge($innerParams, [$perPage + 1, $offset])
-            )->getResultArray();
+            if ($perPage === -1) {
+                $rows = $this->db->query(
+                    "SELECT * FROM ($innerSql) t ORDER BY t.transaction_date DESC, t.id DESC",
+                    $innerParams
+                )->getResultArray();
+            } else {
+                $rows = $this->db->query(
+                    "SELECT * FROM ($innerSql) t ORDER BY t.transaction_date DESC, t.id DESC LIMIT ? OFFSET ?",
+                    array_merge($innerParams, [$perPage + 1, $offset])
+                )->getResultArray();
+            }
 
             return [$total, $rows];
         };
@@ -134,14 +198,17 @@ class FinancialStatementModel extends Model
         try {
             [$total, $rows] = $runQuery($sql, $params);
         } catch (\Throwable $e) {
-            // Tabela deposits pode não existir em deploys antigos — cai para o ledger puro
             log_message('debug', 'getUserStatement deposits guard: ' . $e->getMessage());
             [$total, $rows] = $runQuery($ledgerSql, $ledgerParams);
         }
 
-        $hasMore = count($rows) > $perPage;
-        if ($hasMore) {
-            array_pop($rows);
+        if ($perPage === -1) {
+            $hasMore = false;
+        } else {
+            $hasMore = count($rows) > $perPage;
+            if ($hasMore) {
+                array_pop($rows);
+            }
         }
 
         return ['data' => $rows, 'has_more' => $hasMore, 'total' => $total];

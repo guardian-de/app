@@ -876,7 +876,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             </div>
 
             <!-- Search -->
-            <div style="position: relative; margin-bottom: 16px; flex-shrink: 0;">
+            <div style="position: relative; margin-bottom: 12px; flex-shrink: 0;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2.5"
                     stroke-linecap="round" stroke-linejoin="round"
                     style="position:absolute;left:12px;top:50%;transform:translateY(-50%);">
@@ -885,6 +885,66 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 <input type="text" id="statement-search" placeholder="<?= lang('App.stmt_search_placeholder') ?>"
                     oninput="onStatementSearch(this.value)"
                     style="width:100%;background:rgba(15,23,42,0.6);border:1px solid #334155;border-radius:12px;color:white;padding:10px 12px 10px 36px;font-size:14px;outline:none;box-sizing:border-box;">
+            </div>
+
+            <!-- Advanced Filters & Exports -->
+            <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px; background:rgba(15,23,42,0.3); padding:12px; border-radius:16px; border:1px solid rgba(51,65,85,0.4); flex-shrink:0;">
+                <!-- Dates Grid -->
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="display:block; font-size:9px; color:#64748b; text-transform:uppercase; font-weight:700; margin-bottom:4px;">De</label>
+                        <input type="date" id="statement-start-date" onchange="resetStatement()"
+                            style="width:100%; background:rgba(15,23,42,0.6); border:1px solid #334155; border-radius:10px; color:white; padding:8px; font-size:12px; outline:none; box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:9px; color:#64748b; text-transform:uppercase; font-weight:700; margin-bottom:4px;">Até</label>
+                        <input type="date" id="statement-end-date" onchange="resetStatement()"
+                            style="width:100%; background:rgba(15,23,42,0.6); border:1px solid #334155; border-radius:10px; color:white; padding:8px; font-size:12px; outline:none; box-sizing:border-box;">
+                    </div>
+                </div>
+
+                <!-- Selectors Grid -->
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="display:block; font-size:9px; color:#64748b; text-transform:uppercase; font-weight:700; margin-bottom:4px;">Tipo</label>
+                        <select id="statement-type" onchange="resetStatement()"
+                            style="width:100%; background:rgba(15,23,42,0.6); border:1px solid #334155; border-radius:10px; color:white; padding:8px; font-size:12px; outline:none; box-sizing:border-box; cursor:pointer;">
+                            <option value="">Todos</option>
+                            <option value="deposit">Depósito</option>
+                            <option value="withdrawal">Saída / Retirada</option>
+                            <option value="margin_lock">Compra de USDT</option>
+                            <option value="limit_release">Liberação Limite</option>
+                            <option value="partial_amortization">Amortização Parcial</option>
+                            <option value="full_settlement">Liquidação Integral</option>
+                            <option value="late_fee">Multa por Atraso</option>
+                            <option value="adjustment">Ajustes</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:9px; color:#64748b; text-transform:uppercase; font-weight:700; margin-bottom:4px;">Status</label>
+                        <select id="statement-status" onchange="resetStatement()"
+                            style="width:100%; background:rgba(15,23,42,0.6); border:1px solid #334155; border-radius:10px; color:white; padding:8px; font-size:12px; outline:none; box-sizing:border-box; cursor:pointer;">
+                            <option value="">Todos</option>
+                            <option value="completed">Lançado</option>
+                            <option value="pending">Pendente</option>
+                            <option value="rejected">Rejeitado</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Exports Row -->
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:4px;">
+                    <button onclick="downloadStatement('pdf')"
+                        style="display:flex; align-items:center; justify-content:center; gap:6px; padding:10px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2); border-radius:12px; color:#f87171; font-size:12px; font-weight:700; cursor:pointer; transition:all 0.2s;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        PDF
+                    </button>
+                    <button onclick="downloadStatement('xlsx')"
+                        style="display:flex; align-items:center; justify-content:center; gap:6px; padding:10px; background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.2); border-radius:12px; color:#4ade80; font-size:12px; font-weight:700; cursor:pointer; transition:all 0.2s;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Excel
+                    </button>
+                </div>
             </div>
 
             <!-- List (scrollable) -->
@@ -1800,6 +1860,10 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             function openStatementModal() {
                 showModal('statement-modal');
                 document.getElementById('statement-search').value = '';
+                document.getElementById('statement-start-date').value = '';
+                document.getElementById('statement-end-date').value = '';
+                document.getElementById('statement-type').value = '';
+                document.getElementById('statement-status').value = '';
                 stmtNature = '';
                 stmtSearch = '';
                 document.querySelectorAll('.stmt-filter-btn').forEach(b => applyStmtFilterStyle(b, b.dataset.nature === ''));
@@ -1825,7 +1889,15 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 stmtLoading = true;
                 document.getElementById('statement-loader').style.display = 'block';
                 try {
-                    const params = new URLSearchParams({ page: stmtPage, nature: stmtNature, q: stmtSearch });
+                    const params = new URLSearchParams({
+                        page: stmtPage,
+                        nature: stmtNature,
+                        q: stmtSearch,
+                        start_date: document.getElementById('statement-start-date').value,
+                        end_date: document.getElementById('statement-end-date').value,
+                        type: document.getElementById('statement-type').value,
+                        status: document.getElementById('statement-status').value
+                    });
                     const res  = await fetch(`<?= url_to('chat_statement') ?>?${params}`);
                     const data = await res.json();
                     stmtTotal = data.total;
@@ -1838,6 +1910,20 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                     stmtLoading = false;
                     document.getElementById('statement-loader').style.display = 'none';
                 }
+            }
+
+            function downloadStatement(format) {
+                const params = new URLSearchParams({
+                    nature: stmtNature,
+                    q: stmtSearch,
+                    start_date: document.getElementById('statement-start-date').value,
+                    end_date: document.getElementById('statement-end-date').value,
+                    type: document.getElementById('statement-type').value,
+                    status: document.getElementById('statement-status').value
+                });
+                
+                let baseUrl = format === 'pdf' ? "<?= url_to('chat_statement_pdf') ?>" : "<?= url_to('chat_statement_xlsx') ?>";
+                window.open(`${baseUrl}?${params.toString()}`, '_blank');
             }
 
             function renderStmtItems(items) {

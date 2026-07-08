@@ -895,10 +895,312 @@ class ChatController extends BaseController
         $nature = $this->request->getGet('nature') ?: '';
         $search = $this->request->getGet('q') ?: '';
 
+        $filters = [
+            'start_date' => $this->request->getGet('start_date') ?: '',
+            'end_date'   => $this->request->getGet('end_date')   ?: '',
+            'type'       => $this->request->getGet('type')       ?: '',
+            'status'     => $this->request->getGet('status')     ?: '',
+        ];
+
         $model  = new \App\Models\FinancialStatementModel();
-        $result = $model->getUserStatement($userId, $page, 20, $nature, $search);
+        $result = $model->getUserStatement($userId, $page, 20, $nature, $search, $filters);
 
         return $this->response->setJSON($result);
+    }
+
+    public function exportStatementPdf()
+    {
+        if (!session()->get('isLoggedIn')) {
+            return redirect()->to(url_to('login'));
+        }
+
+        $userId = (int) session()->get('user_id');
+        $userModel = new \App\Models\UserModel();
+        $user = $userModel->find($userId);
+
+        $nature = $this->request->getGet('nature') ?: '';
+        $search = $this->request->getGet('q') ?: '';
+
+        $filters = [
+            'start_date' => $this->request->getGet('start_date') ?: '',
+            'end_date'   => $this->request->getGet('end_date')   ?: '',
+            'type'       => $this->request->getGet('type')       ?: '',
+            'status'     => $this->request->getGet('status')     ?: '',
+        ];
+
+        $model  = new \App\Models\FinancialStatementModel();
+        $result = $model->getUserStatement($userId, 1, -1, $nature, $search, $filters);
+        $items  = $result['data'] ?? [];
+
+        $typeLabels = [
+            'deposit'              => 'Depósito Aprovado',
+            'withdrawal'           => 'Saída / Retirada',
+            'margin_lock'          => 'Compra de USDT',
+            'limit_release'        => 'Liberação de Limite',
+            'partial_amortization' => 'Amortização Parcial',
+            'full_settlement'      => 'Liquidação Integral',
+            'late_fee'             => 'Multa por Atraso',
+            'adjustment_add'       => 'Ajuste de Crédito',
+            'adjustment_subtract'  => 'Ajuste de Débito',
+            'deposit_pending'      => 'Depósito Pendente',
+            'deposit_rejected'     => 'Depósito Rejeitado',
+        ];
+
+        $dateFilterStr = 'Período: ';
+        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
+            $dateFilterStr .= date('d/m/Y', strtotime($filters['start_date'])) . ' até ' . date('d/m/Y', strtotime($filters['end_date']));
+        } elseif (!empty($filters['start_date'])) {
+            $dateFilterStr .= 'A partir de ' . date('d/m/Y', strtotime($filters['start_date']));
+        } elseif (!empty($filters['end_date'])) {
+            $dateFilterStr .= 'Até ' . date('d/m/Y', strtotime($filters['end_date']));
+        } else {
+            $dateFilterStr .= 'Todo o histórico';
+        }
+
+        echo '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Extrato Financeiro - ' . esc($user['login']) . '</title>
+    <style>
+        body { font-family: "Segoe UI", Helvetica, Arial, sans-serif; color: #1e293b; background: #fff; margin: 30px; font-size: 13px; line-height: 1.5; }
+        .header { display: flex; justify-content: space-between; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px; }
+        .header h1 { font-size: 18px; font-weight: 700; margin: 0 0 5px 0; color: #0f172a; }
+        .header p { margin: 2px 0; color: #64748b; }
+        .info { margin-bottom: 20px; }
+        .info span { font-weight: bold; color: #334155; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #f8fafc; border-bottom: 2px solid #cbd5e1; color: #475569; font-weight: 600; text-align: left; padding: 10px 12px; font-size: 11px; text-transform: uppercase; }
+        td { border-bottom: 1px solid #e2e8f0; padding: 12px; vertical-align: top; }
+        tr:nth-child(even) td { background: #fafafa; }
+        .amount-c { color: #16a34a; font-weight: bold; }
+        .amount-d { color: #dc2626; font-weight: bold; }
+        .amount-p { color: #d97706; }
+        .amount-r { color: #dc2626; text-decoration: line-through; }
+        .details { font-size: 11px; color: #64748b; margin-top: 4px; background: #f8fafc; padding: 6px 10px; border-radius: 6px; display: inline-block; }
+        @media print {
+            body { margin: 15px; font-size: 12px; }
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>GUARDIAN CORRETORA</h1>
+            <p>Relatório de Extrato Financeiro</p>
+        </div>
+        <div style="text-align: right;">
+            <p><span>Cliente:</span> ' . esc($user['login']) . '</p>
+            <p>' . $dateFilterStr . '</p>
+            <p>Gerado em: ' . date('d/m/Y H:i') . '</p>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Operação</th>
+                <th>Descrição</th>
+                <th style="text-align: right;">Valor</th>
+            </tr>
+        </thead>
+        <tbody>';
+
+        if (empty($items)) {
+            echo '<tr><td colspan="4" style="text-align: center; color: #94a3b8; padding: 30px;">Nenhuma transação encontrada para os filtros selecionados.</td></tr>';
+        } else {
+            foreach ($items as $item) {
+                $isPending = $item['operation_type'] === 'deposit_pending';
+                $isRejected = $item['operation_type'] === 'deposit_rejected';
+                $isCredit = $item['nature'] === 'C' || $item['operation_type'] === 'withdrawal';
+
+                $class = 'amount-d';
+                $sign = '− ';
+                if ($isPending) { $class = 'amount-p'; $sign = ''; }
+                elseif ($isRejected) { $class = 'amount-r'; $sign = ''; }
+                elseif ($isCredit) { $class = 'amount-c'; $sign = '+ '; }
+
+                $label = $typeLabels[$item['operation_type']] ?? $item['operation_type'];
+                $dateStr = date('d/m/Y H:i', strtotime($item['transaction_date']));
+                $amount = number_format($item['amount'], 2, ',', '.');
+                $amountStr = $item['unit'] === 'USDT' ? $amount . ' USDT' : 'R$ ' . $amount;
+
+                $details = '';
+                if ($item['operation_type'] === 'margin_lock') {
+                    $parts = [];
+                    if ($item['usdt_amount'] != null) {
+                        $parts[] = 'USDT: ' . number_format($item['usdt_amount'], 2, ',', '.') . ' USDT';
+                    }
+                    if ($item['spot_rate'] != null) {
+                        $parts[] = 'Cotação: R$ ' . number_format($item['spot_rate'], 4, ',', '.');
+                    }
+                    if ($item['purchase_hash']) {
+                        $parts[] = 'Hash: ' . esc($item['purchase_hash']);
+                    }
+                    if (!empty($parts)) {
+                        $details = '<div class="details">' . implode(' &middot; ', $parts) . '</div>';
+                    }
+                } elseif ($item['operation_type'] === 'withdrawal' && !empty($item['notes'])) {
+                    $details = '<div class="details">Destino: ' . esc($item['notes']) . '</div>';
+                }
+
+                echo '<tr>
+                    <td style="white-space: nowrap;">' . $dateStr . '</td>
+                    <td><strong>' . esc($label) . '</strong></td>
+                    <td>
+                        ' . esc($item['description']) . '
+                        ' . $details . '
+                    </td>
+                    <td style="text-align: right;" class="' . $class . '">' . $sign . $amountStr . '</td>
+                </tr>';
+            }
+        }
+
+        echo '</tbody>
+    </table>
+
+    <script>
+        window.onload = function() {
+            window.print();
+        }
+    </script>
+</body>
+</html>';
+        exit;
+    }
+
+    public function exportStatementXlsx()
+    {
+        if (!session()->get('isLoggedIn')) {
+            return redirect()->to(url_to('login'));
+        }
+
+        $userId = (int) session()->get('user_id');
+        $userModel = new \App\Models\UserModel();
+        $user = $userModel->find($userId);
+
+        $nature = $this->request->getGet('nature') ?: '';
+        $search = $this->request->getGet('q') ?: '';
+
+        $filters = [
+            'start_date' => $this->request->getGet('start_date') ?: '',
+            'end_date'   => $this->request->getGet('end_date')   ?: '',
+            'type'       => $this->request->getGet('type')       ?: '',
+            'status'     => $this->request->getGet('status')     ?: '',
+        ];
+
+        $model  = new \App\Models\FinancialStatementModel();
+        $result = $model->getUserStatement($userId, 1, -1, $nature, $search, $filters);
+        $items  = $result['data'] ?? [];
+
+        $typeLabels = [
+            'deposit'              => 'Depósito Aprovado',
+            'withdrawal'           => 'Saída / Retirada',
+            'margin_lock'          => 'Compra de USDT',
+            'limit_release'        => 'Liberação de Limite',
+            'partial_amortization' => 'Amortização Parcial',
+            'full_settlement'      => 'Liquidação Integral',
+            'late_fee'             => 'Multa por Atraso',
+            'adjustment_add'       => 'Ajuste de Crédito',
+            'adjustment_subtract'  => 'Ajuste de Débito',
+            'deposit_pending'      => 'Depósito Pendente',
+            'deposit_rejected'     => 'Depósito Rejeitado',
+        ];
+
+        $filename = 'extrato_' . strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $user['login'])) . '_' . date('Ymd_His') . '.xls';
+
+        header("Content-Type: application/vnd.ms-excel; charset=utf-8");
+        header("Content-Disposition: attachment; filename=\"" . $filename . "\"");
+        header("Pragma: no-cache");
+        header("Expires: 0");
+
+        echo "\xEF\xBB\xBF";
+
+        echo '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+    <meta http-equiv="Content-type" content="text/html;charset=utf-8" />
+    <style>
+        table { border-collapse: collapse; }
+        th { background: #3b82f6; color: white; font-weight: bold; border: 1px solid #ccc; padding: 8px; }
+        td { border: 1px solid #ccc; padding: 8px; vertical-align: top; }
+        .amount-c { color: #16a34a; font-weight: bold; }
+        .amount-d { color: #dc2626; font-weight: bold; }
+        .amount-p { color: #d97706; }
+    </style>
+</head>
+<body>
+    <h3>GUARDIAN CORRETORA - EXTRATO FINANCEIRO</h3>
+    <p><b>Cliente:</b> ' . esc($user['login']) . '</p>
+    <p><b>Data de Emissão:</b> ' . date('d/m/Y H:i') . '</p>
+    <br/>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Data</th>
+                <th>Operação</th>
+                <th>Descrição</th>
+                <th>Natureza</th>
+                <th>Unidade</th>
+                <th>Valor</th>
+                <th>Taxa %</th>
+                <th>Taxa R$</th>
+                <th>USDT Adquirido</th>
+                <th>Taxa Comercial</th>
+                <th>Hash / Obs</th>
+            </tr>
+        </thead>
+        <tbody>';
+
+        foreach ($items as $item) {
+            $isPending = $item['operation_type'] === 'deposit_pending';
+            $isRejected = $item['operation_type'] === 'deposit_rejected';
+            $isCredit = $item['nature'] === 'C' || $item['operation_type'] === 'withdrawal';
+
+            $class = 'amount-d';
+            $sign = '-';
+            if ($isPending) { $class = 'amount-p'; $sign = ''; }
+            elseif ($isRejected) { $class = 'amount-r'; $sign = ''; }
+            elseif ($isCredit) { $class = 'amount-c'; $sign = '+'; }
+
+            $label = $typeLabels[$item['operation_type']] ?? $item['operation_type'];
+            $dateStr = date('d/m/Y H:i', strtotime($item['transaction_date']));
+            
+            $feePercentStr = $item['fee_percent'] !== null ? number_format($item['fee_percent'], 2, ',', '.') . '%' : '';
+            $feeBrlStr = $item['fee_brl'] !== null ? number_format($item['fee_brl'], 2, ',', '.') : '';
+            $usdtStr = $item['usdt_amount'] !== null ? number_format($item['usdt_amount'], 2, ',', '.') : '';
+            $spotStr = $item['spot_rate'] !== null ? number_format($item['spot_rate'], 4, ',', '.') : '';
+            
+            $hashObs = '';
+            if ($item['operation_type'] === 'margin_lock') {
+                $hashObs = $item['purchase_hash'] ?: '';
+            } elseif ($item['operation_type'] === 'withdrawal') {
+                $hashObs = $item['notes'] ?: '';
+            }
+
+            echo '<tr>
+                <td>' . $item['id'] . '</td>
+                <td>' . $dateStr . '</td>
+                <td>' . esc($label) . '</td>
+                <td>' . esc($item['description']) . '</td>
+                <td style="text-align: center;">' . ($item['nature'] ?: '-') . '</td>
+                <td style="text-align: center;">' . $item['unit'] . '</td>
+                <td class="' . $class . '" style="text-align: right;">' . $sign . number_format($item['amount'], 2, ',', '.') . '</td>
+                <td style="text-align: right;">' . $feePercentStr . '</td>
+                <td style="text-align: right;">' . $feeBrlStr . '</td>
+                <td style="text-align: right;">' . $usdtStr . '</td>
+                <td style="text-align: right;">' . $spotStr . '</td>
+                <td>' . esc($hashObs) . '</td>
+            </tr>';
+        }
+
+        echo '</tbody>
+    </table>
+</body>
+</html>';
+        exit;
     }
 
     public function getNotifications()
