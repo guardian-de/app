@@ -79,9 +79,19 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             overflow: hidden;
         }
 
-        .dashboard-panel-desktop,
+        .dashboard-panel-desktop {
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
         .chat-panel-desktop {
-            display: contents;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+            position: relative;
+            overflow: hidden;
         }
 
         /* Responsive Desktop Refinements (screens >= 1024px) */
