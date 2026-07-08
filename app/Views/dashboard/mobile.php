@@ -745,12 +745,6 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             <div id="deposit-items-list" style="overflow-y: auto; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 16px; padding-right: 6px; margin-bottom: 16px;"></div>
 
             <div style="flex-shrink: 0;">
-                <!-- Add Another Deposit Button -->
-                <button type="button" onclick="addDepositItemField()"
-                    style="width: 100%; padding: 12px; margin-bottom: 16px; background: rgba(255,255,255,0.03); border: 1px dashed rgba(16,185,129,0.4); border-radius: 12px; color: #34d399; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                    + <?= $isChinese ? '添加另一个存款' : 'Adicionar item manualmente' ?>
-                </button>
-
                 <button id="deposit-submit-btn" onclick="submitDeposit()"
                     style="width: 100%; padding: 14px; border-radius: 12px; background: #10b981; border: none; color: white; font-weight: 700; font-size: 15px; cursor: pointer;">
                     <?= $isChinese ? '提交存款' : 'Enviar Depósito' ?>
