@@ -72,6 +72,8 @@ class FinancialStatementModel extends Model
                 CONVERT(CASE WHEN fs.operation_type = 'withdrawal' OR fs.description LIKE 'Depósito de USDT%'
                      THEN 'USDT' ELSE 'BRL' END USING utf8mb4) AS unit,
                 CONVERT(NULL USING utf8mb4) AS rejection_reason,
+                CONVERT(NULL USING utf8mb4) AS amount_edited_reason,
+                CONVERT(NULL USING utf8mb4) AS ocr_status,
                 fs.fee_percent, fs.fee_brl, c.total_amount AS usdt_amount,
                 ROUND(c.comercial_brl / NULLIF(c.total_amount, 0), 4) AS spot_rate,
                 CONVERT((
@@ -121,6 +123,8 @@ class FinancialStatementModel extends Model
                     NULL AS contract_id, d.created_at AS transaction_date,
                     CONVERT('BRL' USING utf8mb4) AS unit,
                     CONVERT(d.rejection_reason USING utf8mb4) AS rejection_reason,
+                    CONVERT(d.amount_edited_reason USING utf8mb4) AS amount_edited_reason,
+                    CONVERT(d.ocr_status USING utf8mb4) AS ocr_status,
                     NULL AS fee_percent, NULL AS fee_brl, NULL AS usdt_amount,
                     NULL AS spot_rate,
                     CONVERT(NULL USING utf8mb4) AS purchase_hash,

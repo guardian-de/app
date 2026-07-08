@@ -498,39 +498,41 @@
 
     <!-- Deposit Modal -->
     <div id="deposit-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1200; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(10px);">
-        <div class="auth-container" style="max-width: 420px; background: #1e293b; padding: 40px; border-radius: 24px; border: 1px solid rgba(16, 185, 129, 0.2); position: relative;">
-            <button onclick="closeDepositModal()" style="position: absolute; right: 20px; top: 20px; background: none; border: none; color: #94a3b8; font-size: 24px; cursor: pointer;">&times;</button>
+        <div class="auth-container" style="max-width: 440px; background: #1e293b; padding: 32px; border-radius: 24px; border: 1px solid rgba(16, 185, 129, 0.2); position: relative; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden;">
+            <button onclick="closeDepositModal()" style="position: absolute; right: 16px; top: 16px; background: none; border: none; color: #94a3b8; font-size: 24px; cursor: pointer; z-index: 10;">&times;</button>
 
-            <div style="width: 60px; height: 60px; background: rgba(16, 185, 129, 0.1); border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 20px;">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            <div style="flex-shrink: 0; text-align: center;">
+                <div style="width: 52px; height: 52px; background: rgba(16,185,129,0.1); border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 12px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                </div>
+                <h2 style="color: white; font-size: 18px; font-weight: 700; margin-bottom: 4px;"><?= $isChinese ? '存款' : 'Realizar Depósito' ?></h2>
+                <p style="color: #94a3b8; font-size: 12px; margin-bottom: 16px;"><?= $isChinese ? '上传付款凭证，金额将自动识别。' : 'Envie o(s) comprovante(s) de pagamento. O valor será identificado automaticamente.' ?></p>
             </div>
 
-            <h2 style="color: white; font-size: 20px; font-weight: 700; margin-bottom: 8px; text-align: center;"><?= $isChinese ? '存款' : 'Realizar Depósito' ?></h2>
-            <p style="color: #94a3b8; font-size: 14px; margin-bottom: 28px; text-align: center;"><?= $isChinese ? '填写金额并上传付款凭证。' : 'Informe o valor e envie o comprovante de pagamento.' ?></p>
-
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; color: #94a3b8; font-size: 12px; text-transform: uppercase; font-weight: 600; margin-bottom: 8px;"><?= $isChinese ? '金额 (BRL)' : 'Valor (BRL)' ?> *</label>
-                <input type="number" id="deposit-amount" step="0.01" min="0.01"
-                    style="width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 10px; color: white; padding: 12px 16px; font-size: 16px; outline: none;"
-                    placeholder="Ex: 5000.00">
+            <input type="file" id="deposit-bulk-input" multiple accept="image/*,application/pdf" style="display:none" onchange="handleBulkFileSelect(this)">
+            <div id="deposit-dropzone" onclick="document.getElementById('deposit-bulk-input').click()"
+                ondragover="event.preventDefault(); this.style.borderColor='#34d399'; this.style.background='rgba(16,185,129,0.1)';"
+                ondragleave="this.style.borderColor='rgba(16,185,129,0.3)'; this.style.background='transparent';"
+                ondrop="handleDepositDrop(event, this)"
+                style="flex-shrink: 0; border: 2px dashed rgba(16,185,129,0.3); border-radius: 14px; padding: 20px 16px; text-align: center; cursor: pointer; margin-bottom: 16px; transition: 0.2s;">
+                <div style="font-size: 26px; margin-bottom: 6px;">📎</div>
+                <div style="color: #34d399; font-weight: 600; font-size: 13px; margin-bottom: 2px;"><?= $isChinese ? '点击或拖拽多个凭证到此处' : 'Clique ou arraste vários comprovantes aqui' ?></div>
+                <div style="color: #64748b; font-size: 11px;"><?= $isChinese ? '可一次选择多个文件' : 'Você pode selecionar quantos arquivos quiser de uma vez' ?></div>
             </div>
 
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; color: #94a3b8; font-size: 12px; text-transform: uppercase; font-weight: 600; margin-bottom: 8px;"><?= $isChinese ? '付款凭证' : 'Comprovante' ?> *</label>
-                <input type="file" id="deposit-proof" accept="image/*,application/pdf" style="display: none;" onchange="handleDepositFile(this)">
-                <label for="deposit-proof" id="deposit-file-label" style="display: block; padding: 24px; border: 2px dashed rgba(16, 185, 129, 0.3); border-radius: 12px; cursor: pointer; transition: 0.3s; text-align: center;">
-                    <span id="deposit-file-name" style="color: #34d399; font-weight: 500; font-size: 14px;"><?= $isChinese ? '点击选择文件' : 'Clique para selecionar arquivo' ?></span>
-                </label>
-            </div>
+            <!-- Scrollable list of items -->
+            <div id="deposit-items-list" style="overflow-y: auto; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 16px; padding-right: 6px; margin-bottom: 16px;"></div>
 
-            <div style="margin-bottom: 24px;">
-                <label style="display: block; color: #94a3b8; font-size: 12px; text-transform: uppercase; font-weight: 600; margin-bottom: 8px;"><?= $isChinese ? '备注 (可选)' : 'Observações (Opcional)' ?></label>
-                <textarea id="deposit-notes" rows="2" style="width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 10px; color: white; padding: 12px; font-size: 14px; outline: none; resize: none;" placeholder="<?= $isChinese ? '输入备注...' : 'Informações adicionais...' ?>"></textarea>
-            </div>
+            <div style="flex-shrink: 0;">
+                <button type="button" onclick="addDepositItemField()"
+                    style="width: 100%; padding: 12px; margin-bottom: 16px; background: rgba(255,255,255,0.03); border: 1px dashed rgba(16,185,129,0.4); border-radius: 12px; color: #34d399; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    + <?= $isChinese ? '添加另一个存款' : 'Adicionar item manualmente' ?>
+                </button>
 
-            <button id="deposit-submit-btn" onclick="submitDeposit()" class="btn-primary" style="width: 100%; background: #10b981;">
-                <?= $isChinese ? '提交存款' : 'Enviar Depósito' ?>
-            </button>
+                <button id="deposit-submit-btn" onclick="submitDeposit()" class="btn-primary" style="width: 100%; background: #10b981;">
+                    <?= $isChinese ? '提交存款' : 'Enviar Depósito' ?>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -1033,41 +1035,121 @@
             }
         }
 
+        let depositItemCounter = 0;
+
+        function addDepositItemField(file) {
+            depositItemCounter++;
+            const container = document.getElementById('deposit-items-list');
+            if (!container) return;
+
+            const itemDiv = document.createElement('div');
+            itemDiv.id = 'deposit-item-' + depositItemCounter;
+            itemDiv.className = 'deposit-item-card';
+            itemDiv.style.cssText = 'background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.04); border-radius: 16px; padding: 16px; position: relative; display: flex; flex-direction: column; gap: 12px; margin-bottom: 4px; text-align: left;';
+
+            const removeBtn = `<button type="button" onclick="removeDepositItemField(${depositItemCounter})" style="position: absolute; right: 12px; top: 12px; background: rgba(239, 68, 68, 0.15); border: none; color: #ef4444; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; line-height: 1;">&times;</button>`;
+
+            itemDiv.innerHTML = `
+                ${removeBtn}
+                <div style="font-size: 12px; font-weight: 700; color: #10b981; text-transform: uppercase;">
+                    ${isChinese ? '存款 #' : 'Depósito #'} ${depositItemCounter}
+                </div>
+
+                <div>
+                    <label style="display: block; color: #94a3b8; font-size: 11px; text-transform: uppercase; font-weight: 600; margin-bottom: 6px;">${isChinese ? '付款凭证' : 'Comprovante'} *</label>
+                    <input type="file" id="dep-item-proof-${depositItemCounter}" class="dep-item-proof" accept="image/*,application/pdf" style="display: none;" onchange="handleDepositItemFile(this, ${depositItemCounter})">
+                    <label for="dep-item-proof-${depositItemCounter}" style="display: block; padding: 12px; border: 2px dashed rgba(16,185,129,0.3); border-radius: 10px; cursor: pointer; text-align: center; box-sizing: border-box;">
+                        <span id="dep-item-file-name-${depositItemCounter}" style="color: #34d399; font-weight: 500; font-size: 12px; word-break: break-all;">${isChinese ? '点击选择文件' : 'Clique para selecionar arquivo'}</span>
+                    </label>
+                </div>
+
+                <div>
+                    <label style="display: block; color: #94a3b8; font-size: 11px; text-transform: uppercase; font-weight: 600; margin-bottom: 6px;">${isChinese ? '备注 (可选)' : 'Observações (Opcional)'}</label>
+                    <textarea class="dep-item-notes" rows="2" style="width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 10px; color: white; padding: 10px; font-size: 13px; outline: none; resize: none; box-sizing: border-box;" placeholder="${isChinese ? '输入备注...' : 'Informações adicionais...' }"></textarea>
+                </div>
+            `;
+
+            container.appendChild(itemDiv);
+            container.scrollTop = container.scrollHeight;
+
+            if (file) {
+                const fileInputEl = itemDiv.querySelector('.dep-item-proof');
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                fileInputEl.files = dt.files;
+                const span = itemDiv.querySelector('span[id^="dep-item-file-name-"]');
+                if (span) span.textContent = file.name;
+            }
+        }
+
+        function removeDepositItemField(id) {
+            const el = document.getElementById('deposit-item-' + id);
+            if (el) el.remove();
+        }
+
+        function handleDepositItemFile(input, id) {
+            const files = input.files;
+            const span = document.getElementById('dep-item-file-name-' + id);
+            if (span) {
+                span.textContent = files[0] ? files[0].name : (isChinese ? '点击选择文件' : 'Clique para selecionar arquivo');
+            }
+        }
+
+        function addFilesAsDepositItems(fileList) {
+            Array.from(fileList).forEach(file => addDepositItemField(file));
+        }
+
+        function handleBulkFileSelect(input) {
+            addFilesAsDepositItems(input.files);
+            input.value = '';
+        }
+
+        function handleDepositDrop(e, zone) {
+            e.preventDefault();
+            zone.style.borderColor = 'rgba(16,185,129,0.3)';
+            zone.style.background = 'transparent';
+            addFilesAsDepositItems(e.dataTransfer.files);
+        }
+
         function openDepositModal() {
+            document.getElementById('deposit-items-list').innerHTML = '';
+            depositItemCounter = 0;
             showModal('deposit-modal');
         }
 
         function closeDepositModal() {
             document.getElementById('deposit-modal').style.display = 'none';
-            document.getElementById('deposit-amount').value = '';
-            document.getElementById('deposit-proof').value = '';
-            document.getElementById('deposit-file-name').textContent = isChinese ? '点击选择文件' : 'Clique para selecionar arquivo';
-            document.getElementById('deposit-notes').value = '';
-        }
-
-        function handleDepositFile(input) {
-            const name = input.files[0] ? input.files[0].name : (isChinese ? '点击选择文件' : 'Clique para selecionar arquivo');
-            document.getElementById('deposit-file-name').textContent = name;
+            document.getElementById('deposit-items-list').innerHTML = '';
+            depositItemCounter = 0;
         }
 
         async function submitDeposit() {
-            const amount = document.getElementById('deposit-amount').value;
-            const file = document.getElementById('deposit-proof').files[0];
-            const notes = document.getElementById('deposit-notes').value;
+            const listContainer = document.getElementById('deposit-items-list');
+            const items = listContainer.getElementsByClassName('deposit-item-card');
 
-            if (!amount || parseFloat(amount) <= 0) {
-                alert(isChinese ? '请输入有效金额。' : 'Informe um valor válido.');
-                return;
-            }
-            if (!file) {
-                alert(isChinese ? '请上传付款凭证。' : 'O comprovante é obrigatório.');
+            if (items.length === 0) {
+                alert(isChinese ? '请添加至少一个存款项。' : 'Adicione pelo menos um item de depósito.');
                 return;
             }
 
             const formData = new FormData();
-            formData.append('amount', amount);
-            formData.append('proof', file);
-            formData.append('notes', notes);
+
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                const fileInput = item.querySelector('.dep-item-proof');
+                const notesInput = item.querySelector('.dep-item-notes');
+
+                const notes = notesInput.value.trim();
+                const file = fileInput.files[0];
+
+                if (!file) {
+                    alert(isChinese ? '请上传所有付款凭证。' : 'O comprovante é obrigatório para todos os depósitos.');
+                    return;
+                }
+
+                formData.append('notes[]', notes);
+                formData.append('proofs[]', file);
+            }
 
             const btn = document.getElementById('deposit-submit-btn');
             btn.disabled = true;

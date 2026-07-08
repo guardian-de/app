@@ -727,7 +727,18 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
                 </div>
                 <h2 style="color: white; font-size: 18px; font-weight: 700; margin-bottom: 4px;"><?= $isChinese ? '存款' : 'Realizar Depósito' ?></h2>
-                <p style="color: #94a3b8; font-size: 12px; margin-bottom: 20px;"><?= $isChinese ? '填写金额并上传付款凭证。' : 'Informe o valor e envie o comprovante de pagamento.' ?></p>
+                <p style="color: #94a3b8; font-size: 12px; margin-bottom: 16px;"><?= $isChinese ? '上传付款凭证，金额将自动识别。' : 'Envie o(s) comprovante(s) de pagamento. O valor será identificado automaticamente.' ?></p>
+            </div>
+
+            <input type="file" id="deposit-bulk-input" multiple accept="image/*,application/pdf" style="display:none" onchange="handleBulkFileSelect(this)">
+            <div id="deposit-dropzone" onclick="document.getElementById('deposit-bulk-input').click()"
+                ondragover="event.preventDefault(); this.style.borderColor='#34d399'; this.style.background='rgba(16,185,129,0.1)';"
+                ondragleave="this.style.borderColor='rgba(16,185,129,0.3)'; this.style.background='transparent';"
+                ondrop="handleDepositDrop(event, this)"
+                style="flex-shrink: 0; border: 2px dashed rgba(16,185,129,0.3); border-radius: 14px; padding: 20px 16px; text-align: center; cursor: pointer; margin-bottom: 16px; transition: 0.2s;">
+                <div style="font-size: 26px; margin-bottom: 6px;">📎</div>
+                <div style="color: #34d399; font-weight: 600; font-size: 13px; margin-bottom: 2px;"><?= $isChinese ? '点击或拖拽多个凭证到此处' : 'Clique ou arraste vários comprovantes aqui' ?></div>
+                <div style="color: #64748b; font-size: 11px;"><?= $isChinese ? '可一次选择多个文件' : 'Você pode selecionar quantos arquivos quiser de uma vez' ?></div>
             </div>
 
             <!-- Scrollable list of items -->
@@ -737,7 +748,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 <!-- Add Another Deposit Button -->
                 <button type="button" onclick="addDepositItemField()"
                     style="width: 100%; padding: 12px; margin-bottom: 16px; background: rgba(255,255,255,0.03); border: 1px dashed rgba(16,185,129,0.4); border-radius: 12px; color: #34d399; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                    + <?= $isChinese ? '添加另一个存款' : 'Adicionar outro depósito' ?>
+                    + <?= $isChinese ? '添加另一个存款' : 'Adicionar item manualmente' ?>
                 </button>
 
                 <button id="deposit-submit-btn" onclick="submitDeposit()"
@@ -1860,6 +1871,9 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 deposit_pending:      '<?= lang('App.stmt_op_deposit_pending') ?>',
                 deposit_rejected:     '<?= lang('App.stmt_op_deposit_rejected') ?>',
                 rejectionReason:      '<?= lang('App.stmt_rejection_reason') ?>',
+                amountUnidentified:   '<?= lang('App.stmt_amount_unidentified') ?>',
+                amountProcessing:     '<?= lang('App.stmt_amount_processing') ?>',
+                amountEditedReason:   '<?= lang('App.stmt_amount_edited_reason') ?>',
                 usdtLabel:            '<?= lang('App.stmt_usdt_label') ?>',
                 spotLabel:            '<?= lang('App.stmt_spot_label') ?>',
                 hashLabel:            '<?= lang('App.stmt_hash_label') ?>',
@@ -1972,8 +1986,13 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                     const d        = new Date(item.transaction_date.replace(' ', 'T'));
                     const dateStr  = d.toLocaleDateString('pt-BR', { day:'2-digit', month:'short', year:'numeric' })
                                    + ' · ' + d.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
-                    const amount   = parseFloat(item.amount).toLocaleString('pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 });
-                    const amountStr = item.unit === 'USDT' ? `${amount} USDT` : `R$ ${amount}`;
+                    let amountStr;
+                    if (item.amount === null) {
+                        amountStr = item.ocr_status === 'processing' ? stmtLang.amountProcessing : stmtLang.amountUnidentified;
+                    } else {
+                        const amount = parseFloat(item.amount).toLocaleString('pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 });
+                        amountStr = item.unit === 'USDT' ? `${amount} USDT` : `R$ ${amount}`;
+                    }
 
                     let marginLockDetails = '';
                     if (item.operation_type === 'margin_lock') {
@@ -2006,6 +2025,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                                 <div style="font-size:11px;color:#64748b;">${dateStr}</div>
                                 ${item.description ? `<div style="font-size:11px;color:#475569;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.description}</div>` : ''}
                                 ${item.rejection_reason ? `<div style="font-size:11px;color:#f87171;margin-top:2px;">${stmtLang.rejectionReason}: ${item.rejection_reason}</div>` : ''}
+                                ${item.amount_edited_reason ? `<div style="font-size:11px;color:#fbbf24;margin-top:2px;">${stmtLang.amountEditedReason}: ${item.amount_edited_reason}</div>` : ''}
                             </div>
                             <div style="text-align:right;flex-shrink:0;">
                                 <div style="font-size:15px;font-weight:700;color:${color};white-space:nowrap;${isRejectedDeposit ? 'text-decoration:line-through;opacity:0.7;' : ''}">${sign}${amountStr}</div>
@@ -2259,30 +2279,23 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
 
         let depositItemCounter = 0;
 
-        function addDepositItemField() {
+        function addDepositItemField(file) {
             depositItemCounter++;
             const container = document.getElementById('deposit-items-list');
             if (!container) return;
-            
+
             const itemDiv = document.createElement('div');
             itemDiv.id = 'deposit-item-' + depositItemCounter;
             itemDiv.className = 'deposit-item-card';
             itemDiv.style.cssText = 'background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.04); border-radius: 16px; padding: 16px; position: relative; display: flex; flex-direction: column; gap: 12px; margin-bottom: 4px; text-align: left;';
-            
+
             const isChinese = <?= $isChinese ? 'true' : 'false' ?>;
             const removeBtn = `<button type="button" onclick="removeDepositItemField(${depositItemCounter})" style="position: absolute; right: 12px; top: 12px; background: rgba(239, 68, 68, 0.15); border: none; color: #ef4444; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; line-height: 1;">&times;</button>`;
-            
+
             itemDiv.innerHTML = `
-                ${depositItemCounter > 1 ? removeBtn : ''}
+                ${removeBtn}
                 <div style="font-size: 12px; font-weight: 700; color: #10b981; text-transform: uppercase;">
                     ${isChinese ? '存款 #' : 'Depósito #'} ${depositItemCounter}
-                </div>
-                
-                <div>
-                    <label style="display: block; color: #94a3b8; font-size: 11px; text-transform: uppercase; font-weight: 600; margin-bottom: 6px;">${isChinese ? '金额 (BRL)' : 'Valor (BRL)'} *</label>
-                    <input type="number" class="dep-item-amount" step="0.01" min="0.01" required
-                        style="width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 10px; color: white; padding: 10px 12px; font-size: 14px; outline: none; box-sizing: border-box;"
-                        placeholder="Ex: 5000.00">
                 </div>
 
                 <div>
@@ -2298,9 +2311,18 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                     <textarea class="dep-item-notes" rows="2" style="width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 10px; color: white; padding: 10px; font-size: 13px; outline: none; resize: none; box-sizing: border-box;" placeholder="${isChinese ? '输入备注...' : 'Informações adicionais...' }"></textarea>
                 </div>
             `;
-            
+
             container.appendChild(itemDiv);
             container.scrollTop = container.scrollHeight;
+
+            if (file) {
+                const fileInputEl = itemDiv.querySelector('.dep-item-proof');
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                fileInputEl.files = dt.files;
+                const span = itemDiv.querySelector('span[id^="dep-item-file-name-"]');
+                if (span) span.textContent = file.name;
+            }
         }
 
         function removeDepositItemField(id) {
@@ -2316,10 +2338,25 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             }
         }
 
+        function addFilesAsDepositItems(fileList) {
+            Array.from(fileList).forEach(file => addDepositItemField(file));
+        }
+
+        function handleBulkFileSelect(input) {
+            addFilesAsDepositItems(input.files);
+            input.value = '';
+        }
+
+        function handleDepositDrop(e, zone) {
+            e.preventDefault();
+            zone.style.borderColor = 'rgba(16,185,129,0.3)';
+            zone.style.background = 'transparent';
+            addFilesAsDepositItems(e.dataTransfer.files);
+        }
+
         function openDepositModal() {
             document.getElementById('deposit-items-list').innerHTML = '';
             depositItemCounter = 0;
-            addDepositItemField(); // start with one
             showModal('deposit-modal');
         }
 
@@ -2342,25 +2379,17 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             
             for (let i = 0; i < items.length; i++) {
                 const item = items[i];
-                const amountInput = item.querySelector('.dep-item-amount');
                 const fileInput = item.querySelector('.dep-item-proof');
                 const notesInput = item.querySelector('.dep-item-notes');
-                
-                const amount = amountInput.value.trim();
+
                 const notes = notesInput.value.trim();
                 const file = fileInput.files[0];
-                
-                if (!amount || parseFloat(amount) <= 0) {
-                    alert(isChinese ? '请输入有效金额。' : 'Informe um valor válido.');
-                    amountInput.focus();
-                    return;
-                }
+
                 if (!file) {
                     alert(isChinese ? '请上传所有付款凭证。' : 'O comprovante é obrigatório para todos os depósitos.');
                     return;
                 }
-                
-                formData.append('amounts[]', amount);
+
                 formData.append('notes[]', notes);
                 formData.append('proofs[]', file);
             }

@@ -73,6 +73,7 @@ $routes->group('admin', ['filter' => 'admin'], function ($routes) {
     $routes->post('deposits/reverse/(:num)', 'DepositsController::reverse/$1', ['as' => 'admin_deposits_reverse']);
     $routes->post('deposits/reject/(:num)', 'DepositsController::reject/$1', ['as' => 'admin_deposits_reject']);
     $routes->post('deposits/reverse-rejection/(:num)', 'DepositsController::reverseRejection/$1', ['as' => 'admin_deposits_reverse_rejection']);
+    $routes->post('deposits/update-amount/(:num)', 'DepositsController::updateAmount/$1', ['as' => 'admin_deposits_update_amount']);
     $routes->get('conciliation', 'AdminController::conciliation', ['as' => 'admin_conciliation']);
     $routes->get('settings', 'AdminController::settings', ['as' => 'admin_settings']);
     $routes->post('settings/update', 'AdminController::updateSettings', ['as' => 'admin_settings_update']);
@@ -120,3 +121,4 @@ $routes->get('cron/record', 'Cron::record');
 $routes->get('cron/populate', 'Cron::populateHistory');
 $routes->get('cron/migrate', 'Cron::migrate');
 $routes->get('cron/apply-interest', 'Cron::applyInterest');
+$routes->get('cron/process-deposit-ocr', 'Cron::processDepositOcr');
