@@ -546,7 +546,7 @@ class AdminController extends BaseController
         $perPage = (int)($this->request->getGet('per_page') ?? 15);
         if (!in_array($perPage, [15, 25, 50, 100])) $perPage = 15;
 
-        $builder = $contractModel->select('contracts.*, users.login as user_name, users.usdt_wallet, transactions.rate as tx_rate, COALESCE(la_totals.total_lot_allocated, 0) AS total_lot_allocated')
+        $builder = $contractModel->select("contracts.*, users.login as user_name, users.usdt_wallet, transactions.rate as tx_rate, transactions.base_rate as spot_rate, COALESCE(la_totals.total_lot_allocated, 0) AS total_lot_allocated")
                                  ->join('users', 'users.id = contracts.user_id')
                                  ->join('transactions', 'transactions.id = contracts.transaction_id', 'left')
                                  ->join("(SELECT contract_id, SUM(usdt_amount) AS total_lot_allocated FROM lot_allocations WHERE status IN ('reserved', 'delivered') GROUP BY contract_id) la_totals", 'la_totals.contract_id = contracts.id', 'left');
@@ -622,7 +622,7 @@ class AdminController extends BaseController
     {
         $contractModel = new \App\Models\ContractModel();
         $contract = $contractModel
-            ->select('contracts.*, users.login as user_name, users.usdt_wallet, COALESCE(la_totals.total_lot_allocated, 0) AS total_lot_allocated')
+            ->select("contracts.*, users.login as user_name, users.usdt_wallet, transactions.base_rate as spot_rate, COALESCE(la_totals.total_lot_allocated, 0) AS total_lot_allocated")
             ->join('users', 'users.id = contracts.user_id')
             ->join('transactions', 'transactions.id = contracts.transaction_id', 'left')
             ->join("(SELECT contract_id, SUM(usdt_amount) AS total_lot_allocated FROM lot_allocations WHERE status IN ('reserved', 'delivered') GROUP BY contract_id) la_totals", 'la_totals.contract_id = contracts.id', 'left')

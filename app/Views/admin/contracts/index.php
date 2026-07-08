@@ -122,6 +122,7 @@
                     <th style="padding: 15px; color: #94a3b8; font-size: 12px; text-transform: uppercase;">ID</th>
                     <th style="padding: 15px; color: #94a3b8; font-size: 12px; text-transform: uppercase;">Usuário</th>
                     <th style="padding: 15px; color: #94a3b8; font-size: 12px; text-transform: uppercase;">Total</th>
+                    <th style="padding: 15px; color: #94a3b8; font-size: 12px; text-transform: uppercase;">Spot</th>
                     <th style="padding: 15px; color: #94a3b8; font-size: 12px; text-transform: uppercase;">Saldo Devedor</th>
                     <th style="padding: 15px; color: #94a3b8; font-size: 12px; text-transform: uppercase;">Vencimento</th>
                     <th style="padding: 15px; color: #94a3b8; font-size: 12px; text-transform: uppercase;">Status Pag.</th>
@@ -135,7 +136,7 @@
                 <?php endforeach; ?>
                 <?php if(empty($contracts)): ?>
                     <tr id="empty-row">
-                        <td colspan="8" style="padding: 40px; text-align: center; color: #64748b; font-size: 14px;">
+                        <td colspan="9" style="padding: 40px; text-align: center; color: #64748b; font-size: 14px;">
                             Nenhuma operação encontrada com os filtros aplicados.
                         </td>
                     </tr>
