@@ -426,8 +426,16 @@ $adminAlertSound = $settingsModel->getConfig('admin_alert_sound', 'chime_premium
 
 <body>
     <div class="sidebar">
-        <a href="<?= url_to('dashboard') ?>" class="logo">
-            <span style="color:var(--primary)">GUARDIAN</span> ADMIN
+        <?php
+        $settingsModel = new \App\Models\SettingsModel();
+        $logoPath = $settingsModel->getConfig('logo_path');
+        ?>
+        <a href="<?= url_to('dashboard') ?>" class="logo" style="display: flex; align-items: center; justify-content: center; padding: 15px 10px;">
+            <?php if ($logoPath): ?>
+                <img src="<?= base_url($logoPath) ?>" alt="Logo" style="max-height: 40px; max-width: 100%; object-fit: contain;">
+            <?php else: ?>
+                <span style="color:var(--primary)">GUARDIAN</span> ADMIN
+            <?php endif; ?>
         </a>
         <div class="nav-links">
             <?php
