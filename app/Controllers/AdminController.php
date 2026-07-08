@@ -16,6 +16,10 @@ class AdminController extends BaseController
         try { $db->query("CREATE TABLE IF NOT EXISTS `lot_allocations` (`id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, `lot_id` INT UNSIGNED NOT NULL, `contract_id` INT UNSIGNED NULL, `transaction_id` INT UNSIGNED NULL, `usdt_amount` DECIMAL(18,4) NOT NULL, `status` ENUM('reserved','delivered','cancelled') NOT NULL DEFAULT 'reserved', `profit_brl` DECIMAL(18,2) NULL, `allocated_by` INT UNSIGNED NOT NULL, `delivered_by` INT UNSIGNED NULL, `created_at` DATETIME NULL, `updated_at` DATETIME NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"); } catch (\Throwable $e) {}
         try { $db->query("CREATE TABLE IF NOT EXISTS `activity_logs` (`id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, `user_id` INT UNSIGNED NULL, `action` VARCHAR(100) NOT NULL, `entity_type` VARCHAR(50) NOT NULL, `entity_id` INT UNSIGNED NOT NULL, `payload` TEXT NULL, `ip_address` VARCHAR(45) NULL, `created_at` DATETIME NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"); } catch (\Throwable $e) {}
         try { if ($db->fieldExists('credit_limit', 'users') && !$db->fieldExists('score', 'users')) { $db->query("ALTER TABLE `users` CHANGE `credit_limit` `score` DECIMAL(15,2) NOT NULL DEFAULT 0.00"); } } catch (\Throwable $e) {}
+        try {
+            if (!$db->fieldExists('purchase_model', 'users')) { $db->query("ALTER TABLE `users` ADD COLUMN `purchase_model` ENUM('usdt','brl','both') NOT NULL DEFAULT 'usdt' AFTER `allowed_delivery_types`"); }
+            if (!$db->fieldExists('last_purchase_mode', 'users')) { $db->query("ALTER TABLE `users` ADD COLUMN `last_purchase_mode` ENUM('usdt','brl') NULL AFTER `purchase_model`"); }
+        } catch (\Throwable $e) {}
 
         $userModel = new UserModel();
         $users = $userModel->orderBy('role', 'ASC')->orderBy('login', 'ASC')->findAll();
@@ -50,6 +54,7 @@ class AdminController extends BaseController
         
         $role = $this->request->getPost('role') ?: 'user';
         $permissions = $this->request->getPost('permissions');
+        $canSetPurchaseModel = session()->get('user_role') === 'admin' || in_array('purchase_model', session()->get('user_permissions') ?? []);
 
         $data = [
             'login'                  => $this->request->getPost('login'),
@@ -60,6 +65,7 @@ class AdminController extends BaseController
             'default_contract_type'  => $role === 'user' ? ($this->request->getPost('default_contract_type') ?: 'd+1') : 'd+1',
             'daily_interest_rate'    => $role === 'user' ? ($this->request->getPost('daily_interest_rate') ?: 0.00) : 0.00,
             'allowed_delivery_types' => $role === 'user' ? ($this->request->getPost('allowed_delivery_types') ?: 'all') : 'all',
+            'purchase_model'         => ($role === 'user' && $canSetPurchaseModel) ? ($this->request->getPost('purchase_model') ?: 'usdt') : 'usdt',
             'role'                   => $role,
             'permissions'            => ($role !== 'user' && !empty($permissions)) ? json_encode($permissions) : null,
         ];
@@ -88,9 +94,11 @@ class AdminController extends BaseController
     {
         if ($response = $this->checkPermission('usuarios')) return $response;
         $userModel = new UserModel();
-        
+        $existingUser = $userModel->find($id);
+
         $role = $this->request->getPost('role') ?: 'user';
         $permissions = $this->request->getPost('permissions');
+        $canSetPurchaseModel = session()->get('user_role') === 'admin' || in_array('purchase_model', session()->get('user_permissions') ?? []);
 
         $data = [
             'login'                  => $this->request->getPost('login'),
@@ -100,6 +108,9 @@ class AdminController extends BaseController
             'default_contract_type'  => $role === 'user' ? ($this->request->getPost('default_contract_type') ?: 'd+1') : 'd+1',
             'daily_interest_rate'    => $role === 'user' ? ($this->request->getPost('daily_interest_rate') ?: 0.00) : 0.00,
             'allowed_delivery_types' => $role === 'user' ? ($this->request->getPost('allowed_delivery_types') ?: 'all') : 'all',
+            'purchase_model'         => $role === 'user'
+                ? ($canSetPurchaseModel ? ($this->request->getPost('purchase_model') ?: 'usdt') : ($existingUser['purchase_model'] ?? 'usdt'))
+                : 'usdt',
             'role'                   => $role,
             'permissions'            => ($role !== 'user' && !empty($permissions)) ? json_encode($permissions) : null,
         ];

@@ -583,11 +583,20 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             <button onclick="closeModal()"
                 style="position: absolute; right: 20px; top: 20px; background: none; border: none; color: #94a3b8; font-size: 24px; cursor: pointer;">&times;</button>
 
+            <?php
+                $purchaseModel = $user['purchase_model'] ?? 'usdt';
+                $initialMode = $purchaseModel === 'both' ? ($user['last_purchase_mode'] ?: 'usdt') : $purchaseModel;
+            ?>
             <div style="text-align: center; margin-bottom: 25px;">
                 <h1 style="font-size: 32px; font-weight: 700; margin-bottom: 8px; color: #a78bfa;">
                     <?= lang('App.buy') ?>
                 </h1>
-                <p style="color: #94a3b8; font-size: 14px; font-weight: 500;">Valor em BRL</p>
+                <?php if ($purchaseModel === 'both'): ?>
+                <div id="mode-toggle" style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
+                    <button type="button" class="mode-toggle-btn" data-mode="usdt" style="flex:1; padding: 8px; border-radius: 8px; border: 1px solid #334155; background: rgba(99,102,241,0.15); color: #cbd5e1; cursor: pointer; font-size: 13px; font-weight: 600;"><?= lang('App.amount_usdt') ?></button>
+                    <button type="button" class="mode-toggle-btn" data-mode="brl" style="flex:1; padding: 8px; border-radius: 8px; border: 1px solid #334155; background: rgba(99,102,241,0.15); color: #cbd5e1; cursor: pointer; font-size: 13px; font-weight: 600;"><?= lang('App.amount_brl') ?></button>
+                </div>
+                <?php endif; ?>
             </div>
 
             <div style="margin-bottom: 20px;">
@@ -600,11 +609,20 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 </div>
             </div>
 
-            <div style="margin-bottom: 20px;">
+            <div id="usdt-input-group" style="margin-bottom: 20px; <?= $initialMode === 'brl' ? 'display:none;' : '' ?>">
                 <label for="usdt-amount"
                     style="display: block; color: #94a3b8; font-size: 13px; font-weight: 500; margin-bottom: 8px;">Valor
                     em USDT (USDT)</label>
                 <input type="number" id="usdt-amount" placeholder="Ex: 5000" step="0.01" min="5000"
+                    style="width: 100%; background: #0f172a; border: 1px solid #334155; padding: 12px; border-radius: 8px; color: white; font-size: 16px; outline: none; transition: border-color 0.2s;"
+                    onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#334155'">
+            </div>
+
+            <div id="brl-input-group" style="margin-bottom: 20px; <?= $initialMode !== 'brl' ? 'display:none;' : '' ?>">
+                <label for="brl-amount"
+                    style="display: block; color: #94a3b8; font-size: 13px; font-weight: 500; margin-bottom: 8px;">Valor
+                    em BRL (R$)</label>
+                <input type="number" id="brl-amount" placeholder="Ex: 30000" step="0.01"
                     style="width: 100%; background: #0f172a; border: 1px solid #334155; padding: 12px; border-radius: 8px; color: white; font-size: 16px; outline: none; transition: border-color 0.2s;"
                     onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#334155'">
             </div>
@@ -647,9 +665,10 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                             0,0000</span>
                     </div>
                     <div id="result-label"
-                        style="display: flex; justify-content: space-between; align-items: center; background: rgba(99, 102, 241, 0.1); padding: 12px; border-radius: 8px; border: 1px solid rgba(99, 102, 241, 0.2);">
-                        <span
-                            style="color: #94a3b8; font-size: 14px; font-weight: 700;"><?= lang('App.total_brl') ?>:</span>
+                        style="display: flex; justify-content: space-between; align-items: center; background: rgba(99, 102, 241, 0.1); padding: 12px; border-radius: 8px; border: 1px solid rgba(99, 102, 241, 0.2);"
+                        data-label-usdt="<?= lang('App.total_brl') ?>" data-label-brl="<?= lang('App.receive_usdt') ?>">
+                        <span id="result-label-text"
+                            style="color: #94a3b8; font-size: 14px; font-weight: 700;"><?= $initialMode === 'brl' ? lang('App.receive_usdt') : lang('App.total_brl') ?>:</span>
                         <span id="brl-result"
                             style="color: #818cf8; font-weight: 800; font-size: 22px; font-family: 'Outfit', sans-serif;">R$
                             0,00</span>
@@ -1054,6 +1073,34 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             let selectedDeliveryType = '<?= $active_val ?>';
             const quotationFlow = '<?= $quotation_flow ?>';
             const operatorWhatsapp = '<?= $operator_whatsapp ?>';
+            const purchaseModel = '<?= $purchaseModel ?>';
+            let currentInputMode = '<?= $initialMode ?>';
+
+            function updateResultDisplay() {
+                const resultLabelDiv = document.getElementById('result-label');
+                const resultText = document.getElementById('result-label-text');
+                const resultValue = document.getElementById('brl-result');
+                if (currentInputMode === 'brl') {
+                    const brl = parseFloat(document.getElementById('brl-amount').value) || 0;
+                    const usdt = currentExchangeRate > 0 ? brl / currentExchangeRate : 0;
+                    resultText.textContent = resultLabelDiv.dataset.labelBrl + ':';
+                    resultValue.textContent = `${usdt.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT`;
+                } else {
+                    const usdt = parseFloat(document.getElementById('usdt-amount').value) || 0;
+                    const brl = usdt * currentExchangeRate;
+                    resultText.textContent = resultLabelDiv.dataset.labelUsdt + ':';
+                    resultValue.textContent = `R$ ${brl.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                }
+            }
+
+            document.querySelectorAll('.mode-toggle-btn').forEach(btn => {
+                btn.onclick = () => {
+                    currentInputMode = btn.dataset.mode;
+                    document.getElementById('usdt-input-group').style.display = currentInputMode === 'usdt' ? '' : 'none';
+                    document.getElementById('brl-input-group').style.display = currentInputMode === 'brl' ? '' : 'none';
+                    updateResultDisplay();
+                };
+            });
 
             async function changeLanguage(lang) {
                 await fetch('<?= url_to('update_language') ?>', {
@@ -1089,11 +1136,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                     if (document.getElementById('buy-modal') && document.getElementById('buy-modal').style.display === 'flex') {
                         document.getElementById('modal-base-rate').textContent = `R$ ${currentBaseRate.toLocaleString('pt-BR', { minimumFractionDigits: 4 })}`;
                         document.getElementById('modal-rate').textContent = `R$ ${currentExchangeRate.toLocaleString('pt-BR', { minimumFractionDigits: 4 })}`;
-                        
-                        const usdtInput = document.getElementById('usdt-amount');
-                        const usdt = parseFloat(usdtInput.value) || 0;
-                        const brl = usdt * currentExchangeRate;
-                        document.getElementById('brl-result').textContent = `R$ ${brl.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                        updateResultDisplay();
                     }
 
                     if (window.mobileChart) {
@@ -1298,8 +1341,12 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 btn.style.opacity = '1';
                 btn.disabled = false;
 
-                const input = document.getElementById('usdt-amount');
-                input.value = amount > 0 ? amount : '';
+                const input = currentInputMode === 'brl' ? document.getElementById('brl-amount') : document.getElementById('usdt-amount');
+                if (amount > 0) {
+                    input.value = currentInputMode === 'brl' ? (amount * rate) : amount;
+                } else {
+                    input.value = '';
+                }
                 input.dispatchEvent(new Event('input'));
                 showModal('buy-modal');
             }
@@ -1307,11 +1354,8 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             function closeModal() { document.getElementById('buy-modal').style.display = 'none'; }
             function closeSuccessModal() { document.getElementById('success-modal').style.display = 'none'; }
 
-            document.getElementById('usdt-amount').oninput = (e) => {
-                const usdt = parseFloat(e.target.value) || 0;
-                const brl = usdt * currentExchangeRate;
-                document.getElementById('brl-result').textContent = `R$ ${brl.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-            };
+            document.getElementById('usdt-amount').oninput = () => updateResultDisplay();
+            document.getElementById('brl-amount').oninput = () => updateResultDisplay();
 
             document.querySelectorAll('.delivery-option').forEach(opt => {
                 opt.onclick = () => {
@@ -1325,9 +1369,16 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             });
 
             document.getElementById('confirm-buy-btn').onclick = async function () {
-                const amountUsdt = parseFloat(document.getElementById('usdt-amount').value) || 0;
+                let amountUsdt, amountBrl;
+                if (currentInputMode === 'brl') {
+                    amountBrl = parseFloat(document.getElementById('brl-amount').value) || 0;
+                    amountUsdt = currentExchangeRate > 0 ? amountBrl / currentExchangeRate : 0;
+                } else {
+                    amountUsdt = parseFloat(document.getElementById('usdt-amount').value) || 0;
+                    amountBrl = amountUsdt * currentExchangeRate;
+                }
 
-                if (amountUsdt <= 0) {
+                if (amountUsdt <= 0 || amountBrl <= 0) {
                     alert(isChinese ? '请输入有效金额' : 'Por favor, insira um valor válido');
                     return;
                 }
@@ -1352,7 +1403,9 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                         },
                         body: JSON.stringify({
                             amount_usdt: amountUsdt,
-                            delivery_type: selectedDeliveryType
+                            amount_brl: amountBrl,
+                            delivery_type: selectedDeliveryType,
+                            input_mode: currentInputMode
                         })
                     });
 
@@ -1360,9 +1413,8 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
 
                     if (data.status === 'success') {
                         closeModal();
-                        
+
                         if (quotationFlow === 'operator' && operatorWhatsapp) {
-                            const amountBrl = amountUsdt * currentExchangeRate;
                             const messageText = `Olá! Acabei de gerar uma solicitação de compra de USDT na plataforma:\n\n` +
                                                 `• *Valor:* ${amountUsdt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT\n` +
                                                 `• *Cotação:* R$ ${currentExchangeRate.toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}\n` +

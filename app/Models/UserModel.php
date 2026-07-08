@@ -14,7 +14,8 @@ class UserModel extends Model
     protected $protectFields    = true;
     protected $allowedFields    = [
         'login', 'password', 'fee_percent', 'language', 'usdt_wallet',
-        'role', 'score', 'default_contract_type', 'daily_interest_rate', 'allowed_delivery_types', 'permissions'
+        'role', 'score', 'default_contract_type', 'daily_interest_rate', 'allowed_delivery_types', 'permissions',
+        'purchase_model', 'last_purchase_mode'
     ];
 
     protected bool $allowEmptyInserts = false;
