@@ -147,8 +147,6 @@ class Cron extends BaseController
             $ocrText  = $ocr->read($deposit['proof_file']);
             $aiResult = $extractor->extract((string) $ocrText);
 
-            $isReadable = $aiResult['is_proof'] && $aiResult['amount'] !== null;
-
             $ocrCode = \App\Models\DepositModel::extractAuthCodeFromText((string) $ocrText);
             $isDuplicate = 0;
 
@@ -167,6 +165,8 @@ class Cron extends BaseController
                     $isDuplicate = 1;
                 }
             }
+
+            $isReadable = $aiResult['is_proof'] && $aiResult['amount'] !== null && !$isDuplicate;
 
             $depositModel->update($deposit['id'], [
                 'amount'       => $isReadable ? $aiResult['amount'] : null,
