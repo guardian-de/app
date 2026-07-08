@@ -129,10 +129,6 @@ class Cron extends BaseController
     {
         set_time_limit(120);
 
-        $db = \Config\Database::connect();
-        try { $db->query("ALTER TABLE `deposits` ADD COLUMN `ocr_code` VARCHAR(255) NULL AFTER `ocr_raw_text`"); } catch (\Throwable $e) {}
-        try { $db->query("ALTER TABLE `deposits` ADD COLUMN `is_duplicate` TINYINT NOT NULL DEFAULT 0 AFTER `ocr_code`"); } catch (\Throwable $e) {}
-
         $depositModel = new \App\Models\DepositModel();
         $pending = $depositModel
             ->where('ocr_status', 'processing')
