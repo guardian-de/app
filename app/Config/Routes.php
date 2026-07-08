@@ -107,6 +107,9 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->post('deposit/store', 'ChatController::depositStore', ['as' => 'deposit_store']);
 });
 
+// API Routes
+$routes->get('api/usdt-cotacao', 'ApiController::usdtCotacao');
+
 // Cron URL
 $routes->get('cron/record', 'Cron::record');
 $routes->get('cron/populate', 'Cron::populateHistory');
