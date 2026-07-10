@@ -99,6 +99,25 @@
 
         <div style="padding: 20px; background: rgba(15, 23, 42, 0.3); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);">
             <h3 style="font-size: 16px; color: white; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                🚫 Desativar Prazos Temporariamente
+            </h3>
+            
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <label style="display: flex; align-items: center; gap: 10px; color: white; cursor: pointer; font-size: 14px; user-select: none;">
+                    <input type="checkbox" name="disable_d1" value="1" <?= $disable_d1 ? 'checked' : '' ?> style="width: 18px; height: 18px; accent-color: #f43f5e; cursor: pointer;">
+                    <span>Desativar Prazo D+1</span>
+                </label>
+                
+                <label style="display: flex; align-items: center; gap: 10px; color: white; cursor: pointer; font-size: 14px; user-select: none;">
+                    <input type="checkbox" name="disable_d2" value="1" <?= $disable_d2 ? 'checked' : '' ?> style="width: 18px; height: 18px; accent-color: #f43f5e; cursor: pointer;">
+                    <span>Desativar Prazo D+2</span>
+                </label>
+            </div>
+            <p style="margin-top: 15px; color: #64748b; font-size: 12px;">Prazos marcados acima ficarão indisponíveis para seleção e compra no painel do cliente.</p>
+        </div>
+
+        <div style="padding: 20px; background: rgba(15, 23, 42, 0.3); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);">
+            <h3 style="font-size: 16px; color: white; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
                 ⚙️ Fluxo de Compra / Cotação
             </h3>
             
