@@ -15,7 +15,7 @@ class UsdtLotModel extends Model
         'supplier', 'purchase_hash', 'delivery_type',
         'usdt_amount', 'conversion_rate', 'total_brl', 'total_brl_overridden',
         'usdt_reserved', 'usdt_delivered', 'profit_brl',
-        'status', 'created_by',
+        'status', 'created_by', 'is_promotional', 'target_type', 'target_group', 'target_users', 'promo_rate'
     ];
 
     public function getAvailable(int $lotId): float

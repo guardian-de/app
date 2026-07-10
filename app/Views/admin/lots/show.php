@@ -77,6 +77,20 @@
 
 <!-- Detalhes -->
 <div class="card" style="padding:20px;margin-bottom:28px;display:flex;flex-wrap:wrap;gap:24px;">
+    <?php if (isset($lot['is_promotional']) && $lot['is_promotional']): ?>
+    <div>
+        <p style="font-size:11px;color:#64748b;text-transform:uppercase;margin-bottom:4px;">Tipo de Lote</p>
+        <span style="font-size:13px;padding:4px 10px;border-radius:20px;background:rgba(239,68,68,0.12);color:#f87171;font-weight:700;">PROMOCIONAL</span>
+    </div>
+    <div>
+        <p style="font-size:11px;color:#64748b;text-transform:uppercase;margin-bottom:4px;">Custo Cliente</p>
+        <p style="font-size:13px;color:white;font-weight:600;">R$ <?= number_format((float)($lot['promo_rate'] ?? 0), 4, ',', '.') ?></p>
+    </div>
+    <div>
+        <p style="font-size:11px;color:#64748b;text-transform:uppercase;margin-bottom:4px;">Destinatários</p>
+        <p style="font-size:13px;color:#94a3b8;"><?= strtoupper($lot['target_type'] ?? '') ?> <?= $lot['target_group'] ? ' - ' . esc($lot['target_group']) : '' ?></p>
+    </div>
+    <?php endif; ?>
     <?php if ($lot['delivery_type']): ?>
     <div>
         <p style="font-size:11px;color:#64748b;text-transform:uppercase;margin-bottom:4px;">Fluxo</p>

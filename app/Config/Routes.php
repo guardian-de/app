@@ -110,6 +110,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->get('chat/statement/pdf', 'ChatController::exportStatementPdf', ['as' => 'chat_statement_pdf']);
     $routes->get('chat/statement/xlsx', 'ChatController::exportStatementXlsx', ['as' => 'chat_statement_xlsx']);
     $routes->get('chat/notifications', 'ChatController::getNotifications', ['as' => 'chat_notifications']);
+    $routes->get('chat/promotional-lots', 'ChatController::getPromotionalLots', ['as' => 'chat_promotional_lots']);
     $routes->post('deposit/store', 'ChatController::depositStore', ['as' => 'deposit_store']);
 });
 

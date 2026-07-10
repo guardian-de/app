@@ -174,7 +174,12 @@
                             onmouseover="this.style.background='rgba(255,255,255,0.02)'"
                             onmouseout="this.style.background=''">
                             <td style="padding:14px 20px;font-size:13px;color:#64748b;">#<?= $lot['id'] ?></td>
-                            <td style="padding:14px 20px;font-size:13px;font-weight:600;color:white;"><?= esc($lot['supplier']) ?></td>
+                            <td style="padding:14px 20px;font-size:13px;font-weight:600;color:white;">
+                                <?= esc($lot['supplier']) ?>
+                                <?php if (isset($lot['is_promotional']) && $lot['is_promotional']): ?>
+                                    <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(239,68,68,0.15);color:#f87171;font-weight:700;margin-left:6px;vertical-align:middle;text-transform:uppercase;">PROMO</span>
+                                <?php endif; ?>
+                            </td>
                             <td style="padding:14px 20px;">
                                 <?php if ($lot['delivery_type']): ?>
                                     <span style="font-size:11px;padding:3px 8px;border-radius:20px;background:rgba(99,102,241,0.12);color:#818cf8;font-weight:700;"><?= strtoupper($lot['delivery_type']) ?></span>

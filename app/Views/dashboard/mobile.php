@@ -508,6 +508,9 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                     <div id="desktop-balance-badge" style="font-size: 20px; font-weight: 700; color: #4ade80;">R$ 0,00</div>
                 </div>
 
+                <!-- Container de Lotes Promocionais Desktop -->
+                <div id="promotional-lots-desktop" style="display: none; margin-bottom: 20px;"></div>
+
                 <!-- Botões de Ação Rápida -->
                 <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px;">
                     <button onclick="openBuyModal(currentExchangeRate)"
@@ -681,6 +684,9 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                     </div>
                 </div>
 
+                <!-- Container de Lotes Promocionais Mobile -->
+                <div id="promotional-lots-mobile" style="display: none; padding: 10px 20px; border-bottom: 1px solid rgba(239, 68, 68, 0.2); background: rgba(239, 68, 68, 0.02);"></div>
+
                 <!-- Botão Comprar + Depositar Mobile -->
                 <div style="padding: 8px 15px; background: rgba(15, 23, 42, 0.8); border-bottom: 1px solid rgba(59, 130, 246, 0.1); display: flex; gap: 8px;">
                     <button onclick="openBuyModal(currentExchangeRate)"
@@ -789,11 +795,12 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 </div>
             </div>
 
+
             <div id="usdt-input-group" style="margin-bottom: 20px; <?= $initialMode === 'brl' ? 'display:none;' : '' ?>">
                 <label for="usdt-amount"
                     style="display: block; color: #94a3b8; font-size: 13px; font-weight: 500; margin-bottom: 8px;">Valor
                     em USDT (USDT)</label>
-                <input type="number" id="usdt-amount" placeholder="Ex: 5000" step="0.01" min="5000"
+                <input type="text" inputmode="numeric" id="usdt-amount" placeholder="Ex: 5,000.00"
                     style="width: 100%; background: #0f172a; border: 1px solid #334155; padding: 12px; border-radius: 8px; color: white; font-size: 16px; outline: none; transition: border-color 0.2s;"
                     onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#334155'">
             </div>
@@ -802,7 +809,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 <label for="brl-amount"
                     style="display: block; color: #94a3b8; font-size: 13px; font-weight: 500; margin-bottom: 8px;">Valor
                     em BRL (R$)</label>
-                <input type="number" id="brl-amount" placeholder="Ex: 30000" step="0.01"
+                <input type="text" inputmode="numeric" id="brl-amount" placeholder="Ex: 30.000,00"
                     style="width: 100%; background: #0f172a; border: 1px solid #334155; padding: 12px; border-radius: 8px; color: white; font-size: 16px; outline: none; transition: border-color 0.2s;"
                     onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#334155'">
             </div>
@@ -870,6 +877,81 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             </div>
         </div>
         </div>
+
+
+    <!-- Buy Promo Modal -->
+    <div id="buy-promo-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 5001; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(8px);">
+        <div
+            style="width: 100%; max-width: 450px; position: relative; background: #1e293b; padding: 30px; border-radius: 24px; border: 1px solid rgba(244, 63, 94, 0.3); font-family: sans-serif; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+            <button onclick="closePromoModal()"
+                style="position: absolute; right: 20px; top: 20px; background: none; border: none; color: #94a3b8; font-size: 24px; cursor: pointer;">&times;</button>
+
+            <div style="text-align: center; margin-bottom: 25px;">
+                <h1 style="font-size: 32px; font-weight: 700; margin-bottom: 8px; color: #f43f5e;">
+                    Comprar Promoção
+                </h1>
+                <div style="background: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.2); padding: 6px 12px; border-radius: 20px; display: inline-block; font-size: 11px; font-weight: 700; color: #f43f5e; text-transform: uppercase; letter-spacing: 0.05em;">
+                    Lote Promocional Ativo
+                </div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label
+                    style="display: block; color: #94a3b8; font-size: 13px; font-weight: 500; margin-bottom: 8px;">Endereço
+                    da Carteira USDT (TRC-20)</label>
+                <div
+                    style="background: rgba(15, 23, 42, 0.5); padding: 12px; border-radius: 8px; border: 1px dashed #334155; font-family: monospace; font-size: 13px; color: #818cf8; word-break: break-all; line-height: 1.4;">
+                    <?= session()->get('user_wallet') ?: ($isChinese ? '未注册' : 'Não cadastrada') ?>
+                </div>
+            </div>
+
+            <div id="promo-usdt-input-group" style="margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <label for="promo-usdt-amount"
+                        style="color: #94a3b8; font-size: 13px; font-weight: 500;">Valor em USDT (USDT)</label>
+                    <span id="promo-stock-display" style="font-size: 12px; font-weight: 600; color: #fca5a5;">
+                        Estoque: 0,00 USDT
+                    </span>
+                </div>
+                <input type="text" inputmode="numeric" id="promo-usdt-amount" placeholder="Ex: 1,000.00"
+                    style="width: 100%; background: #0f172a; border: 1px solid #334155; padding: 12px; border-radius: 8px; color: white; font-size: 16px; outline: none; transition: border-color 0.2s;"
+                    onfocus="this.style.borderColor='#f43f5e'" onblur="this.style.borderColor='#334155'">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label
+                    style="display: block; color: #94a3b8; font-size: 13px; font-weight: 500; margin-bottom: 8px;">Prazo de Entrega</label>
+                <div id="promo-delivery-display"
+                    style="background: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.2); padding: 12px; border-radius: 8px; font-weight: 700; color: white; font-size: 15px; text-align: center; text-transform: uppercase;">
+                    D+0
+                </div>
+            </div>
+
+            <div id="promo-conversion-info"
+                style="margin-bottom: 25px; background: rgba(15, 23, 42, 0.4); padding: 15px; border-radius: 12px; border: 1px solid #1e293b;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span
+                        style="color: #94a3b8; font-size: 13px; font-weight: 500;">Cotação Final:</span>
+                    <span id="promo-modal-rate"
+                        style="color: #fca5a5; font-weight: 700; font-size: 18px; font-family: 'Outfit', sans-serif;">R$ 0,0000</span>
+                </div>
+                <div id="promo-result-label"
+                    style="display: flex; justify-content: space-between; align-items: center; background: rgba(244, 63, 94, 0.1); padding: 12px; border-radius: 8px; border: 1px solid rgba(244, 63, 94, 0.2);">
+                    <span
+                        style="color: #94a3b8; font-size: 14px; font-weight: 700;">Total em BRL:</span>
+                    <span id="promo-brl-result"
+                        style="color: #f43f5e; font-weight: 800; font-size: 22px; font-family: 'Outfit', sans-serif;">R$ 0,00</span>
+                </div>
+            </div>
+
+            <button id="confirm-promo-buy-btn"
+                style="width: 100%; padding: 15px; border-radius: 10px; background: #f43f5e; border: none; color: white; font-weight: 700; font-size: 16px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3);"
+                onmouseover="this.style.background='#e11d48'" onmouseout="this.style.background='#f43f5e'">
+                Confirmar Compra Promocional
+            </button>
+        </div>
+    </div>
 
 
         <!-- Success Modal -->
@@ -1280,6 +1362,50 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
             }
 
+            function formatUSDTMask(value) {
+                let clean = value.replace(/\D/g, '');
+                if (!clean || clean === '00' || clean === '0') return '';
+                
+                clean = clean.replace(/^0+/, '');
+                if (clean.length < 3) {
+                    clean = clean.padStart(3, '0');
+                }
+                
+                let cents = parseInt(clean, 10);
+                if (isNaN(cents)) return '';
+                let val = (cents / 100).toFixed(2);
+                let parts = val.split('.');
+                parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                return parts.join('.');
+            }
+
+            function getCleanUSDT(value) {
+                let clean = value.replace(/,/g, '');
+                return parseFloat(clean) || 0;
+            }
+
+            function formatBRLMask(value) {
+                let clean = value.replace(/\D/g, '');
+                if (!clean || clean === '00' || clean === '0') return '';
+                
+                clean = clean.replace(/^0+/, '');
+                if (clean.length < 3) {
+                    clean = clean.padStart(3, '0');
+                }
+                
+                let cents = parseInt(clean, 10);
+                if (isNaN(cents)) return '';
+                let val = (cents / 100).toFixed(2);
+                let parts = val.split('.');
+                parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                return parts.join(',');
+            }
+
+            function getCleanBRL(value) {
+                let clean = value.replace(/\./g, '').replace(',', '.');
+                return parseFloat(clean) || 0;
+            }
+
             let _sessionExpiredHandled = false;
             function handleUnauthorized() {
                 if (_sessionExpiredHandled) return;
@@ -1325,6 +1451,8 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             let currentExchangeRate = 0;
             let currentBaseRate = 0;
             let currentFeePercent = 0;
+            let standardExchangeRate = 0;
+            let activePromotionalLots = [];
             let selectedDeliveryType = '<?= $active_val ?>';
             const quotationFlow = '<?= $quotation_flow ?>';
             const operatorWhatsapp = '<?= $operator_whatsapp ?>';
@@ -1336,12 +1464,12 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 const resultText = document.getElementById('result-label-text');
                 const resultValue = document.getElementById('brl-result');
                 if (currentInputMode === 'brl') {
-                    const brl = parseFloat(document.getElementById('brl-amount').value) || 0;
+                    const brl = getCleanBRL(document.getElementById('brl-amount').value) || 0;
                     const usdt = currentExchangeRate > 0 ? brl / currentExchangeRate : 0;
                     resultText.textContent = resultLabelDiv.dataset.labelBrl + ':';
                     resultValue.textContent = `${usdt.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT`;
                 } else {
-                    const usdt = parseFloat(document.getElementById('usdt-amount').value) || 0;
+                    const usdt = getCleanUSDT(document.getElementById('usdt-amount').value) || 0;
                     const brl = usdt * currentExchangeRate;
                     resultText.textContent = resultLabelDiv.dataset.labelUsdt + ':';
                     resultValue.textContent = `R$ ${brl.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -1380,8 +1508,14 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
 
             async function updateLiveRate() {
                 try {
+                    if (activePromoLotId) {
+                        return;
+                    }
                     const response = await fetch('<?= url_to('chat_rate') ?>?delivery_type=' + encodeURIComponent(selectedDeliveryType));
                     const data = await response.json();
+                    if (activePromoLotId) {
+                        return;
+                    }
                     // Mostrar cotação SEM taxas no header
                     const formattedRate = `R$ ${parseFloat(data.base_rate).toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`;
                     const liveRateVal = document.getElementById('live-rate-val');
@@ -1392,6 +1526,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                     currentExchangeRate = parseFloat(data.rate);
                     currentBaseRate = parseFloat(data.base_rate);
                     currentFeePercent = parseFloat(data.fee_percent);
+                    standardExchangeRate = currentExchangeRate;
 
                     if (document.getElementById('buy-modal') && document.getElementById('buy-modal').style.display === 'flex') {
                         document.getElementById('modal-base-rate').textContent = `R$ ${currentBaseRate.toLocaleString('pt-BR', { minimumFractionDigits: 4 })}`;
@@ -1584,6 +1719,54 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             }
 
+            let activePromoLotId = null;
+            let activePromoRate = 0;
+            let activePromoDelivery = 'D+0';
+            let activePromoStock = 0;
+
+            function openPromoBuyModal(rate, deliveryType, promoLotId, usdtAvailable) {
+                activePromoLotId = promoLotId;
+                activePromoRate = parseFloat(rate);
+                activePromoDelivery = deliveryType || 'D+0';
+                activePromoStock = parseFloat(usdtAvailable) || 0;
+
+                const isChinese = <?= (session()->get('user_lang') === 'zh-CN') ? 'true' : 'false' ?>;
+
+                document.getElementById('promo-modal-rate').textContent = `R$ ${activePromoRate.toLocaleString('pt-BR', { minimumFractionDigits: 4 })}`;
+                document.getElementById('promo-delivery-display').textContent = activePromoDelivery.toUpperCase();
+                document.getElementById('promo-stock-display').textContent = (isChinese ? '库存: ' : 'Estoque: ') + activePromoStock.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' USDT';
+                document.getElementById('promo-usdt-amount').value = '';
+                document.getElementById('promo-brl-result').textContent = 'R$ 0,00';
+                document.getElementById('promo-usdt-amount').style.borderColor = '#334155';
+                document.getElementById('promo-stock-display').style.color = '#fca5a5';
+                
+                showModal('buy-promo-modal');
+            }
+
+            function closePromoModal() {
+                document.getElementById('buy-promo-modal').style.display = 'none';
+                activePromoLotId = null;
+            }
+
+            // Update calculations on input
+            document.getElementById('promo-usdt-amount').oninput = function() {
+                const masked = formatUSDTMask(this.value);
+                this.value = masked;
+
+                const usdt = getCleanUSDT(masked);
+                const brl = usdt * activePromoRate;
+                document.getElementById('promo-brl-result').textContent = `R$ ${brl.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+                const inputEl = this;
+                if (usdt > activePromoStock) {
+                    inputEl.style.borderColor = '#ef4444';
+                    document.getElementById('promo-stock-display').style.color = '#ef4444';
+                } else {
+                    inputEl.style.borderColor = '#f43f5e';
+                    document.getElementById('promo-stock-display').style.color = '#fca5a5';
+                }
+            };
+
             function openBuyModal(rate, amount = 0) {
                 // Se a taxa passada for significativamente diferente da global atual,
                 // recalculamos o baseRate proporcionalmente para o detalhamento.
@@ -1603,7 +1786,6 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 document.getElementById('modal-rate').textContent = `R$ ${rate.toLocaleString('pt-BR', { minimumFractionDigits: 4 })}`;
 
                 const btn = document.getElementById('confirm-buy-btn');
-                const resultLabel = document.getElementById('result-label');
                 if (quotationFlow === 'operator') {
                     btn.textContent = isChinese ? '发送给操作员' : 'Enviar ao Operador';
                     btn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
@@ -1616,7 +1798,9 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
 
                 const input = currentInputMode === 'brl' ? document.getElementById('brl-amount') : document.getElementById('usdt-amount');
                 if (amount > 0) {
-                    input.value = currentInputMode === 'brl' ? (amount * rate) : amount;
+                    let rawVal = currentInputMode === 'brl' ? (amount * rate) : amount;
+                    let cleanDigits = parseFloat(rawVal).toFixed(2).replace('.', '');
+                    input.value = currentInputMode === 'brl' ? formatBRLMask(cleanDigits) : formatUSDTMask(cleanDigits);
                 } else {
                     input.value = '';
                 }
@@ -1624,11 +1808,21 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 showModal('buy-modal');
             }
 
-            function closeModal() { document.getElementById('buy-modal').style.display = 'none'; }
+            function closeModal() { 
+                document.getElementById('buy-modal').style.display = 'none'; 
+            }
             function closeSuccessModal() { document.getElementById('success-modal').style.display = 'none'; }
 
-            document.getElementById('usdt-amount').oninput = () => updateResultDisplay();
-            document.getElementById('brl-amount').oninput = () => updateResultDisplay();
+            document.getElementById('usdt-amount').oninput = function() {
+                const masked = formatUSDTMask(this.value);
+                this.value = masked;
+                updateResultDisplay();
+            };
+            document.getElementById('brl-amount').oninput = function() {
+                const masked = formatBRLMask(this.value);
+                this.value = masked;
+                updateResultDisplay();
+            };
 
             document.querySelectorAll('.delivery-option').forEach(opt => {
                 opt.onclick = () => {
@@ -1644,10 +1838,10 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             document.getElementById('confirm-buy-btn').onclick = async function () {
                 let amountUsdt, amountBrl;
                 if (currentInputMode === 'brl') {
-                    amountBrl = parseFloat(document.getElementById('brl-amount').value) || 0;
+                    amountBrl = getCleanBRL(document.getElementById('brl-amount').value) || 0;
                     amountUsdt = currentExchangeRate > 0 ? amountBrl / currentExchangeRate : 0;
                 } else {
-                    amountUsdt = parseFloat(document.getElementById('usdt-amount').value) || 0;
+                    amountUsdt = getCleanUSDT(document.getElementById('usdt-amount').value) || 0;
                     amountBrl = amountUsdt * currentExchangeRate;
                 }
 
@@ -1656,7 +1850,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                     return;
                 }
 
-                if (amountUsdt < 5000) {
+                if (!activePromoLotId && amountUsdt < 5000) {
                     alert(isChinese ? '最低购买金额为 5000 USDT' : 'O valor mínimo de compra é 5.000 USDT');
                     return;
                 }
@@ -1678,7 +1872,8 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                             amount_usdt: amountUsdt,
                             amount_brl: amountBrl,
                             delivery_type: selectedDeliveryType,
-                            input_mode: currentInputMode
+                            input_mode: currentInputMode,
+                            promo_lot_id: activePromoLotId
                         })
                     });
 
@@ -1712,6 +1907,76 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 } finally {
                     btn.disabled = false;
                     btn.textContent = quotationFlow === 'operator' ? (isChinese ? '发送给操作员' : 'Enviar ao Operador') : '<?= lang('App.confirm_buy') ?>';
+                    btn.style.opacity = '1';
+                }
+            };
+
+            document.getElementById('confirm-promo-buy-btn').onclick = async function() {
+                const usdtAmount = getCleanUSDT(document.getElementById('promo-usdt-amount').value) || 0;
+                const brlAmount = usdtAmount * activePromoRate;
+
+                if (usdtAmount <= 0) {
+                    alert(isChinese ? '请输入有效金额' : 'Por favor, insira um valor válido');
+                    return;
+                }
+
+                if (usdtAmount > activePromoStock) {
+                    alert(isChinese ? '输入金额超出可用促销库存' : 'O valor inserido é superior ao estoque disponível da promoção');
+                    return;
+                }
+
+                const btn = this;
+                btn.disabled = true;
+                btn.textContent = isChinese ? '处理中...' : 'Processando...';
+                btn.style.opacity = '0.7';
+
+                try {
+                    const response = await fetch('<?= url_to('chat_buy') ?>', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': getCsrfToken()
+                        },
+                        body: JSON.stringify({
+                            amount_usdt: usdtAmount,
+                            amount_brl: brlAmount,
+                            delivery_type: activePromoDelivery,
+                            input_mode: 'usdt',
+                            promo_lot_id: activePromoLotId
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.status === 'success') {
+                        closePromoModal();
+
+                        if (quotationFlow === 'operator' && operatorWhatsapp) {
+                            const messageText = `Olá! Acabei de gerar uma solicitação de compra de USDT na plataforma (Lote Promocional):\n\n` +
+                                                `• *Valor:* ${usdtAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT\n` +
+                                                `• *Cotação:* R$ ${activePromoRate.toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}\n` +
+                                                `• *Total:* R$ ${brlAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n` +
+                                                `• *Prazo:* ${activePromoDelivery}\n` +
+                                                `• *Transação ID:* #${data.transaction_id}\n` +
+                                                `• *Minha Carteira:* <?= esc(session()->get('user_wallet') ?: '') ?>\n\n` +
+                                                `Pode prosseguir com a minha operação?`;
+                            const encodedText = encodeURIComponent(messageText);
+                            window.open(`https://wa.me/${operatorWhatsapp}?text=${encodedText}`, '_blank');
+                        }
+                        
+                        document.getElementById('proof-transaction-id').value = data.transaction_id;
+                        showModal('success-modal');
+                    } else if (response.status !== 401) {
+                        alert(data.error || data.message || (isChinese ? '发生错误' : 'Erro ao processar'));
+                    }
+                } catch(e) {
+                    if (!_sessionExpiredHandled) {
+                        alert(isChinese ? '网络错误' : 'Erro de conexão');
+                    }
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = 'Confirmar Compra Promocional';
                     btn.style.opacity = '1';
                 }
             };
@@ -2312,6 +2577,96 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             }
 
 
+            async function checkPromotionalLots() {
+                try {
+                    const response = await fetch('<?= url_to('chat_promotional_lots') ?>');
+                    const lots = await response.json();
+                    activePromotionalLots = lots || [];
+                    
+                    const containerDesktop = document.getElementById('promotional-lots-desktop');
+                    const containerMobile = document.getElementById('promotional-lots-mobile');
+                    
+                    if (!lots || lots.length === 0) {
+                        if (containerDesktop) containerDesktop.style.display = 'none';
+                        if (containerMobile) containerMobile.style.display = 'none';
+                        return;
+                    }
+                    
+                    let html = '';
+                    const isChinese = <?= $isChinese ? 'true' : 'false' ?>;
+                    lots.forEach(lot => {
+                        const rate = parseFloat(lot.conversion_rate).toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+                        const available = parseFloat(lot.usdt_available).toLocaleString(isChinese ? 'en-US' : 'pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        const deliveryStr = lot.delivery_type ? ` [${lot.delivery_type.toUpperCase()}]` : '';
+                        
+                        html += `
+                            <div onclick="openPromoBuyModal(${lot.conversion_rate}, '${lot.delivery_type || ''}', ${lot.id}, ${lot.usdt_available})"
+                                 onmouseover="this.style.background='rgba(239, 68, 68, 0.12)'; this.style.transform='scale(1.01)';"
+                                 onmouseout="this.style.background='rgba(239, 68, 68, 0.08)'; this.style.transform='scale(1.00)';"
+                                 style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); padding: 12px 16px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; cursor: pointer; transition: background 0.2s, transform 0.2s;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="color: #ef4444; display: flex; align-items: center; justify-content: center; background: rgba(239, 68, 68, 0.1); width: 32px; height: 32px; border-radius: 50%;">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p style="font-size: 13px; font-weight: 700; color: white; margin: 0;">Lote Promocional!</p>
+                                        <p style="font-size: 11px; color: #fca5a5; margin: 2px 0 0 0;">Taxa: R$ ${rate}${deliveryStr}</p>
+                                    </div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <p style="font-size: 11px; font-weight: 700; color: #fca5a5; margin: 0;">Estoque</p>
+                                    <p style="font-size: 13px; font-weight: 800; color: white; margin: 2px 0 0 0;">${available} USDT</p>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    if (containerDesktop) {
+                        containerDesktop.innerHTML = html;
+                        containerDesktop.style.display = 'block';
+                    }
+                    if (containerMobile) {
+                        containerMobile.innerHTML = html;
+                        containerMobile.style.display = 'block';
+                    }
+                    
+                    let alerted = JSON.parse(localStorage.getItem('alerted_promo_lots') || '[]');
+                    let newLotToAlert = null;
+                    
+                    lots.forEach(lot => {
+                        if (!alerted.includes(lot.id)) {
+                            newLotToAlert = lot;
+                        }
+                    });
+                    
+                    if (newLotToAlert) {
+                        alerted.push(newLotToAlert.id);
+                        localStorage.setItem('alerted_promo_lots', JSON.stringify(alerted));
+                        
+                        const rate = parseFloat(newLotToAlert.conversion_rate).toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+                        const available = parseFloat(newLotToAlert.usdt_available).toLocaleString(isChinese ? 'en-US' : 'pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        const deliveryStr = newLotToAlert.delivery_type ? ` [${newLotToAlert.delivery_type.toUpperCase()}]` : '';
+
+                        document.getElementById('alert-notif-title').textContent = isChinese ? '新促销活动可用！' : 'Novo Lote Promocional!';
+                        document.getElementById('alert-notif-message').textContent = isChinese
+                            ? `管理员已发布特价 USDT。价格: R$ ${rate}，库存: ${available} USDT。`
+                            : `O administrador liberou uma taxa especial de USDT. Taxa: R$ ${rate}${deliveryStr}, Estoque: ${available} USDT.`;
+                        
+                        const iconContainer = document.getElementById('alert-notif-icon-container');
+                        if (iconContainer) {
+                            iconContainer.style.background = 'rgba(239, 68, 68, 0.1)';
+                            iconContainer.style.color = '#ef4444';
+                        }
+                        
+                        showModal('alert-notification-modal');
+                    }
+                } catch(e) {
+                    console.error('Error checking promotional lots', e);
+                }
+            }
+
             // Initialization calls at the bottom
             updateLiveRate();
             updateDebtBalance();
@@ -2319,10 +2674,12 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             initChart();
             initContractsBadge();
             checkNotifications();
+            checkPromotionalLots();
 
             setInterval(updateLiveRate, 1000); // 1s interval for fast real-time updates
             setInterval(updateDebtBalance, 30000);
             setInterval(checkNotifications, 30000);
+            setInterval(checkPromotionalLots, 5000);
             setInterval(loadChatHistory, 3000); // Poll chat messages every 3 seconds
 
         let debtsData = null;

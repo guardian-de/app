@@ -415,6 +415,7 @@
     const contractRevenuePerUsdt = <?= ($c['total_amount'] > 0 && $c['comercial_brl'] > 0) ? round((float)$c['comercial_brl'] / (float)$c['total_amount'], 6) : 0 ?>;
     const contractRemainingToAllocate = <?= max(0, (float)$c['total_amount'] - (float)$c['delivered_usdt'] - ($totalReservedUsdt ?? 0)) ?>;
     const contractUnlinkedDelivered = <?= (float)($unlinkedDelivered ?? 0) ?>;
+    const firstReservedLotId = <?= json_encode($firstReservedLotId ?? null) ?>;
     const availableLots = <?= json_encode(array_map(fn($l) => [
         'id'            => (int)$l['id'],
         'supplier'      => $l['supplier'],
@@ -423,13 +424,17 @@
         'conversion_rate'=> (float)$l['conversion_rate'],
         'total_brl'     => (float)$l['total_brl'],
         'cost_per_usdt' => $l['usdt_amount'] > 0 ? round((float)$l['total_brl'] / (float)$l['usdt_amount'], 6) : 0,
-    ], $availableLots ?? [])) ?>.filter(l => l.usdt_available > 0);
+    ], $availableLots ?? [])) ?>.filter(l => l.usdt_available > 0 || l.id === firstReservedLotId);
 
     let selectedLot = null;
 
     function openLotModal() {
-        selectedLot = null;
-        renderStep1();
+        if (firstReservedLotId) {
+            selectLot(firstReservedLotId);
+        } else {
+            selectedLot = null;
+            renderStep1();
+        }
         document.getElementById('lot-modal').style.display = 'flex';
         document.body.style.overflow = 'hidden';
     }
@@ -450,14 +455,29 @@
                     ${margin > 0 ? '+' : ''}R$ ${margin.toFixed(4).replace('.', ',')} / USDT
                    </span>`
                 : '';
+            
+            const isReserved = lot.id === firstReservedLotId;
+            const borderStyle = isReserved ? 'border: 1px solid rgba(244, 63, 94, 0.4); background: rgba(244, 63, 94, 0.02);' : 'border: 1px solid rgba(255,255,255,0.07); background: rgba(255,255,255,0.03);';
+            const hoverBorder = isReserved ? 'rgba(244, 63, 94, 0.6)' : 'rgba(59,130,246,0.4)';
+            const hoverBg = isReserved ? 'rgba(244, 63, 94, 0.05)' : 'rgba(59,130,246,0.05)';
+            const origBorder = isReserved ? 'rgba(244, 63, 94, 0.4)' : 'rgba(255,255,255,0.07)';
+            const origBg = isReserved ? 'rgba(244, 63, 94, 0.02)' : 'rgba(255,255,255,0.03)';
+            
+            const badgeHtml = isReserved
+                ? `<span style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(244,63,94,0.12);color:#f43f5e;font-weight:700;margin-left:8px;">Reservado Automaticamente</span>`
+                : '';
+
             return `
-            <div style="padding:20px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:16px;cursor:pointer;transition:all 0.15s;"
-                 onmouseover="this.style.borderColor='rgba(59,130,246,0.4)';this.style.background='rgba(59,130,246,0.05)'"
-                 onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.background='rgba(255,255,255,0.03)'"
+            <div style="padding:20px;${borderStyle}border-radius:16px;cursor:pointer;transition:all 0.15s;"
+                 onmouseover="this.style.borderColor='${hoverBorder}';this.style.background='${hoverBg}'"
+                 onmouseout="this.style.borderColor='${origBorder}';this.style.background='${origBg}'"
                  onclick="selectLot(${lot.id})">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
                     <div>
-                        <p style="font-size:11px;color:#64748b;text-transform:uppercase;margin-bottom:3px;">Lote #${lot.id}</p>
+                        <div style="display:flex;align-items:center;">
+                            <p style="font-size:11px;color:#64748b;text-transform:uppercase;margin-bottom:3px;margin-right:8px;">Lote #${lot.id}</p>
+                            ${badgeHtml}
+                        </div>
                         <p style="font-size:17px;font-weight:700;color:white;">${lot.supplier}</p>
                     </div>
                     ${marginHtml}

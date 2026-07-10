@@ -61,8 +61,12 @@ class LotsController extends BaseController
     {
         if ($response = $this->checkPermission('lots')) return $response;
         $supplierModel = new SupplierModel();
+        $userModel     = new \App\Models\UserModel();
+        $users         = $userModel->where('role', 'user')->orderBy('login', 'ASC')->findAll();
+
         return view('admin/lots/new', [
             'suppliers'   => $supplierModel->getEnabled(),
+            'users'       => $users,
             'active_menu' => 'lots',
         ]);
     }
@@ -79,10 +83,21 @@ class LotsController extends BaseController
         $purchaseHash   = trim($this->request->getPost('purchase_hash') ?? '');
         $deliveryType   = $this->request->getPost('delivery_type');
 
+        $isPromotional  = (bool)$this->request->getPost('is_promotional');
+        $targetType     = $this->request->getPost('target_type');
+        $targetGroup    = $this->request->getPost('target_group');
+        $targetUsersArr = $this->request->getPost('target_users');
+        $promoRate      = $isPromotional ? (float)$this->request->getPost('promo_rate') : null;
+
         if ($usdtAmount <= 0 || $conversionRate <= 0 || empty($supplier)) {
             return redirect()->back()->withInput()->with('error', 'Preencha todos os campos obrigatórios.');
         }
         $totalBrl = round($usdtAmount * $conversionRate, 2);
+
+        $targetUsers = null;
+        if ($isPromotional && $targetType === 'users' && is_array($targetUsersArr)) {
+            $targetUsers = json_encode(array_map('intval', $targetUsersArr));
+        }
 
         $lotId = $lotModel->insert([
             'supplier'      => $supplier,
@@ -93,6 +108,11 @@ class LotsController extends BaseController
             'total_brl'     => $totalBrl,
             'status'        => 'active',
             'created_by'    => session()->get('user_id'),
+            'is_promotional' => $isPromotional ? 1 : 0,
+            'target_type'    => $isPromotional ? $targetType : null,
+            'target_group'   => ($isPromotional && $targetType === 'group') ? $targetGroup : null,
+            'target_users'   => $targetUsers,
+            'promo_rate'     => $promoRate,
         ]);
 
         $logModel->record('lot.created', 'lot', $lotId, [
@@ -102,6 +122,11 @@ class LotsController extends BaseController
             'usdt_amount'     => $usdtAmount,
             'conversion_rate' => $conversionRate,
             'total_brl'       => $totalBrl,
+            'is_promotional'  => $isPromotional,
+            'target_type'     => $targetType,
+            'target_group'    => $targetGroup,
+            'target_users'    => $targetUsers,
+            'promo_rate'      => $promoRate,
         ]);
 
         return redirect()->to("/admin/lots/{$lotId}")->with('success', 'Lote registrado com sucesso!');

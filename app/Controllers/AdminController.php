@@ -521,8 +521,15 @@ class AdminController extends BaseController
             FROM lot_allocations la
             JOIN usdt_lots ul ON ul.id = la.lot_id
             WHERE la.contract_id = ?
-            ORDER BY la.created_at DESC
         ", [$id])->getResultArray();
+
+        $firstReservedLotId = null;
+        foreach ($contractAllocations as $alloc) {
+            if ($alloc['status'] === 'reserved') {
+                $firstReservedLotId = (int)$alloc['lot_id'];
+                break;
+            }
+        }
 
         return view('admin/contracts/show', [
             'c'                   => $contract,
@@ -535,6 +542,7 @@ class AdminController extends BaseController
             'currentBaseRate'     => $currentBaseRate,
             'suppliers'           => $suppliers,
             'contractAllocations' => $contractAllocations,
+            'firstReservedLotId'  => $firstReservedLotId,
         ]);
     }
 

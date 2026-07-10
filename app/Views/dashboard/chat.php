@@ -384,12 +384,12 @@
 
             <div class="form-group" id="usdt-input-group" style="<?= $initialMode === 'brl' ? 'display:none;' : '' ?>">
                 <label for="usdt-amount"><?= lang('App.amount_usdt') ?> (USDT)</label>
-                <input type="number" id="usdt-amount" placeholder="Ex: 5000" step="0.01" min="5000">
+                <input type="text" inputmode="numeric" id="usdt-amount" placeholder="Ex: 5,000.00">
             </div>
 
             <div class="form-group" id="brl-input-group" style="<?= $initialMode !== 'brl' ? 'display:none;' : '' ?>">
                 <label for="brl-amount"><?= lang('App.amount_brl') ?> (R$)</label>
-                <input type="number" id="brl-amount" placeholder="Ex: 30000" step="0.01">
+                <input type="text" inputmode="numeric" id="brl-amount" placeholder="Ex: 30.000,00">
             </div>
 
             <div class="form-group">
@@ -571,6 +571,50 @@
     <script>
         const isChinese = <?= session()->get('user_lang') === 'zh-CN' ? 'true' : 'false' ?>;
 
+        function formatUSDTMask(value) {
+            let clean = value.replace(/\D/g, '');
+            if (!clean || clean === '00' || clean === '0') return '';
+            
+            clean = clean.replace(/^0+/, '');
+            if (clean.length < 3) {
+                clean = clean.padStart(3, '0');
+            }
+            
+            let cents = parseInt(clean, 10);
+            if (isNaN(cents)) return '';
+            let val = (cents / 100).toFixed(2);
+            let parts = val.split('.');
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            return parts.join('.');
+        }
+
+        function getCleanUSDT(value) {
+            let clean = value.replace(/,/g, '');
+            return parseFloat(clean) || 0;
+        }
+
+        function formatBRLMask(value) {
+            let clean = value.replace(/\D/g, '');
+            if (!clean || clean === '00' || clean === '0') return '';
+            
+            clean = clean.replace(/^0+/, '');
+            if (clean.length < 3) {
+                clean = clean.padStart(3, '0');
+            }
+            
+            let cents = parseInt(clean, 10);
+            if (isNaN(cents)) return '';
+            let val = (cents / 100).toFixed(2);
+            let parts = val.split('.');
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            return parts.join(',');
+        }
+
+        function getCleanBRL(value) {
+            let clean = value.replace(/\./g, '').replace(',', '.');
+            return parseFloat(clean) || 0;
+        }
+
         // Only one modal (any element whose id ends in "-modal") may be visible at a time.
         function showModal(id) {
             document.querySelectorAll('[id$="-modal"]').forEach(m => {
@@ -648,12 +692,12 @@
             const resultText = document.getElementById('result-label-text');
             const resultValue = document.getElementById('brl-result');
             if (currentInputMode === 'brl') {
-                const brl = parseFloat(document.getElementById('brl-amount').value) || 0;
+                const brl = getCleanBRL(document.getElementById('brl-amount').value) || 0;
                 const usdt = currentExchangeRate > 0 ? brl / currentExchangeRate : 0;
                 resultText.textContent = resultLabelDiv.dataset.labelBrl + ':';
                 resultValue.textContent = `${usdt.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT`;
             } else {
-                const usdt = parseFloat(document.getElementById('usdt-amount').value) || 0;
+                const usdt = getCleanUSDT(document.getElementById('usdt-amount').value) || 0;
                 const brl = usdt * currentExchangeRate;
                 resultText.textContent = resultLabelDiv.dataset.labelUsdt + ':';
                 resultValue.textContent = `R$ ${brl.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -833,7 +877,9 @@
             document.getElementById('modal-rate').textContent = `R$ ${rate.toLocaleString('pt-BR', { minimumFractionDigits: 4 })}`;
             const input = currentInputMode === 'brl' ? document.getElementById('brl-amount') : document.getElementById('usdt-amount');
             if (amount > 0) {
-                input.value = currentInputMode === 'brl' ? (amount * rate) : amount;
+                let rawVal = currentInputMode === 'brl' ? (amount * rate) : amount;
+                let cleanDigits = parseFloat(rawVal).toFixed(2).replace('.', '');
+                input.value = currentInputMode === 'brl' ? formatBRLMask(cleanDigits) : formatUSDTMask(cleanDigits);
             } else {
                 input.value = '';
             }
@@ -858,8 +904,16 @@
             document.getElementById('buy-modal').style.display = 'none';
         }
 
-        document.getElementById('usdt-amount').oninput = () => updateResultDisplay();
-        document.getElementById('brl-amount').oninput = () => updateResultDisplay();
+        document.getElementById('usdt-amount').oninput = function() {
+            const masked = formatUSDTMask(this.value);
+            this.value = masked;
+            updateResultDisplay();
+        };
+        document.getElementById('brl-amount').oninput = function() {
+            const masked = formatBRLMask(this.value);
+            this.value = masked;
+            updateResultDisplay();
+        };
 
         function closeSuccessModal() {
             document.getElementById('success-modal').style.display = 'none';
@@ -868,10 +922,10 @@
         document.getElementById('confirm-buy-btn').onclick = async () => {
             let amountUsdt, amountBrl;
             if (currentInputMode === 'brl') {
-                amountBrl = parseFloat(document.getElementById('brl-amount').value) || 0;
+                amountBrl = getCleanBRL(document.getElementById('brl-amount').value) || 0;
                 amountUsdt = currentExchangeRate > 0 ? amountBrl / currentExchangeRate : 0;
             } else {
-                amountUsdt = parseFloat(document.getElementById('usdt-amount').value) || 0;
+                amountUsdt = getCleanUSDT(document.getElementById('usdt-amount').value) || 0;
                 amountBrl = amountUsdt * currentExchangeRate;
             }
 
