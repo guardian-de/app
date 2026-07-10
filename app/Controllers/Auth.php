@@ -10,11 +10,33 @@ class Auth extends BaseController
     public function login()
     {
         $this->runSchemaGuards();
+        
+        if (session()->get('isLoggedIn')) {
+            $role = session()->get('user_role');
+            if ($role === 'admin') {
+                return redirect()->to('/admin/contracts');
+            } elseif ($role === 'operator') {
+                return redirect()->to('/admin/contracts');
+            } else {
+                return redirect()->to('/dashboard');
+            }
+        }
+        
         return view('auth/login');
     }
 
     public function register()
     {
+        if (session()->get('isLoggedIn')) {
+            $role = session()->get('user_role');
+            if ($role === 'admin') {
+                return redirect()->to('/admin/contracts');
+            } elseif ($role === 'operator') {
+                return redirect()->to('/admin/contracts');
+            } else {
+                return redirect()->to('/dashboard');
+            }
+        }
         return view('auth/register');
     }
 
