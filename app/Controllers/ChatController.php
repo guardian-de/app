@@ -478,7 +478,8 @@ class ChatController extends BaseController
         $deliveryType = $json->delivery_type ?? 'D+0';
         $type = $json->type ?? 'buy'; // 'buy' ou 'sell'
         $inputMode = $json->input_mode ?? ($usdtAmountReq > 0 ? 'usdt' : 'brl');
-        if ($inputMode === 'brl') {
+        $promoLotId = $json->promo_lot_id ?? null;
+        if ($inputMode === 'brl' && !$promoLotId) {
             // Recalcula o USDT a partir do BRL informado, ignorando qualquer amount_usdt pré-calculado no cliente
             $usdtAmountReq = 0;
         }
@@ -532,6 +533,50 @@ class ChatController extends BaseController
         $userModel = new \App\Models\UserModel();
         $user = $userModel->find($userId);
         $feePercent = $user['fee_percent'] ?? 10.00;
+
+        $lot = null;
+        if ($promoLotId) {
+            $lotModel = new \App\Models\UsdtLotModel();
+            $lot = $lotModel->find($promoLotId);
+            if (!$lot || $lot['is_promotional'] != 1 || $lot['status'] !== 'active') {
+                return $this->response->setJSON(['error' => 'Lote promocional inválido ou esgotado.'])->setStatusCode(400);
+            }
+            
+            // Check if user is targeted
+            $isTargeted = false;
+            if ($lot['target_type'] === 'all') {
+                $isTargeted = true;
+            } elseif ($lot['target_type'] === 'group') {
+                if ($lot['target_group'] === 'role_user' && $user['role'] === 'user') {
+                    $isTargeted = true;
+                } elseif ($lot['target_group'] === 'contract_d0' && $user['role'] === 'user' && strtolower($user['default_contract_type']) === 'd+0') {
+                    $isTargeted = true;
+                } elseif ($lot['target_group'] === 'contract_d1' && $user['role'] === 'user' && strtolower($user['default_contract_type']) === 'd+1') {
+                    $isTargeted = true;
+                } elseif ($lot['target_group'] === 'contract_d2' && $user['role'] === 'user' && strtolower($user['default_contract_type']) === 'd+2') {
+                    $isTargeted = true;
+                }
+            } elseif ($lot['target_type'] === 'users') {
+                $targetUsers = json_decode($lot['target_users'] ?? '[]', true);
+                if (is_array($targetUsers) && in_array($userId, $targetUsers)) {
+                    $isTargeted = true;
+                }
+            }
+            
+            if (!$isTargeted) {
+                return $this->response->setJSON(['error' => 'Você não tem acesso a esta promoção.'])->setStatusCode(403);
+            }
+
+            if ($inputMode === 'brl') {
+                $usdtAmountReq = round($brlAmountReq / (float)$lot['promo_rate'], 4);
+            }
+            
+            // Validate stock
+            $available = $lotModel->getAvailable($promoLotId);
+            if ($usdtAmountReq > $available + 0.001) {
+                return $this->response->setJSON(['error' => "Estoque insuficiente no lote promocional. Disponível: " . number_format($available, 2) . " USDT."])->setStatusCode(400);
+            }
+        }
         
         // Define o settlement com base no prazo de entrega selecionado
         $settlement = 'D0';
@@ -541,28 +586,35 @@ class ChatController extends BaseController
             $settlement = 'D2';
         }
 
-        // Pega cotação direto do Transfero OTC / Binance em tempo real na hora de comprar
-        $baseRate = $this->getDollarRate(0, $settlement);
-
-        if (!$baseRate) {
-            // Fallback caso falhe a chamada à API da Binance
-            $rateData = $this->getLatestRateFromDb($feePercent);
-            $baseRate = $rateData['base_rate'];
+        if ($lot) {
+            $baseRate = (float)$lot['conversion_rate'];
+            $rate = (float)$lot['promo_rate'];
+            $feePercent = $baseRate > 0 ? round((($rate / $baseRate) - 1) * 100, 2) : 0.0;
         } else {
-            // Grava o histórico global a cada 30 segundos em background se a chamada for bem sucedida
-            $db = \Config\Database::connect();
-            $lastRecord = $db->table('dollar_history')
-                             ->where('created_at >=', date('Y-m-d H:i:s', strtotime('-30 seconds')))
-                             ->get()
-                             ->getRow();
-            if (!$lastRecord) {
-                $db->table('dollar_history')->insert([
-                    'base_rate'  => round($baseRate, 4),
-                    'created_at' => date('Y-m-d H:i:s')
-                ]);
+            // Pega cotação direto do Transfero OTC / Binance em tempo real na hora de comprar
+            $baseRate = $this->getDollarRate(0, $settlement);
+
+            if (!$baseRate) {
+                // Fallback caso falhe a chamada à API da Binance
+                $rateData = $this->getLatestRateFromDb($feePercent);
+                $baseRate = $rateData['base_rate'];
+            } else {
+                // Grava o histórico global a cada 30 segundos em background se a chamada for bem sucedida
+                $db = \Config\Database::connect();
+                $lastRecord = $db->table('dollar_history')
+                                 ->where('created_at >=', date('Y-m-d H:i:s', strtotime('-30 seconds')))
+                                 ->get()
+                                 ->getRow();
+                if (!$lastRecord) {
+                    $db->table('dollar_history')->insert([
+                        'base_rate'  => round($baseRate, 4),
+                        'created_at' => date('Y-m-d H:i:s')
+                    ]);
+                }
             }
+            $rate = $baseRate * (1 + ($feePercent / 100));
         }
-        $rate = $baseRate * (1 + ($feePercent / 100));
+
         $usdtAmount = $usdtAmountReq;
         $brlAmount = $brlAmountReq;
 
@@ -572,7 +624,7 @@ class ChatController extends BaseController
             $usdtAmount = round($brlAmount / $rate, 2);
         }
 
-        if ($type === 'buy' && $usdtAmount < self::MIN_BUY_USDT) {
+        if ($type === 'buy' && !$promoLotId && $usdtAmount < self::MIN_BUY_USDT) {
             $errMsg = $userLang == 'zh-CN'
                 ? '最低购买金额为 ' . self::MIN_BUY_USDT . ' USDT。'
                 : 'O valor mínimo de compra é ' . self::MIN_BUY_USDT . ' USDT.';
@@ -659,6 +711,19 @@ class ChatController extends BaseController
             if ($autoPayAmount > 0.01) {
                 $contractModel->registerPayment($contractId, $autoPayAmount);
             }
+        }
+
+        if ($contractId && $lot) {
+            $allocationModel = new \App\Models\LotAllocationModel();
+            $allocationModel->insert([
+                'lot_id'       => $lot['id'],
+                'contract_id'  => $contractId,
+                'usdt_amount'  => $usdtAmount,
+                'status'       => 'reserved',
+                'allocated_by' => $lot['created_by'],
+            ]);
+            $lotModel = new \App\Models\UsdtLotModel();
+            $lotModel->recalculateTotals((int)$lot['id']);
         }
 
         if (($user['purchase_model'] ?? 'usdt') === 'both' && $user['last_purchase_mode'] !== $inputMode) {
@@ -1216,6 +1281,67 @@ class ChatController extends BaseController
         $result = $model->getUserStatement($userId, 1, 30);
 
         return $this->response->setJSON($result);
+    }
+
+    public function getPromotionalLots()
+    {
+        if (!session()->get('isLoggedIn')) {
+            return $this->response->setJSON(['error' => 'Unauthorized'])->setStatusCode(401);
+        }
+
+        $userId = (int) session()->get('user_id');
+        $userModel = new \App\Models\UserModel();
+        $user = $userModel->find($userId);
+
+        if (!$user) {
+            return $this->response->setJSON([]);
+        }
+
+        $lotModel = new \App\Models\UsdtLotModel();
+        $lots = $lotModel->where('is_promotional', 1)
+                         ->where('status', 'active')
+                         ->findAll();
+
+        $targetedLots = [];
+        foreach ($lots as $lot) {
+            $isTargeted = false;
+
+            if ($lot['target_type'] === 'all') {
+                $isTargeted = true;
+            } elseif ($lot['target_type'] === 'group') {
+                if ($lot['target_group'] === 'role_user' && $user['role'] === 'user') {
+                    $isTargeted = true;
+                } elseif ($lot['target_group'] === 'contract_d0' && $user['role'] === 'user' && strtolower($user['default_contract_type']) === 'd+0') {
+                    $isTargeted = true;
+                } elseif ($lot['target_group'] === 'contract_d1' && $user['role'] === 'user' && strtolower($user['default_contract_type']) === 'd+1') {
+                    $isTargeted = true;
+                } elseif ($lot['target_group'] === 'contract_d2' && $user['role'] === 'user' && strtolower($user['default_contract_type']) === 'd+2') {
+                    $isTargeted = true;
+                }
+            } elseif ($lot['target_type'] === 'users') {
+                $targetUsers = json_decode($lot['target_users'] ?? '[]', true);
+                if (is_array($targetUsers) && in_array($userId, $targetUsers)) {
+                    $isTargeted = true;
+                }
+            }
+
+            if ($isTargeted) {
+                $available = $lotModel->getAvailable((int)$lot['id']);
+                if ($available > 0) {
+                    $targetedLots[] = [
+                        'id'              => $lot['id'],
+                        'usdt_available'  => $available,
+                        'promo_rate'      => $lot['promo_rate'],
+                        'conversion_rate' => $lot['promo_rate'], // Return promo_rate as conversion_rate for the UI
+                        'cost_rate'       => $lot['conversion_rate'],
+                        'delivery_type'   => $lot['delivery_type'],
+                        'created_at'      => $lot['created_at'],
+                    ];
+                }
+            }
+        }
+
+        return $this->response->setJSON($targetedLots);
     }
 
     public function getChatMessages()
