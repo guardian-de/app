@@ -26,6 +26,8 @@ class ChatController extends BaseController
         ];
         $data['quotation_flow'] = $settingsModel->getConfig('quotation_flow', 'direct');
         $data['operator_whatsapp'] = $settingsModel->getConfig('operator_whatsapp', '');
+        $data['disable_d1'] = $settingsModel->getConfig('disable_d1', '0') === '1';
+        $data['disable_d2'] = $settingsModel->getConfig('disable_d2', '0') === '1';
         
         return view('dashboard/chat', $data);
     }
@@ -48,6 +50,8 @@ class ChatController extends BaseController
         ];
         $data['quotation_flow'] = $settingsModel->getConfig('quotation_flow', 'direct');
         $data['operator_whatsapp'] = $settingsModel->getConfig('operator_whatsapp', '');
+        $data['disable_d1'] = $settingsModel->getConfig('disable_d1', '0') === '1';
+        $data['disable_d2'] = $settingsModel->getConfig('disable_d2', '0') === '1';
         
         return view('dashboard/mobile', $data);
     }
@@ -499,6 +503,16 @@ class ChatController extends BaseController
         $nowObj = new \DateTime('now', new \DateTimeZone('America/Sao_Paulo'));
         $settingsModel = new \App\Models\SettingsModel();
         $now = $nowObj->format('H:i');
+
+        // Validação de desativação temporária de prazo
+        if ($deliveryType === 'D+1' && $settingsModel->getConfig('disable_d1', '0') === '1') {
+            $errMsg = ($userLang == 'zh-CN') ? "D+1 交易暂时关闭。" : "Transações D+1 estão temporariamente desativadas.";
+            return $this->response->setJSON(['error' => $errMsg])->setStatusCode(403);
+        }
+        if ($deliveryType === 'D+2' && $settingsModel->getConfig('disable_d2', '0') === '1') {
+            $errMsg = ($userLang == 'zh-CN') ? "D+2 交易暂时关闭。" : "Transações D+2 estão temporariamente desativadas.";
+            return $this->response->setJSON(['error' => $errMsg])->setStatusCode(403);
+        }
 
         // Validação de horário por tipo de entrega
         if ($deliveryType === 'D+0') {

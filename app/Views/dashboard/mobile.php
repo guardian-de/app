@@ -821,7 +821,13 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 <div class="delivery-selector" style="display: flex; gap: 10px; margin-bottom: 20px;">
                     <?php
                     $allowed = $user['allowed_delivery_types'];
-                    $options = ['D+0', 'D+1', 'D+2'];
+                    $options = ['D+0'];
+                    if (!isset($disable_d1) || !$disable_d1) {
+                        $options[] = 'D+1';
+                    }
+                    if (!isset($disable_d2) || !$disable_d2) {
+                        $options[] = 'D+2';
+                    }
                     $first = true;
                     $active_val = 'D+0';
                     foreach ($options as $opt):
