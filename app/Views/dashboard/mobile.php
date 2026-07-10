@@ -400,6 +400,12 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             color: white;
         }
 
+        .delivery-option.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            border-style: dashed;
+        }
+
         .mobile-input-area {
             position: fixed;
             bottom: 0;
@@ -821,20 +827,15 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 <div class="delivery-selector" style="display: flex; gap: 10px; margin-bottom: 20px;">
                     <?php
                     $allowed = $user['allowed_delivery_types'];
-                    $options = ['D+0'];
-                    if (!isset($disable_d1) || !$disable_d1) {
-                        $options[] = 'D+1';
-                    }
-                    if (!isset($disable_d2) || !$disable_d2) {
-                        $options[] = 'D+2';
-                    }
+                    $options = ['D+0', 'D+1', 'D+2'];
                     $first = true;
                     $active_val = 'D+0';
                     foreach ($options as $opt):
+                        $is_disabled = ($opt === 'D+1' && isset($disable_d1) && $disable_d1) || ($opt === 'D+2' && isset($disable_d2) && $disable_d2);
                         if ($allowed == 'all' || $allowed == $opt):
                     ?>
-                        <div class="delivery-option <?= $first ? 'active' : '' ?>" data-value="<?= $opt ?>"><?= $opt ?></div>
-                        <?php if ($first) { $first = false; $active_val = $opt; } ?>
+                        <div class="delivery-option <?= $is_disabled ? 'disabled' : ($first ? 'active' : '') ?>" data-value="<?= $opt ?>"><?= $opt ?></div>
+                        <?php if ($first && !$is_disabled) { $first = false; $active_val = $opt; } ?>
                     <?php
                         endif;
                     endforeach;
@@ -1832,6 +1833,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
 
             document.querySelectorAll('.delivery-option').forEach(opt => {
                 opt.onclick = () => {
+                    if (opt.classList.contains('disabled')) return;
                     document.querySelectorAll('.delivery-option').forEach(o => o.classList.remove('active'));
                     opt.classList.add('active');
                     selectedDeliveryType = opt.dataset.value;
