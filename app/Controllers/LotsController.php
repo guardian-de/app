@@ -26,7 +26,8 @@ class LotsController extends BaseController
         if (!in_array($perPage, [15, 25, 50, 100])) { $perPage = 15; }
 
         $builder = $lotModel->select('usdt_lots.*, users.login as created_by_name')
-            ->join('users', 'users.id = usdt_lots.created_by', 'left');
+            ->join('users', 'users.id = usdt_lots.created_by', 'left')
+            ->where('usdt_lots.is_promotional', 0);
 
         if (!empty($filters['start_date'])) {
             $builder->where('usdt_lots.created_at >=', $filters['start_date'] . ' 00:00:00');
@@ -168,11 +169,13 @@ class LotsController extends BaseController
 
         $logs = $logModel->getForEntity('lot', $id);
 
+        $activeMenu = (isset($lot['is_promotional']) && $lot['is_promotional']) ? 'promotions' : 'lots';
+
         return view('admin/lots/show', [
             'lot'         => $lot,
             'allocations' => $allocations,
             'logs'        => $logs,
-            'active_menu' => 'lots',
+            'active_menu' => $activeMenu,
         ]);
     }
 
@@ -444,5 +447,138 @@ class LotsController extends BaseController
         }, $lots);
 
         return $this->response->setJSON($result);
+    }
+
+    public function promotions()
+    {
+        if ($response = $this->checkPermission('lots')) return $response;
+        $lotModel      = new UsdtLotModel();
+        $supplierModel = new SupplierModel();
+
+        $filters = [
+            'start_date'    => $this->request->getGet('start_date') ?? '',
+            'end_date'      => $this->request->getGet('end_date')   ?? '',
+            'supplier'      => $this->request->getGet('supplier')   ?? '',
+            'delivery_type' => $this->request->getGet('delivery_type') ?? '',
+        ];
+        $perPage = (int)($this->request->getGet('per_page') ?? 15);
+        if (!in_array($perPage, [15, 25, 50, 100])) { $perPage = 15; }
+
+        $builder = $lotModel->select('usdt_lots.*, users.login as created_by_name')
+            ->join('users', 'users.id = usdt_lots.created_by', 'left')
+            ->where('usdt_lots.is_promotional', 1)
+            ->where('usdt_lots.status', 'active')
+            ->where('(usdt_lots.usdt_amount - usdt_lots.usdt_reserved - usdt_lots.usdt_delivered) >', 0);
+
+        if (!empty($filters['start_date'])) {
+            $builder->where('usdt_lots.created_at >=', $filters['start_date'] . ' 00:00:00');
+        }
+        if (!empty($filters['end_date'])) {
+            $builder->where('usdt_lots.created_at <=', $filters['end_date'] . ' 23:59:59');
+        }
+        if (!empty($filters['supplier'])) {
+            $builder->like('usdt_lots.supplier', $filters['supplier']);
+        }
+        if (!empty($filters['delivery_type'])) {
+            $builder->where('usdt_lots.delivery_type', $filters['delivery_type']);
+        }
+
+        $lots = $builder->orderBy('usdt_lots.created_at', 'DESC')->paginate($perPage);
+
+        return view('admin/promotions/index', [
+            'lots'        => $lots,
+            'pager'       => $lotModel->pager,
+            'filters'     => $filters,
+            'per_page'    => $perPage,
+            'suppliers'   => $supplierModel->getEnabled(),
+            'summary'     => $lotModel->getSummary(true),
+            'active_menu' => 'promotions',
+        ]);
+    }
+
+    public function createPromotion()
+    {
+        if ($response = $this->checkPermission('lots')) return $response;
+        $supplierModel = new SupplierModel();
+
+        return view('admin/promotions/new', [
+            'suppliers'   => $supplierModel->getEnabled(),
+            'active_menu' => 'promotions',
+        ]);
+    }
+
+    public function storePromotion()
+    {
+        if ($response = $this->checkPermission('lots')) return $response;
+        $lotModel  = new UsdtLotModel();
+        $logModel  = new ActivityLogModel();
+
+        $usdtAmount     = (float)$this->request->getPost('usdt_amount');
+        $conversionRate = (float)$this->request->getPost('conversion_rate');
+        $promoRate      = $conversionRate;
+        $supplier       = trim($this->request->getPost('supplier') ?? '');
+        $purchaseHash   = trim($this->request->getPost('purchase_hash') ?? '');
+        $deliveryType   = $this->request->getPost('delivery_type');
+
+        if ($usdtAmount <= 0 || $conversionRate <= 0) {
+            return redirect()->back()->withInput()->with('error', 'Preencha todos os campos obrigatórios (Quantidade e Taxa por USDT).');
+        }
+
+        if (empty($supplier)) {
+            $supplier = 'Promoção';
+        }
+        $totalBrl = round($usdtAmount * $conversionRate, 2);
+
+        $lotId = $lotModel->insert([
+            'supplier'        => $supplier,
+            'purchase_hash'   => $purchaseHash ?: null,
+            'delivery_type'   => in_array($deliveryType, ['d+0', 'd+1', 'd+2']) ? $deliveryType : null,
+            'usdt_amount'     => $usdtAmount,
+            'conversion_rate' => $conversionRate,
+            'total_brl'       => $totalBrl,
+            'status'          => 'active',
+            'created_by'      => session()->get('user_id'),
+            'is_promotional'  => 1,
+            'target_type'     => 'all',
+            'target_group'    => null,
+            'target_users'    => null,
+            'promo_rate'      => $promoRate,
+        ]);
+
+        $logModel->record('lot.created', 'lot', $lotId, [
+            'supplier'        => $supplier,
+            'purchase_hash'   => $purchaseHash ?: null,
+            'delivery_type'   => $deliveryType,
+            'usdt_amount'     => $usdtAmount,
+            'conversion_rate' => $conversionRate,
+            'total_brl'       => $totalBrl,
+            'is_promotional'  => true,
+            'target_type'     => 'all',
+            'target_group'    => null,
+            'target_users'    => null,
+            'promo_rate'      => $promoRate,
+        ]);
+
+        return redirect()->to("/admin/lots/{$lotId}")->with('success', 'Promoção lançada com sucesso!');
+    }
+
+    public function deactivatePromotion(int $id)
+    {
+        if ($response = $this->checkPermission('lots')) return $response;
+        $lotModel = new UsdtLotModel();
+        $logModel = new ActivityLogModel();
+
+        $lot = $lotModel->find($id);
+        if (!$lot || $lot['is_promotional'] != 1) {
+            return redirect()->to('/admin/promotions')->with('error', 'Promoção não encontrada.');
+        }
+
+        $lotModel->update($id, ['status' => 'cancelled']);
+
+        $logModel->record('lot.deactivated', 'lot', $id, [
+            'is_promotional' => true,
+        ]);
+
+        return redirect()->to('/admin/promotions')->with('success', 'Promoção desativada com sucesso!');
     }
 }

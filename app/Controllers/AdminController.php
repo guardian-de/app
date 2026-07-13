@@ -406,6 +406,28 @@ class AdminController extends BaseController
                         'transaction_date' => date('Y-m-d H:i:s')
                     ]);
                 }
+
+                // Se for compra à vista promocional, dá baixa na alocação de lote
+                if ($transaction['type'] == 'buy') {
+                    $allocationModel = new \App\Models\LotAllocationModel();
+                    $lotModel = new \App\Models\UsdtLotModel();
+                    $allocations = $allocationModel->where('transaction_id', $id)->where('status', 'reserved')->findAll();
+                    foreach ($allocations as $alloc) {
+                        $lot = $lotModel->find($alloc['lot_id']);
+                        if ($lot) {
+                            $costPerUsdt = (float)$lot['conversion_rate'];
+                            $revenuePerUsdt = $allocationModel->getRevenuePerUsdt('transaction', $id);
+                            $profitBrl = round(($revenuePerUsdt - $costPerUsdt) * (float)$alloc['usdt_amount'], 2);
+
+                            $allocationModel->update($alloc['id'], [
+                                'status' => 'delivered',
+                                'profit_brl' => $profitBrl,
+                                'delivered_by' => session()->get('user_id') ?? $alloc['allocated_by'],
+                            ]);
+                            $lotModel->recalculateTotals((int)$alloc['lot_id']);
+                        }
+                    }
+                }
             }
 
             (new \App\Models\ActivityLogModel())->record('transaction.approved', 'transaction', (int)$id, [
@@ -418,6 +440,15 @@ class AdminController extends BaseController
         
         if ($status === 'cancelled') {
             $transactionModel->update($id, ['status' => 'cancelled', 'updated_at' => date('Y-m-d H:i:s'), 'locked_by' => null, 'locked_at' => null]);
+            
+            // Cancela alocações de lote vinculadas à transação
+            $allocationModel = new \App\Models\LotAllocationModel();
+            $lotModel = new \App\Models\UsdtLotModel();
+            $allocations = $allocationModel->where('transaction_id', $id)->findAll();
+            foreach ($allocations as $alloc) {
+                $allocationModel->update($alloc['id'], ['status' => 'cancelled']);
+                $lotModel->recalculateTotals((int)$alloc['lot_id']);
+            }
             
             // Se tiver contrato pendente, cancela e libera o limite
             $contractModel = new \App\Models\ContractModel();
@@ -776,9 +807,9 @@ class AdminController extends BaseController
                 "SELECT la.*, ul.conversion_rate
                  FROM lot_allocations la
                  JOIN usdt_lots ul ON ul.id = la.lot_id
-                 WHERE la.contract_id = ? AND la.status = 'reserved'
+                 WHERE (la.contract_id = ? OR (la.contract_id IS NULL AND la.transaction_id = ?)) AND la.status = 'reserved'
                  ORDER BY la.created_at ASC",
-                [$id]
+                [$id, $contract['transaction_id']]
             )->getResultArray();
 
             $adminId   = session()->get('user_id');
