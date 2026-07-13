@@ -87,6 +87,16 @@ class AdminController extends BaseController
             return redirect()->back()->withInput()->with('errors', $userModel->errors());
         }
 
+        $userId = $userModel->getInsertID();
+        if ($userId && !empty($data['usdt_wallet'])) {
+            $walletModel = new \App\Models\UserWalletModel();
+            $walletModel->insert([
+                'user_id' => $userId,
+                'address' => $data['usdt_wallet'],
+                'is_default' => 1
+            ]);
+        }
+
         return redirect()->to('/admin/users')->with('success', 'Usuário criado com sucesso!');
     }
 
@@ -99,6 +109,19 @@ class AdminController extends BaseController
         if (!$data['user']) {
             return redirect()->to('/admin/users')->with('error', 'Usuário não encontrado.');
         }
+
+        $walletModel = new \App\Models\UserWalletModel();
+        $wallets = $walletModel->where('user_id', $id)->findAll();
+        // Fallback migration on the fly
+        if (empty($wallets) && !empty($data['user']['usdt_wallet'])) {
+            $walletModel->insert([
+                'user_id'    => $id,
+                'address'    => $data['user']['usdt_wallet'],
+                'is_default' => 1
+            ]);
+            $wallets = $walletModel->where('user_id', $id)->findAll();
+        }
+        $data['wallets'] = $wallets;
 
         return view('admin/users/edit', $data);
     }
@@ -113,10 +136,52 @@ class AdminController extends BaseController
         $permissions = $this->request->getPost('permissions');
         $canSetPurchaseModel = session()->get('user_role') === 'admin' || in_array('purchase_model', session()->get('user_permissions') ?? []);
 
+        // Processamento das carteiras
+        $walletsPost = (array)$this->request->getPost('wallets');
+        $defaultWalletPost = $this->request->getPost('default_wallet');
+        $walletsPost = array_filter(array_map('trim', $walletsPost));
+
+        $walletModel = new \App\Models\UserWalletModel();
+        $existingWallets = $walletModel->where('user_id', $id)->findAll();
+
+        foreach ($existingWallets as $ew) {
+            if (!in_array($ew['address'], $walletsPost)) {
+                $walletModel->delete($ew['id']);
+            }
+        }
+
+        $defaultAddress = null;
+        foreach ($walletsPost as $addr) {
+            $isDefault = ($addr === $defaultWalletPost) ? 1 : 0;
+            if ($isDefault) {
+                $defaultAddress = $addr;
+            }
+
+            $existing = $walletModel->where('user_id', $id)->where('address', $addr)->first();
+            if ($existing) {
+                $walletModel->update($existing['id'], ['is_default' => $isDefault]);
+            } else {
+                $walletModel->insert([
+                    'user_id'    => $id,
+                    'address'    => $addr,
+                    'is_default' => $isDefault
+                ]);
+            }
+        }
+
+        if (!$defaultAddress && !empty($walletsPost)) {
+            $firstAddr = reset($walletsPost);
+            $existing = $walletModel->where('user_id', $id)->where('address', $firstAddr)->first();
+            if ($existing) {
+                $walletModel->update($existing['id'], ['is_default' => 1]);
+                $defaultAddress = $firstAddr;
+            }
+        }
+
         $data = [
             'login'                  => $this->request->getPost('login'),
             'fee_percent'            => $role === 'user' ? ($this->request->getPost('fee_percent') ?: 10.00) : 0.00,
-            'usdt_wallet'            => $role === 'user' ? $this->request->getPost('usdt_wallet') : null,
+            'usdt_wallet'            => $role === 'user' ? $defaultAddress : null,
             'score'                  => 0.00,
             'default_contract_type'  => $role === 'user' ? ($this->request->getPost('default_contract_type') ?: 'd+1') : 'd+1',
             'daily_interest_rate'    => $role === 'user' ? ($this->request->getPost('daily_interest_rate') ?: 0.00) : 0.00,
@@ -461,8 +526,9 @@ class AdminController extends BaseController
 
         $contractModel = new \App\Models\ContractModel();
         
-        $contract = $contractModel->select('contracts.*, users.login as user_name, users.usdt_wallet, users.score, users.fee_percent')
+        $contract = $contractModel->select('contracts.*, users.login as user_name, users.usdt_wallet, transactions.wallet_address as requested_wallet, users.score, users.fee_percent')
                                    ->join('users', 'users.id = contracts.user_id')
+                                   ->join('transactions', 'transactions.id = contracts.transaction_id', 'left')
                                    ->where('contracts.id', $id)
                                    ->first();
 
@@ -577,7 +643,7 @@ class AdminController extends BaseController
         $perPage = (int)($this->request->getGet('per_page') ?? 15);
         if (!in_array($perPage, [15, 25, 50, 100])) $perPage = 15;
 
-        $builder = $contractModel->select("contracts.*, users.login as user_name, users.usdt_wallet, transactions.rate as tx_rate, transactions.base_rate as spot_rate, COALESCE(la_totals.total_lot_allocated, 0) AS total_lot_allocated")
+        $builder = $contractModel->select("contracts.*, users.login as user_name, users.usdt_wallet, transactions.wallet_address as requested_wallet, transactions.rate as tx_rate, transactions.base_rate as spot_rate, COALESCE(la_totals.total_lot_allocated, 0) AS total_lot_allocated")
                                  ->join('users', 'users.id = contracts.user_id')
                                  ->join('transactions', 'transactions.id = contracts.transaction_id', 'left')
                                  ->join("(SELECT contract_id, SUM(usdt_amount) AS total_lot_allocated FROM lot_allocations WHERE status IN ('reserved', 'delivered') GROUP BY contract_id) la_totals", 'la_totals.contract_id = contracts.id', 'left');
@@ -768,6 +834,7 @@ class AdminController extends BaseController
                     'user_id'        => $uid,
                     'user_name'      => $d['user_name'],
                     'usdt_wallet'    => $d['usdt_wallet'],
+                    'requested_wallet' => $d['requested_wallet'],
                     'contract_count' => 0,
                     'pending_usdt'   => 0.0,
                     'delivered_usdt' => 0.0,

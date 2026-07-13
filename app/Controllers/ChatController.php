@@ -19,6 +19,19 @@ class ChatController extends BaseController
         $userModel = new \App\Models\UserModel();
         $data['user'] = $userModel->find(session()->get('user_id'));
         
+        $walletModel = new \App\Models\UserWalletModel();
+        $userId = session()->get('user_id');
+        $wallets = $walletModel->where('user_id', $userId)->findAll();
+        if (empty($wallets) && !empty($data['user']['usdt_wallet'])) {
+            $walletModel->insert([
+                'user_id'    => $userId,
+                'address'    => $data['user']['usdt_wallet'],
+                'is_default' => 1
+            ]);
+            $wallets = $walletModel->where('user_id', $userId)->findAll();
+        }
+        $data['wallets'] = $wallets;
+        
         $settingsModel = new \App\Models\SettingsModel();
         $data['business_hours'] = [
             'start' => $settingsModel->getConfig('business_hours_start', '08:00'),
@@ -42,6 +55,19 @@ class ChatController extends BaseController
 
         $userModel = new \App\Models\UserModel();
         $data['user'] = $userModel->find(session()->get('user_id'));
+
+        $walletModel = new \App\Models\UserWalletModel();
+        $userId = session()->get('user_id');
+        $wallets = $walletModel->where('user_id', $userId)->findAll();
+        if (empty($wallets) && !empty($data['user']['usdt_wallet'])) {
+            $walletModel->insert([
+                'user_id'    => $userId,
+                'address'    => $data['user']['usdt_wallet'],
+                'is_default' => 1
+            ]);
+            $wallets = $walletModel->where('user_id', $userId)->findAll();
+        }
+        $data['wallets'] = $wallets;
 
         $settingsModel = new \App\Models\SettingsModel();
         $data['business_hours'] = [
@@ -688,7 +714,18 @@ class ChatController extends BaseController
                 ]);
             }
         }
-
+ 
+        $walletAddressReq = $json->wallet_address ?? null;
+        $walletModel = new \App\Models\UserWalletModel();
+        $dbWallet = null;
+        if (!empty($walletAddressReq)) {
+            $dbWallet = $walletModel->where('user_id', $userId)->where('address', trim($walletAddressReq))->first();
+        }
+        if (!$dbWallet) {
+            $dbWallet = $walletModel->where('user_id', $userId)->where('is_default', 1)->first();
+        }
+        $walletAddress = $dbWallet ? $dbWallet['address'] : ($user['usdt_wallet'] ?: 'Não informada');
+ 
         $transactionId = $transactionModel->insert([
             'user_id'        => $userId,
             'type'           => $type,
@@ -701,7 +738,7 @@ class ChatController extends BaseController
             'fee_brl'        => $feeBrl,
             'status'         => 'pending',
             'delivery_type'  => $deliveryType,
-            'wallet_address' => session()->get('user_wallet') ?: 'Não informada'
+            'wallet_address' => $walletAddress
         ]);
 
         if ($contractId) {

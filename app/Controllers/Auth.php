@@ -54,6 +54,16 @@ class Auth extends BaseController
             return redirect()->back()->withInput()->with('errors', $userModel->errors());
         }
 
+        $userId = $userModel->getInsertID();
+        if ($userId && !empty($data['usdt_wallet'])) {
+            $walletModel = new \App\Models\UserWalletModel();
+            $walletModel->insert([
+                'user_id' => $userId,
+                'address' => $data['usdt_wallet'],
+                'is_default' => 1
+            ]);
+        }
+
         return redirect()->to('/login')->with('success', 'Cadastro realizado com sucesso! Faça login.');
     }
 

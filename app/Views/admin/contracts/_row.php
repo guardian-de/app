@@ -14,7 +14,7 @@ $isClosed = $totalAmount > 0 && $totalLotAllocated >= $totalAmount;
     </td>
     <td style="padding: 15px;">
         <div style="font-weight: 600;"><?= esc($contract['user_name']) ?></div>
-        <div style="font-size: 10px; color: #818cf8; font-family: monospace;"><?= esc($contract['usdt_wallet'] ?: 'N/A') ?></div>
+        <div style="font-size: 10px; color: #818cf8; font-family: monospace;"><?= esc($contract['requested_wallet'] ?: ($contract['usdt_wallet'] ?: 'N/A')) ?></div>
         <div style="font-size: 11px; color: #94a3b8;"><?= esc($contract['type']) ?></div>
     </td>
     <td style="padding: 15px; font-weight: 600;">

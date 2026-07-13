@@ -92,7 +92,7 @@
                 <p style="font-size: 12px; color: #94a3b8; text-transform: uppercase;">Carteira do Cliente (TRC-20)</p>
                 <p
                     style="font-size: 14px; font-family: monospace; color: #818cf8; word-break: break-all; background: rgba(129, 140, 248, 0.05); padding: 10px; border-radius: 8px; border: 1px dashed rgba(129, 140, 248, 0.2);">
-                    <?= $c['usdt_wallet'] ?: 'Não informada' ?>
+                    <?= $c['requested_wallet'] ?: ($c['usdt_wallet'] ?: 'Não informada') ?>
                 </p>
             </div>
         </div>
@@ -607,7 +607,7 @@
                 <label style="display:block;font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Quantidade USDT a alocar</label>
                 <div style="display:flex;gap:10px;align-items:center;">
                     <input type="text" id="modal-usdt-amount" inputmode="numeric"
-                        placeholder="Ex: ${formatUSDTMask(maxAlloc.toFixed(2))}"
+                        placeholder="0.00"
                         oninput="this.value = formatUSDTMask(this.value); updateProfitPreview();"
                         style="flex:1;padding:14px 16px;background:#0f172a;border:1px solid #334155;border-radius:12px;color:white;font-size:16px;font-weight:600;outline:none;transition:border-color 0.2s;"
                         onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#334155'">

@@ -381,11 +381,25 @@
             </div>
 
             <div class="form-group">
-                <label><?= lang('App.wallet_address') ?> (TRC-20)</label>
-                <div
-                    style="background: #0f172a; padding: 12px; border-radius: 8px; border: 1px dashed #334155; font-family: monospace; font-size: 13px; color: #818cf8; word-break: break-all;">
-                    <?= session()->get('user_wallet') ?: (session()->get('user_lang') == 'zh-CN' ? '未注册' : 'Não cadastrada') ?>
-                </div>
+                <label for="wallet-selector"><?= lang('App.wallet_address') ?> (TRC-20)</label>
+                <?php if (!empty($wallets)): ?>
+                    <select id="wallet-selector"
+                        style="width: 100%; background: #0f172a; border: 1px solid #334155; padding: 12px; border-radius: 8px; color: white; font-size: 14px; font-family: monospace; outline: none; box-sizing: border-box; cursor: pointer;">
+                        <?php foreach ($wallets as $w): ?>
+                            <option value="<?= esc($w['address']) ?>" <?= $w['is_default'] ? 'selected' : '' ?>>
+                                <?= esc($w['address']) ?> <?= $w['is_default'] ? (session()->get('user_lang') == 'zh-CN' ? '(默认)' : ' (Padrão)') : '' ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                <?php else: ?>
+                    <div
+                        style="background: #0f172a; padding: 12px; border-radius: 8px; border: 1px dashed #334155; font-family: monospace; font-size: 13px; color: #818cf8; word-break: break-all;">
+                        <?= session()->get('user_wallet') ?: (session()->get('user_lang') == 'zh-CN' ? '未注册' : 'Não cadastrada') ?>
+                    </div>
+                    <select id="wallet-selector" style="display: none;">
+                        <option value="<?= esc(session()->get('user_wallet') ?: '') ?>" selected></option>
+                    </select>
+                <?php endif; ?>
             </div>
 
             <div class="form-group" id="usdt-input-group" style="<?= $initialMode === 'brl' ? 'display:none;' : '' ?>">
@@ -947,6 +961,7 @@
                 return;
             }
 
+            const selectedWallet = document.getElementById('wallet-selector')?.value || '';
             try {
                 const response = await fetch('<?= url_to('chat_buy') ?>', {
                     method: 'POST',
@@ -959,7 +974,8 @@
                         amount_brl: amountBrl,
                         amount_usdt: amountUsdt,
                         delivery_type: selectedDeliveryType,
-                        input_mode: currentInputMode
+                        input_mode: currentInputMode,
+                        wallet_address: selectedWallet
                     })
                 });
                 const data = await response.json();
@@ -973,7 +989,7 @@
                                             `• *Total:* R$ ${amountBrl.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n` +
                                             `• *Prazo:* ${selectedDeliveryType}\n` +
                                             `• *Transação ID:* #${data.transaction_id}\n` +
-                                            `• *Minha Carteira:* <?= esc(session()->get('user_wallet') ?: '') ?>\n\n` +
+                                            `• *Minha Carteira:* ${selectedWallet}\n\n` +
                                             `Pode prosseguir com a minha operação?`;
                         const encodedText = encodeURIComponent(messageText);
                         window.open(`https://wa.me/${operatorWhatsapp}?text=${encodedText}`, '_blank');

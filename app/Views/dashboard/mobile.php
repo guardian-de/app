@@ -792,13 +792,29 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             </div>
 
             <div style="margin-bottom: 20px;">
-                <label
-                    style="display: block; color: #94a3b8; font-size: 13px; font-weight: 500; margin-bottom: 8px;">Endereço
-                    da Carteira USDT (TRC-20)</label>
-                <div
-                    style="background: rgba(15, 23, 42, 0.5); padding: 12px; border-radius: 8px; border: 1px dashed #334155; font-family: monospace; font-size: 13px; color: #818cf8; word-break: break-all; line-height: 1.4;">
-                    <?= session()->get('user_wallet') ?: ($isChinese ? '未注册' : 'Não cadastrada') ?>
-                </div>
+                <label for="wallet-selector"
+                    style="display: block; color: #94a3b8; font-size: 13px; font-weight: 500; margin-bottom: 8px;">
+                    <?= session()->get('user_lang') == 'zh-CN' ? 'USDT 接收钱包 (TRC-20)' : 'Carteira de Destino USDT (TRC-20)' ?>
+                </label>
+                <?php if (!empty($wallets)): ?>
+                    <select id="wallet-selector"
+                        style="width: 100%; background: #0f172a; border: 1px solid #334155; padding: 12px; border-radius: 8px; color: white; font-size: 14px; font-family: monospace; outline: none; box-sizing: border-box; cursor: pointer;"
+                        onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#334155'">
+                        <?php foreach ($wallets as $w): ?>
+                            <option value="<?= esc($w['address']) ?>" <?= $w['is_default'] ? 'selected' : '' ?>>
+                                <?= esc($w['address']) ?> <?= $w['is_default'] ? ($isChinese ? '(默认)' : ' (Padrão)') : '' ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                <?php else: ?>
+                    <div
+                        style="background: rgba(15, 23, 42, 0.5); padding: 12px; border-radius: 8px; border: 1px dashed #334155; font-family: monospace; font-size: 13px; color: #818cf8; word-break: break-all; line-height: 1.4;">
+                        <?= session()->get('user_wallet') ?: ($isChinese ? '未注册' : 'Não cadastrada') ?>
+                    </div>
+                    <select id="wallet-selector" style="display: none;">
+                        <option value="<?= esc(session()->get('user_wallet') ?: '') ?>" selected></option>
+                    </select>
+                <?php endif; ?>
             </div>
 
 
@@ -904,13 +920,29 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             </div>
 
             <div style="margin-bottom: 20px;">
-                <label
-                    style="display: block; color: #94a3b8; font-size: 13px; font-weight: 500; margin-bottom: 8px;">Endereço
-                    da Carteira USDT (TRC-20)</label>
-                <div
-                    style="background: rgba(15, 23, 42, 0.5); padding: 12px; border-radius: 8px; border: 1px dashed #334155; font-family: monospace; font-size: 13px; color: #818cf8; word-break: break-all; line-height: 1.4;">
-                    <?= session()->get('user_wallet') ?: ($isChinese ? '未注册' : 'Não cadastrada') ?>
-                </div>
+                <label for="promo-wallet-selector"
+                    style="display: block; color: #94a3b8; font-size: 13px; font-weight: 500; margin-bottom: 8px;">
+                    <?= session()->get('user_lang') == 'zh-CN' ? 'USDT 接收钱包 (TRC-20)' : 'Carteira de Destino USDT (TRC-20)' ?>
+                </label>
+                <?php if (!empty($wallets)): ?>
+                    <select id="promo-wallet-selector"
+                        style="width: 100%; background: #0f172a; border: 1px solid #334155; padding: 12px; border-radius: 8px; color: white; font-size: 14px; font-family: monospace; outline: none; box-sizing: border-box; cursor: pointer;"
+                        onfocus="this.style.borderColor='#f43f5e'" onblur="this.style.borderColor='#334155'">
+                        <?php foreach ($wallets as $w): ?>
+                            <option value="<?= esc($w['address']) ?>" <?= $w['is_default'] ? 'selected' : '' ?>>
+                                <?= esc($w['address']) ?> <?= $w['is_default'] ? ($isChinese ? '(默认)' : ' (Padrão)') : '' ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                <?php else: ?>
+                    <div
+                        style="background: rgba(15, 23, 42, 0.5); padding: 12px; border-radius: 8px; border: 1px dashed #334155; font-family: monospace; font-size: 13px; color: #818cf8; word-break: break-all; line-height: 1.4;">
+                        <?= session()->get('user_wallet') ?: ($isChinese ? '未注册' : 'Não cadastrada') ?>
+                    </div>
+                    <select id="promo-wallet-selector" style="display: none;">
+                        <option value="<?= esc(session()->get('user_wallet') ?: '') ?>" selected></option>
+                    </select>
+                <?php endif; ?>
             </div>
 
             <div id="promo-usdt-input-group" style="margin-bottom: 20px;">
@@ -1868,6 +1900,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 btn.textContent = isChinese ? '处理中...' : 'Processando...';
                 btn.style.opacity = '0.7';
 
+                const selectedWallet = document.getElementById('wallet-selector')?.value || '';
                 try {
                     const response = await fetch('<?= url_to('chat_buy') ?>', {
                         method: 'POST',
@@ -1881,7 +1914,8 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                             amount_brl: amountBrl,
                             delivery_type: selectedDeliveryType,
                             input_mode: currentInputMode,
-                            promo_lot_id: activePromoLotId
+                            promo_lot_id: activePromoLotId,
+                            wallet_address: selectedWallet
                         })
                     });
 
@@ -1897,7 +1931,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                                                 `• *Total:* R$ ${amountBrl.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n` +
                                                 `• *Prazo:* ${selectedDeliveryType}\n` +
                                                 `• *Transação ID:* #${data.transaction_id}\n` +
-                                                `• *Minha Carteira:* <?= esc(session()->get('user_wallet') ?: '') ?>\n\n` +
+                                                `• *Minha Carteira:* ${selectedWallet}\n\n` +
                                                 `Pode prosseguir com a minha operação?`;
                             const encodedText = encodeURIComponent(messageText);
                             window.open(`https://wa.me/${operatorWhatsapp}?text=${encodedText}`, '_blank');
@@ -1938,6 +1972,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 btn.textContent = isChinese ? '处理中...' : 'Processando...';
                 btn.style.opacity = '0.7';
 
+                const selectedWallet = document.getElementById('promo-wallet-selector')?.value || '';
                 try {
                     const response = await fetch('<?= url_to('chat_buy') ?>', {
                         method: 'POST',
@@ -1951,7 +1986,8 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                             amount_brl: brlAmount,
                             delivery_type: activePromoDelivery,
                             input_mode: 'usdt',
-                            promo_lot_id: activePromoLotId
+                            promo_lot_id: activePromoLotId,
+                            wallet_address: selectedWallet
                         })
                     });
 
@@ -1967,7 +2003,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                                                 `• *Total:* R$ ${brlAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n` +
                                                 `• *Prazo:* ${activePromoDelivery}\n` +
                                                 `• *Transação ID:* #${data.transaction_id}\n` +
-                                                `• *Minha Carteira:* <?= esc(session()->get('user_wallet') ?: '') ?>\n\n` +
+                                                `• *Minha Carteira:* ${selectedWallet}\n\n` +
                                                 `Pode prosseguir com a minha operação?`;
                             const encodedText = encodeURIComponent(messageText);
                             window.open(`https://wa.me/${operatorWhatsapp}?text=${encodedText}`, '_blank');
