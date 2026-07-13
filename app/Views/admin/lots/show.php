@@ -40,22 +40,22 @@
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:28px;">
     <div class="card" style="padding:18px;text-align:center;">
         <p style="font-size:11px;color:#64748b;text-transform:uppercase;margin-bottom:6px;">Comprado</p>
-        <p style="font-size:20px;font-weight:700;color:white;"><?= number_format((float)$lot['usdt_amount'], 2, ',', '.') ?></p>
+        <p style="font-size:20px;font-weight:700;color:white;"><?= number_format((float)$lot['usdt_amount'], 2, '.', ',') ?></p>
         <p style="font-size:11px;color:#64748b;">USDT</p>
     </div>
     <div class="card" style="padding:18px;text-align:center;">
         <p style="font-size:11px;color:#64748b;text-transform:uppercase;margin-bottom:6px;">Reservado</p>
-        <p style="font-size:20px;font-weight:700;color:#fbbf24;"><?= number_format((float)$lot['usdt_reserved'], 2, ',', '.') ?></p>
+        <p style="font-size:20px;font-weight:700;color:#fbbf24;"><?= number_format((float)$lot['usdt_reserved'], 2, '.', ',') ?></p>
         <p style="font-size:11px;color:#64748b;">USDT</p>
     </div>
     <div class="card" style="padding:18px;text-align:center;">
         <p style="font-size:11px;color:#64748b;text-transform:uppercase;margin-bottom:6px;">Entregue</p>
-        <p style="font-size:20px;font-weight:700;color:#34d399;"><?= number_format((float)$lot['usdt_delivered'], 2, ',', '.') ?></p>
+        <p style="font-size:20px;font-weight:700;color:#34d399;"><?= number_format((float)$lot['usdt_delivered'], 2, '.', ',') ?></p>
         <p style="font-size:11px;color:#64748b;">USDT</p>
     </div>
     <div class="card" style="padding:18px;text-align:center;">
         <p style="font-size:11px;color:#64748b;text-transform:uppercase;margin-bottom:6px;">Disponível</p>
-        <p style="font-size:20px;font-weight:700;color:#60a5fa;"><?= number_format($available, 2, ',', '.') ?></p>
+        <p style="font-size:20px;font-weight:700;color:#60a5fa;"><?= number_format($available, 2, '.', ',') ?></p>
         <p style="font-size:11px;color:#64748b;">USDT</p>
     </div>
     <div class="card" style="padding:18px;text-align:center;">
@@ -161,7 +161,7 @@
                             </a>
                         </td>
                         <td style="padding:12px 18px;font-size:13px;color:#94a3b8;"><?= esc($alloc['client_name'] ?? '—') ?></td>
-                        <td style="padding:12px 18px;text-align:right;font-size:13px;font-weight:600;color:white;"><?= number_format((float)$alloc['usdt_amount'], 2, ',', '.') ?></td>
+                        <td style="padding:12px 18px;text-align:right;font-size:13px;font-weight:600;color:white;"><?= number_format((float)$alloc['usdt_amount'], 2, '.', ',') ?></td>
                         <td style="padding:12px 18px;">
                             <span style="font-size:11px;padding:3px 10px;border-radius:20px;font-weight:700;background:<?= $aColor ?>22;color:<?= $aColor ?>;"><?= $aLabel ?></span>
                         </td>

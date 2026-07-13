@@ -887,7 +887,7 @@ class AdminController extends BaseController
             }
             if ($amountUsdt > $absoluteMax + 0.009) {
                 $db->transRollback();
-                return redirect()->back()->with('error', 'O valor informado (' . number_format($amountUsdt, 2, ',', '.') . ' USDT) excede o saldo total pendente do cliente (' . number_format($absoluteMax, 2, ',', '.') . ' USDT).');
+                return redirect()->back()->with('error', 'O valor informado (' . number_format($amountUsdt, 2, '.', ',') . ' USDT) excede o saldo total pendente do cliente (' . number_format($absoluteMax, 2, '.', ',') . ' USDT).');
             }
 
             $remaining = $amountUsdt;
@@ -960,13 +960,13 @@ class AdminController extends BaseController
         }
 
         $parts = array_map(
-            fn($cid) => '#' . $cid . ': ' . number_format($deliveredByContract[$cid], 2, ',', '.'),
+            fn($cid) => '#' . $cid . ': ' . number_format($deliveredByContract[$cid], 2, '.', ','),
             array_keys($deliveredByContract)
         );
         $total = round(array_sum($deliveredByContract), 2);
 
         return redirect()->back()->with('success',
-            'Envio de ' . number_format($total, 2, ',', '.') . ' USDT distribuído por maior lucro — ' . implode(' · ', $parts)
+            'Envio de ' . number_format($total, 2, '.', ',') . ' USDT distribuído por maior lucro — ' . implode(' · ', $parts)
         );
     }
 
@@ -1478,7 +1478,7 @@ class AdminController extends BaseController
             return redirect()->back()->with('error', 'Ocorreu um erro ao registrar a compra.');
         }
 
-        return redirect()->back()->with('success', 'Compra de ' . number_format($usdtAmount, 2, ',', '.') . ' USDT registrada com sucesso para o cliente ' . $user['login'] . '!');
+        return redirect()->back()->with('success', 'Compra de ' . number_format($usdtAmount, 2, '.', ',') . ' USDT registrada com sucesso para o cliente ' . $user['login'] . '!');
     }
 
     public function lockHeartbeat(int $id)
@@ -1586,7 +1586,9 @@ class AdminController extends BaseController
             
             $isBrl = in_array($row['operation_type'], ['adjustment_add', 'adjustment_subtract', 'partial_amortization', 'full_settlement', 'late_fee']);
             $unit = $isBrl ? 'R$' : 'USDT';
-            $formattedAmount = $unit . ' ' . number_format($row['amount'], 2, ',', '.');
+            $formattedAmount = $isBrl 
+                ? 'R$ ' . number_format($row['amount'], 2, ',', '.') 
+                : 'USDT ' . number_format($row['amount'], 2, '.', ',');
 
             fputcsv($output, [
                 $row['id'],
