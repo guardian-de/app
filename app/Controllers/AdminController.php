@@ -601,6 +601,7 @@ class AdminController extends BaseController
         $lotModel = new \App\Models\UsdtLotModel();
         $rawLots  = $lotModel->select('id, supplier, usdt_amount, usdt_reserved, usdt_delivered, conversion_rate, total_brl, status')
             ->where('status', 'active')
+            ->where('is_promotional', 0)
             ->orderBy('created_at', 'DESC')
             ->findAll();
         $availableLots = array_map(function ($lot) use ($lotModel) {
