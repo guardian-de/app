@@ -17,7 +17,12 @@ class ChatController extends BaseController
         $this->recordCurrentRate();
         
         $userModel = new \App\Models\UserModel();
-        $data['user'] = $userModel->find(session()->get('user_id'));
+        $user = $userModel->find(session()->get('user_id'));
+        if (!$user) {
+            session()->destroy();
+            return redirect()->to('/login');
+        }
+        $data['user'] = $user;
         
         $walletModel = new \App\Models\UserWalletModel();
         $userId = session()->get('user_id');
@@ -54,7 +59,12 @@ class ChatController extends BaseController
         $this->recordCurrentRate();
 
         $userModel = new \App\Models\UserModel();
-        $data['user'] = $userModel->find(session()->get('user_id'));
+        $user = $userModel->find(session()->get('user_id'));
+        if (!$user) {
+            session()->destroy();
+            return redirect()->to('/login');
+        }
+        $data['user'] = $user;
 
         $walletModel = new \App\Models\UserWalletModel();
         $userId = session()->get('user_id');
