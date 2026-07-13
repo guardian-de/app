@@ -767,6 +767,22 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
     </div>
 
     <!-- Modals -->
+    <?php
+        $defaultWalletAddress = null;
+        if (!empty($wallets)) {
+            foreach ($wallets as $w) {
+                if ($w['is_default']) {
+                    $defaultWalletAddress = $w['address'];
+                    break;
+                }
+            }
+            if (!$defaultWalletAddress) {
+                $defaultWalletAddress = $wallets[0]['address'];
+            }
+        } else {
+            $defaultWalletAddress = session()->get('user_wallet');
+        }
+    ?>
     <!-- Buy Modal -->
     <div id="buy-modal"
         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 5001; justify-content: center; align-items: center; padding: 20px;">
@@ -792,29 +808,14 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             </div>
 
             <div style="margin-bottom: 20px;">
-                <label for="wallet-selector"
-                    style="display: block; color: #94a3b8; font-size: 13px; font-weight: 500; margin-bottom: 8px;">
+                <label style="display: block; color: #94a3b8; font-size: 13px; font-weight: 500; margin-bottom: 8px;">
                     <?= session()->get('user_lang') == 'zh-CN' ? 'USDT 接收钱包 (TRC-20)' : 'Carteira de Destino USDT (TRC-20)' ?>
                 </label>
-                <?php if (!empty($wallets)): ?>
-                    <select id="wallet-selector"
-                        style="width: 100%; background: #0f172a; border: 1px solid #334155; padding: 12px; border-radius: 8px; color: white; font-size: 14px; font-family: monospace; outline: none; box-sizing: border-box; cursor: pointer;"
-                        onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#334155'">
-                        <?php foreach ($wallets as $w): ?>
-                            <option value="<?= esc($w['address']) ?>" <?= $w['is_default'] ? 'selected' : '' ?>>
-                                <?= esc($w['address']) ?> <?= $w['is_default'] ? ($isChinese ? '(默认)' : ' (Padrão)') : '' ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                <?php else: ?>
-                    <div
-                        style="background: rgba(15, 23, 42, 0.5); padding: 12px; border-radius: 8px; border: 1px dashed #334155; font-family: monospace; font-size: 13px; color: #818cf8; word-break: break-all; line-height: 1.4;">
-                        <?= session()->get('user_wallet') ?: ($isChinese ? '未注册' : 'Não cadastrada') ?>
-                    </div>
-                    <select id="wallet-selector" style="display: none;">
-                        <option value="<?= esc(session()->get('user_wallet') ?: '') ?>" selected></option>
-                    </select>
-                <?php endif; ?>
+                <div
+                    style="background: rgba(15, 23, 42, 0.5); padding: 12px; border-radius: 8px; border: 1px dashed #334155; font-family: monospace; font-size: 13px; color: #818cf8; word-break: break-all; line-height: 1.4;">
+                    <?= esc($defaultWalletAddress ?: ($isChinese ? '未注册' : 'Não cadastrada')) ?>
+                </div>
+                <input type="hidden" id="wallet-selector" value="<?= esc($defaultWalletAddress ?: '') ?>">
             </div>
 
 
@@ -920,29 +921,14 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             </div>
 
             <div style="margin-bottom: 20px;">
-                <label for="promo-wallet-selector"
-                    style="display: block; color: #94a3b8; font-size: 13px; font-weight: 500; margin-bottom: 8px;">
+                <label style="display: block; color: #94a3b8; font-size: 13px; font-weight: 500; margin-bottom: 8px;">
                     <?= session()->get('user_lang') == 'zh-CN' ? 'USDT 接收钱包 (TRC-20)' : 'Carteira de Destino USDT (TRC-20)' ?>
                 </label>
-                <?php if (!empty($wallets)): ?>
-                    <select id="promo-wallet-selector"
-                        style="width: 100%; background: #0f172a; border: 1px solid #334155; padding: 12px; border-radius: 8px; color: white; font-size: 14px; font-family: monospace; outline: none; box-sizing: border-box; cursor: pointer;"
-                        onfocus="this.style.borderColor='#f43f5e'" onblur="this.style.borderColor='#334155'">
-                        <?php foreach ($wallets as $w): ?>
-                            <option value="<?= esc($w['address']) ?>" <?= $w['is_default'] ? 'selected' : '' ?>>
-                                <?= esc($w['address']) ?> <?= $w['is_default'] ? ($isChinese ? '(默认)' : ' (Padrão)') : '' ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                <?php else: ?>
-                    <div
-                        style="background: rgba(15, 23, 42, 0.5); padding: 12px; border-radius: 8px; border: 1px dashed #334155; font-family: monospace; font-size: 13px; color: #818cf8; word-break: break-all; line-height: 1.4;">
-                        <?= session()->get('user_wallet') ?: ($isChinese ? '未注册' : 'Não cadastrada') ?>
-                    </div>
-                    <select id="promo-wallet-selector" style="display: none;">
-                        <option value="<?= esc(session()->get('user_wallet') ?: '') ?>" selected></option>
-                    </select>
-                <?php endif; ?>
+                <div
+                    style="background: rgba(15, 23, 42, 0.5); padding: 12px; border-radius: 8px; border: 1px dashed #334155; font-family: monospace; font-size: 13px; color: #818cf8; word-break: break-all; line-height: 1.4;">
+                    <?= esc($defaultWalletAddress ?: ($isChinese ? '未注册' : 'Não cadastrada')) ?>
+                </div>
+                <input type="hidden" id="promo-wallet-selector" value="<?= esc($defaultWalletAddress ?: '') ?>">
             </div>
 
             <div id="promo-usdt-input-group" style="margin-bottom: 20px;">
