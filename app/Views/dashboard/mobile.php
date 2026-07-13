@@ -1474,7 +1474,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                     const brl = getCleanBRL(document.getElementById('brl-amount').value) || 0;
                     const usdt = currentExchangeRate > 0 ? brl / currentExchangeRate : 0;
                     resultText.textContent = resultLabelDiv.dataset.labelBrl + ':';
-                    resultValue.textContent = `${usdt.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT`;
+                    resultValue.textContent = `${usdt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT`;
                 } else {
                     const usdt = getCleanUSDT(document.getElementById('usdt-amount').value) || 0;
                     const brl = usdt * currentExchangeRate;
@@ -1741,7 +1741,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
 
                 document.getElementById('promo-modal-rate').textContent = `R$ ${activePromoRate.toLocaleString('pt-BR', { minimumFractionDigits: 4 })}`;
                 document.getElementById('promo-delivery-display').textContent = activePromoDelivery.toUpperCase();
-                document.getElementById('promo-stock-display').textContent = (isChinese ? '库存: ' : 'Estoque: ') + activePromoStock.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' USDT';
+                document.getElementById('promo-stock-display').textContent = (isChinese ? '库存: ' : 'Estoque: ') + activePromoStock.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' USDT';
                 document.getElementById('promo-usdt-amount').value = '';
                 document.getElementById('promo-brl-result').textContent = 'R$ 0,00';
                 document.getElementById('promo-usdt-amount').style.borderColor = '#334155';
@@ -2045,7 +2045,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 let iconBg = 'rgba(59, 130, 246, 0.1)';
                 
                 const hasAmount = item.amount !== null && item.amount !== undefined && !isNaN(parseFloat(item.amount));
-                const amount = hasAmount ? parseFloat(item.amount).toLocaleString(isChinese ? 'en-US' : 'pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 }) : '';
+                const amount = hasAmount ? parseFloat(item.amount).toLocaleString(item.unit === 'USDT' ? 'en-US' : 'pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 }) : '';
                 const amountStr = hasAmount ? (item.unit === 'USDT' ? `${amount} USDT` : `R$ ${amount}`) : '';
 
                 if (item.operation_type === 'adjustment_add' || (item.operation_type === 'deposit' && item.description.includes('Ajuste'))) {
@@ -2233,7 +2233,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                     let iconBg = 'rgba(59, 130, 246, 0.1)';
                     
                     const hasAmount = item.amount !== null && item.amount !== undefined && !isNaN(parseFloat(item.amount));
-                    const amount = hasAmount ? parseFloat(item.amount).toLocaleString(isChinese ? 'en-US' : 'pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 }) : '';
+                    const amount = hasAmount ? parseFloat(item.amount).toLocaleString(item.unit === 'USDT' ? 'en-US' : 'pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 }) : '';
                     const amountStr = hasAmount ? (item.unit === 'USDT' ? `${amount} USDT` : `R$ ${amount}`) : '';
 
                     if (item.operation_type === 'adjustment_add' || (item.operation_type === 'deposit' && item.description.includes('Ajuste'))) {
@@ -2466,7 +2466,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                     if (item.amount === null) {
                         amountStr = item.ocr_status === 'processing' ? stmtLang.amountProcessing : stmtLang.amountUnidentified;
                     } else {
-                        const amount = parseFloat(item.amount).toLocaleString('pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 });
+                        const amount = parseFloat(item.amount).toLocaleString(item.unit === 'USDT' ? 'en-US' : 'pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 });
                         amountStr = item.unit === 'USDT' ? `${amount} USDT` : `R$ ${amount}`;
                     }
 
@@ -2474,7 +2474,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                     if (item.operation_type === 'margin_lock') {
                         const parts = [];
                         if (item.usdt_amount != null) {
-                            const usdtVal = parseFloat(item.usdt_amount).toLocaleString('pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 });
+                            const usdtVal = parseFloat(item.usdt_amount).toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
                             parts.push(`<div>${stmtLang.usdtLabel}: ${usdtVal} USDT</div>`);
                         }
                         if (item.spot_rate != null) {
@@ -2604,7 +2604,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                     const isChinese = <?= $isChinese ? 'true' : 'false' ?>;
                     lots.forEach(lot => {
                         const rate = parseFloat(lot.conversion_rate).toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
-                        const available = parseFloat(lot.usdt_available).toLocaleString(isChinese ? 'en-US' : 'pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        const available = parseFloat(lot.usdt_available).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                         const deliveryStr = lot.delivery_type ? ` [${lot.delivery_type.toUpperCase()}]` : '';
                         
                         html += `
@@ -2654,7 +2654,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                         localStorage.setItem('alerted_promo_lots', JSON.stringify(alerted));
                         
                         const rate = parseFloat(newLotToAlert.conversion_rate).toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
-                        const available = parseFloat(newLotToAlert.usdt_available).toLocaleString(isChinese ? 'en-US' : 'pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        const available = parseFloat(newLotToAlert.usdt_available).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                         const deliveryStr = newLotToAlert.delivery_type ? ` [${newLotToAlert.delivery_type.toUpperCase()}]` : '';
 
                         document.getElementById('alert-notif-title').textContent = isChinese ? '新促销活动可用！' : 'Novo Lote Promocional!';
@@ -2771,8 +2771,9 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                     debtsData = await response.json();
                 }
                 const fmt = v => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const fmtUsdt = v => v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 document.getElementById('stmt-pos-brl').textContent  = 'R$ ' + fmt(debtsData.todos.total_brl_owed);
-                document.getElementById('stmt-pos-usdt').textContent = fmt(debtsData.todos.total_usdt_owed) + ' USDT';
+                document.getElementById('stmt-pos-usdt').textContent = fmtUsdt(debtsData.todos.total_usdt_owed) + ' USDT';
             } catch (e) {}
         }
 

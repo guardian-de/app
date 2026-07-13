@@ -702,7 +702,7 @@
                 const brl = getCleanBRL(document.getElementById('brl-amount').value) || 0;
                 const usdt = currentExchangeRate > 0 ? brl / currentExchangeRate : 0;
                 resultText.textContent = resultLabelDiv.dataset.labelBrl + ':';
-                resultValue.textContent = `${usdt.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT`;
+                resultValue.textContent = `${usdt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT`;
             } else {
                 const usdt = getCleanUSDT(document.getElementById('usdt-amount').value) || 0;
                 const brl = usdt * currentExchangeRate;

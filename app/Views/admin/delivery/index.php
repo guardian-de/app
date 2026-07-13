@@ -113,18 +113,18 @@
 
             <!-- A enviar (USDT) -->
             <td style="padding:8px 12px; text-align:right; white-space:nowrap;">
-                <div style="font-family:monospace; font-size:14px; font-weight:800; color:#c084fc;"><?= number_format((float)$g['pending_usdt'], 2, ',', '.') ?></div>
+                <div style="font-family:monospace; font-size:14px; font-weight:800; color:#c084fc;"><?= number_format((float)$g['pending_usdt'], 2, '.', ',') ?></div>
                 <?php if((float)$g['unlinked_usdt'] > 0): ?>
                     <div style="margin-top:3px; display:inline-flex; align-items:center; gap:3px; font-size:10px; font-weight:700; color:#fb923c; background:rgba(251,146,60,0.12); border:1px solid rgba(251,146,60,0.3); padding:1px 6px; border-radius:4px;" title="USDT sem lote de fornecedor associado">
-                        ⚠ <?= number_format((float)$g['unlinked_usdt'], 2, ',', '.') ?> sem lote
+                        ⚠ <?= number_format((float)$g['unlinked_usdt'], 2, '.', ',') ?> sem lote
                     </div>
                 <?php endif; ?>
             </td>
 
             <!-- Enviado / Total USDT -->
             <td style="padding:8px 12px; text-align:right; white-space:nowrap;">
-                <div style="font-family:monospace; font-size:12px; font-weight:600; color:#34d399;"><?= number_format((float)$g['delivered_usdt'], 2, ',', '.') ?></div>
-                <div style="font-size:10px; color:#475569; margin-top:1px;"><?= number_format((float)$g['total_amount'], 2, ',', '.') ?></div>
+                <div style="font-family:monospace; font-size:12px; font-weight:600; color:#34d399;"><?= number_format((float)$g['delivered_usdt'], 2, '.', ',') ?></div>
+                <div style="font-size:10px; color:#475569; margin-top:1px;"><?= number_format((float)$g['total_amount'], 2, '.', ',') ?></div>
             </td>
 
             <!-- Carteira -->

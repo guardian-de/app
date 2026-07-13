@@ -201,7 +201,7 @@
                                 <div>
                                     <p style="font-size:13px;font-weight:600;color:white;margin:0;"><?= esc($alloc['supplier']) ?> — Lote #<?= $alloc['lot_id'] ?></p>
                                     <p style="font-size:11px;color:#64748b;margin:2px 0 0;">
-                                        <?= number_format((float)$alloc['usdt_amount'], 4, ',', '.') ?> USDT
+                                        <?= number_format((float)$alloc['usdt_amount'], 4, '.', ',') ?> USDT
                                         <?php if ($alloc['delivery_type']): ?> · <?= strtoupper($alloc['delivery_type']) ?><?php endif; ?>
                                     </p>
                                 </div>

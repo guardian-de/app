@@ -36,15 +36,15 @@
     </div>
     <div class="card" style="padding:18px;text-align:center;">
         <p style="font-size:11px;color:#64748b;text-transform:uppercase;margin-bottom:6px;">Total Comprado</p>
-        <p style="font-size:22px;font-weight:700;color:#60a5fa;"><?= number_format((float)($summary['total_usdt'] ?? 0), 2, ',', '.') ?> USDT</p>
+        <p style="font-size:22px;font-weight:700;color:#60a5fa;"><?= number_format((float)($summary['total_usdt'] ?? 0), 2, '.', ',') ?> USDT</p>
     </div>
     <div class="card" style="padding:18px;text-align:center;">
         <p style="font-size:11px;color:#64748b;text-transform:uppercase;margin-bottom:6px;">Total Entregue</p>
-        <p style="font-size:22px;font-weight:700;color:#34d399;"><?= number_format((float)($summary['total_delivered'] ?? 0), 2, ',', '.') ?> USDT</p>
+        <p style="font-size:22px;font-weight:700;color:#34d399;"><?= number_format((float)($summary['total_delivered'] ?? 0), 2, '.', ',') ?> USDT</p>
     </div>
     <div class="card" style="padding:18px;text-align:center;">
         <p style="font-size:11px;color:#64748b;text-transform:uppercase;margin-bottom:6px;">Reservado</p>
-        <p style="font-size:22px;font-weight:700;color:#fbbf24;"><?= number_format((float)($summary['total_reserved'] ?? 0), 2, ',', '.') ?> USDT</p>
+        <p style="font-size:22px;font-weight:700;color:#fbbf24;"><?= number_format((float)($summary['total_reserved'] ?? 0), 2, '.', ',') ?> USDT</p>
     </div>
     <div class="card" style="padding:18px;text-align:center;">
         <p style="font-size:11px;color:#64748b;text-transform:uppercase;margin-bottom:6px;">Lucro Total</p>
@@ -187,9 +187,9 @@
                                     <span style="color:#475569;font-size:12px;">—</span>
                                 <?php endif; ?>
                             </td>
-                            <td style="padding:14px 20px;text-align:right;font-size:13px;color:white;"><?= number_format((float)$lot['usdt_amount'], 2, ',', '.') ?></td>
-                            <td style="padding:14px 20px;text-align:right;font-size:13px;color:#fbbf24;"><?= number_format((float)$lot['usdt_reserved'], 2, ',', '.') ?></td>
-                            <td style="padding:14px 20px;text-align:right;font-size:13px;color:#34d399;"><?= number_format((float)$lot['usdt_delivered'], 2, ',', '.') ?></td>
+                            <td style="padding:14px 20px;text-align:right;font-size:13px;color:white;"><?= number_format((float)$lot['usdt_amount'], 2, '.', ',') ?></td>
+                            <td style="padding:14px 20px;text-align:right;font-size:13px;color:#fbbf24;"><?= number_format((float)$lot['usdt_reserved'], 2, '.', ',') ?></td>
+                            <td style="padding:14px 20px;text-align:right;font-size:13px;color:#34d399;"><?= number_format((float)$lot['usdt_delivered'], 2, '.', ',') ?></td>
                             <td style="padding:14px 20px;text-align:right;font-size:13px;color:#94a3b8;">R$ <?= number_format((float)$lot['conversion_rate'], 4, ',', '.') ?></td>
                             <td style="padding:14px 20px;">
                                 <span style="font-size:11px;padding:3px 10px;border-radius:20px;font-weight:700;background:<?= $statusColor ?>22;color:<?= $statusColor ?>;"><?= $statusLabel ?></span>

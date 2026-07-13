@@ -735,7 +735,7 @@ $adminAlertSound = $settingsModel->getConfig('admin_alert_sound', 'chime_premium
                 let badgeText = tx.delivery_type || "Transação";
                 let iconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>`;
 
-                const amountUsdtFormatted = parseFloat(tx.amount_usdt).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                const amountUsdtFormatted = parseFloat(tx.amount_usdt).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 const amountBrlFormatted = parseFloat(tx.amount_brl).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
 
                 if (tx.type === 'buy') {
@@ -815,7 +815,7 @@ $adminAlertSound = $settingsModel->getConfig('admin_alert_sound', 'chime_premium
                             <p class="toast-details">
                                 ${tx.type === 'deposit'
                                     ? `<span class="toast-brl">R$ ${parseFloat(tx.amount_brl).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>`
-                                    : `<span class="toast-usdt">${parseFloat(tx.amount_usdt).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} USDT</span>
+                                    : `<span class="toast-usdt">${parseFloat(tx.amount_usdt).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT</span>
                                        <span class="toast-arrow">➔</span>
                                        <span class="toast-brl">R$ ${parseFloat(tx.amount_brl).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>`}
                             </p>

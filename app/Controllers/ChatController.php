@@ -306,9 +306,9 @@ class ChatController extends BaseController
             $sum = $transactionModel->where('user_id', $userId)->where('status', 'completed')->selectSum('amount_usdt')->first();
             $bal = (float)($sum['amount_usdt'] ?? 0);
             if ($userLang == 'zh-CN') {
-                $reply = "您的当前余额为 " . number_format($bal, 2) . " USDT。";
+                $reply = "您的当前余额为 " . number_format($bal, 2, '.', ',') . " USDT。";
             } else {
-                $reply = "Seu saldo atual é de " . number_format($bal, 2, ',', '.') . " USDT.";
+                $reply = "Seu saldo atual é de " . number_format($bal, 2, '.', ',') . " USDT.";
             }
             $chatMsgModel->save(['user_id' => $userId, 'sender' => 'bot', 'message' => $reply]);
             return $this->response->setJSON(['reply' => $reply]);
@@ -326,9 +326,9 @@ class ChatController extends BaseController
             foreach ($contracts as $c) { $totalDebt += $c['remaining_balance']; }
 
             if ($userLang == 'zh-CN') {
-                $reply = "您的待付余额为 " . number_format($totalDebt, 2) . " USDT。您有 " . count($contracts) . " 个开放合同。";
+                $reply = "您的待付余额为 R$ " . number_format($totalDebt, 2, ',', '.') . "。您有 " . count($contracts) . " 个开放合同。";
             } else {
-                $reply = "Seu saldo devedor atual é de " . number_format($totalDebt, 2, ',', '.') . " USDT. Você possui " . count($contracts) . " contrato(s) em aberto.";
+                $reply = "Seu saldo devedor atual é de R$ " . number_format($totalDebt, 2, ',', '.') . ". Você possui " . count($contracts) . " contrato(s) em aberto.";
             }
             $chatMsgModel->save(['user_id' => $userId, 'sender' => 'bot', 'message' => $reply]);
             return $this->response->setJSON(['reply' => $reply]);
@@ -369,9 +369,9 @@ class ChatController extends BaseController
             if ($amount > 0 && $rate) {
                 $usdt = $amount / $rate;
                 if ($userLang == 'zh-CN') {
-                    $reply = "计算如下：R$ " . number_format($amount, 2, ',', '.') . " / R$ " . number_format($rate, 4, ',', '.') . " (汇率) = " . number_format($usdt, 2) . " USDT。";
+                    $reply = "计算如下：R$ " . number_format($amount, 2, ',', '.') . " / R$ " . number_format($rate, 4, ',', '.') . " (汇率) = " . number_format($usdt, 2, '.', ',') . " USDT。";
                 } else {
-                    $reply = "O cálculo é: R$ " . number_format($amount, 2, ',', '.') . " / R$ " . number_format($rate, 4, ',', '.') . " (cotação) = " . number_format($usdt, 2, ',', '.') . " USDT.";
+                    $reply = "O cálculo é: R$ " . number_format($amount, 2, ',', '.') . " / R$ " . number_format($rate, 4, ',', '.') . " (cotação) = " . number_format($usdt, 2, '.', ',') . " USDT.";
                 }
                 
                 $finalResponse = [
@@ -412,9 +412,9 @@ class ChatController extends BaseController
             $sum = $transactionModel->where('user_id', $userId)->where('status', 'pending')->selectSum('amount_usdt')->first();
             $pend = (float)($sum['amount_usdt'] ?? 0);
             if ($userLang == 'zh-CN') {
-                $reply = "您有 " . number_format($pend, 2) . " USDT 待处理。一旦管理员批准，它将记入您的余额。";
+                $reply = "您有 " . number_format($pend, 2, '.', ',') . " USDT 待处理。一旦管理员批准，它将记入您的余额。";
             } else {
-                $reply = "Você tem " . number_format($pend, 2, ',', '.') . " USDT pendentes para receber. Assim que o administrador aprovar, o valor cairá no seu saldo.";
+                $reply = "Você tem " . number_format($pend, 2, '.', ',') . " USDT pendentes para receber. Assim que o administrador aprovar, o valor cairá no seu saldo.";
             }
             $chatMsgModel->save(['user_id' => $userId, 'sender' => 'bot', 'message' => $reply]);
             return $this->response->setJSON(['reply' => $reply]);
@@ -1103,14 +1103,15 @@ class ChatController extends BaseController
 
                 $label = $typeLabels[$item['operation_type']] ?? $item['operation_type'];
                 $dateStr = date('d/m/Y H:i', strtotime($item['transaction_date']));
-                $amount = number_format($item['amount'], 2, ',', '.');
-                $amountStr = $item['unit'] === 'USDT' ? $amount . ' USDT' : 'R$ ' . $amount;
+                $isUsdt = ($item['unit'] === 'USDT');
+                $amount = $isUsdt ? number_format($item['amount'], 2, '.', ',') : number_format($item['amount'], 2, ',', '.');
+                $amountStr = $isUsdt ? $amount . ' USDT' : 'R$ ' . $amount;
 
                 $details = '';
                 if ($item['operation_type'] === 'margin_lock') {
                     $parts = [];
                     if ($item['usdt_amount'] != null) {
-                        $parts[] = 'USDT: ' . number_format($item['usdt_amount'], 2, ',', '.') . ' USDT';
+                        $parts[] = 'USDT: ' . number_format($item['usdt_amount'], 2, '.', ',') . ' USDT';
                     }
                     if ($item['spot_rate'] != null) {
                         $parts[] = 'Cotação: R$ ' . number_format($item['spot_rate'], 4, ',', '.');
