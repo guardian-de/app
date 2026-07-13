@@ -136,6 +136,7 @@ class ContractModel extends Model
                 c.*,
                 u.login       AS user_name,
                 u.usdt_wallet,
+                t.wallet_address AS requested_wallet,
                 COALESCE(fs_delivered.fs_total, 0)  AS fs_delivered_usdt,
                 CASE
                     WHEN c.total_brl > 0
@@ -184,6 +185,7 @@ class ContractModel extends Model
                 2) AS est_profit_brl
             FROM contracts c
             INNER JOIN users u ON u.id = c.user_id
+            LEFT JOIN transactions t ON t.id = c.transaction_id
             LEFT JOIN (
                 SELECT contract_id, SUM(amount) AS fs_total
                 FROM financial_statements

@@ -56,10 +56,42 @@
                     style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none;">
             </div>
 
-            <div class="form-group">
-                <label for="usdt_wallet" style="display: block; color: #94a3b8; font-size: 12px; font-weight: 600; margin-bottom: 8px;">Carteira USDT (TRC-20)</label>
-                <input id="usdt_wallet" type="text" name="usdt_wallet" value="<?= old('usdt_wallet', $user['usdt_wallet']) ?>"
-                    style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none;">
+            <div class="form-group" style="border: 1px solid rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; background: rgba(255,255,255,0.01);">
+                <label style="display: block; color: #94a3b8; font-size: 12px; font-weight: 600; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Carteiras USDT (TRC-20)</label>
+                
+                <div id="wallets-container" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;">
+                    <?php if (!empty($wallets)): ?>
+                        <?php foreach ($wallets as $index => $w): ?>
+                            <div class="wallet-row" style="display: flex; align-items: center; gap: 12px;">
+                                <input type="radio" name="default_wallet" value="<?= esc($w['address']) ?>" <?= $w['is_default'] ? 'checked' : '' ?> title="Definir como padrão" style="width: 18px; height: 18px; cursor: pointer; accent-color: #3b82f6;">
+                                <input type="text" name="wallets[]" value="<?= esc($w['address']) ?>" placeholder="Endereço da carteira USDT" required
+                                    style="flex: 1; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none; font-family: monospace;"
+                                    oninput="updateRadioValue(this)">
+                                <button type="button" onclick="removeWalletRow(this)"
+                                    style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171; border-radius: 10px; padding: 12px 16px; cursor: pointer; font-weight: 600; transition: all 0.2s;">
+                                    Remover
+                                </button>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div class="wallet-row" style="display: flex; align-items: center; gap: 12px;">
+                            <input type="radio" name="default_wallet" value="" checked title="Definir como padrão" style="width: 18px; height: 18px; cursor: pointer; accent-color: #3b82f6;">
+                            <input type="text" name="wallets[]" value="" placeholder="Endereço da carteira USDT" required
+                                style="flex: 1; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none; font-family: monospace;"
+                                oninput="updateRadioValue(this)">
+                            <button type="button" onclick="removeWalletRow(this)"
+                                style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171; border-radius: 10px; padding: 12px 16px; cursor: pointer; font-weight: 600; transition: all 0.2s;">
+                                Remover
+                            </button>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <button type="button" onclick="addWalletRow()" class="btn"
+                    style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); font-size: 13px; font-weight: 600; padding: 10px 20px; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    Adicionar Carteira
+                </button>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
@@ -176,6 +208,46 @@ function toggleFields() {
                 input.setAttribute('required', 'required');
             }
         });
+    }
+}
+
+function updateRadioValue(input) {
+    const row = input.closest('.wallet-row');
+    const radio = row.querySelector('input[type="radio"]');
+    radio.value = input.value;
+}
+
+function removeWalletRow(button) {
+    const container = document.getElementById('wallets-container');
+    if (container.querySelectorAll('.wallet-row').length > 1) {
+        button.closest('.wallet-row').remove();
+    } else {
+        alert('O usuário deve possuir pelo menos uma carteira cadastrada.');
+    }
+}
+
+function addWalletRow() {
+    const container = document.getElementById('wallets-container');
+    const div = document.createElement('div');
+    div.className = 'wallet-row';
+    div.style.display = 'flex';
+    div.style.alignItems = 'center';
+    div.style.gap = '12px';
+    div.innerHTML = `
+        <input type="radio" name="default_wallet" value="" title="Definir como padrão" style="width: 18px; height: 18px; cursor: pointer; accent-color: #3b82f6;">
+        <input type="text" name="wallets[]" value="" placeholder="Endereço da carteira USDT" required
+            style="flex: 1; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none; font-family: monospace;"
+            oninput="updateRadioValue(this)">
+        <button type="button" onclick="removeWalletRow(this)"
+            style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171; border-radius: 10px; padding: 12px 16px; cursor: pointer; font-weight: 600; transition: all 0.2s;">
+            Remover
+        </button>
+    `;
+    container.appendChild(div);
+    
+    const radios = container.querySelectorAll('input[type="radio"]');
+    if (radios.length === 1) {
+        radios[0].checked = true;
     }
 }
 

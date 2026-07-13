@@ -55,7 +55,7 @@ class UsdtLotModel extends Model
         ]);
     }
 
-    public function getSummary(): array
+    public function getSummary(bool $isPromotional = false): array
     {
         $db  = \Config\Database::connect();
         $row = $db->query("
@@ -66,7 +66,8 @@ class UsdtLotModel extends Model
                 COALESCE(SUM(usdt_reserved), 0)  AS total_reserved,
                 COALESCE(SUM(profit_brl), 0)     AS total_profit
             FROM usdt_lots
-        ")->getRow();
+            WHERE is_promotional = ?
+        ", [$isPromotional ? 1 : 0])->getRow();
 
         return $row ? (array)$row : [];
     }

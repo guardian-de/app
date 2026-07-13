@@ -92,7 +92,7 @@
                 <p style="font-size: 12px; color: #94a3b8; text-transform: uppercase;">Carteira do Cliente (TRC-20)</p>
                 <p
                     style="font-size: 14px; font-family: monospace; color: #818cf8; word-break: break-all; background: rgba(129, 140, 248, 0.05); padding: 10px; border-radius: 8px; border: 1px dashed rgba(129, 140, 248, 0.2);">
-                    <?= $c['usdt_wallet'] ?: 'Não informada' ?>
+                    <?= $c['requested_wallet'] ?: ($c['usdt_wallet'] ?: 'Não informada') ?>
                 </p>
             </div>
         </div>
@@ -145,14 +145,14 @@
                     <div style="display: grid; grid-template-columns: 1fr 150px; gap: 15px; align-items: flex-end;">
                         <div style="flex: 1;">
                             <label for="usdt-pay-input" style="display: block; font-size: 12px; color: #94a3b8; margin-bottom: 8px;">Valor USDT Enviado</label>
-                            <input type="number" name="amount_usdt" step="0.01" id="usdt-pay-input"
-                                placeholder="Ex: <?= number_format($usdtPending, 2, '.', '') ?>"
-                                max="<?= max(0, (float)($c['total_amount'] - $c['delivered_usdt'])) ?>"
+                            <input type="text" inputmode="numeric" id="usdt-pay-input"
+                                placeholder="Ex: <?= number_format($usdtPending, 2, '.', ',') ?>"
                                 style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 12px; color: white;"
                                 required>
+                            <input type="hidden" name="amount_usdt" id="usdt-pay-input-clean">
                         </div>
                         <button type="button"
-                            onclick="document.getElementById('usdt-pay-input').value = '<?= $usdtPending ?>'"
+                            onclick="const val = '<?= $usdtPending ?>'; document.getElementById('usdt-pay-input').value = formatUSDTMask(parseFloat(val).toFixed(2)); document.getElementById('usdt-pay-input-clean').value = val;"
                             class="btn"
                             style="background: rgba(52, 211, 153, 0.1); color: #34d399; border: 1px solid #34d399; height: 45px; width: 100%; justify-content: center;">Total</button>
                     </div>
@@ -368,6 +368,64 @@
 </style>
 
 <script>
+    function formatUSDTMask(value) {
+        let clean = value.replace(/\D/g, '');
+        if (!clean || clean === '00' || clean === '0') return '';
+        clean = clean.replace(/^0+/, '');
+        if (clean.length < 3) {
+            clean = clean.padStart(3, '0');
+        }
+        let cents = parseInt(clean, 10);
+        if (isNaN(cents)) return '';
+        let val = (cents / 100).toFixed(2);
+        let parts = val.split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        return parts.join('.');
+    }
+
+    function getCleanUSDT(value) {
+        let clean = value.replace(/,/g, '');
+        return parseFloat(clean) || 0;
+    }
+
+    function formatBRLMask(value) {
+        let clean = value.replace(/\D/g, '');
+        if (!clean || clean === '00' || clean === '0') return '';
+        clean = clean.replace(/^0+/, '');
+        if (clean.length < 3) {
+            clean = clean.padStart(3, '0');
+        }
+        let cents = parseInt(clean, 10);
+        if (isNaN(cents)) return '';
+        let val = (cents / 100).toFixed(2);
+        let parts = val.split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        return parts.join(',');
+    }
+
+    function getCleanBRL(value) {
+        let clean = value.replace(/\./g, '').replace(',', '.');
+        return parseFloat(clean) || 0;
+    }
+
+    function formatRateMask(value) {
+        let clean = value.replace(/[^0-9.,]/g, '');
+        clean = clean.replace(/\./g, ',');
+        let parts = clean.split(',');
+        if (parts.length > 2) {
+            clean = parts[0] + ',' + parts.slice(1).join('');
+        }
+        if (parts[1] && parts[1].length > 4) {
+            clean = parts[0] + ',' + parts[1].substring(0, 4);
+        }
+        return clean;
+    }
+
+    function getCleanRate(value) {
+        let clean = value.replace(/[^0-9,]/g, '').replace(',', '.');
+        return parseFloat(clean) || 0;
+    }
+
     // Validação Envio USDT
     const usdtForm = document.querySelector('form[action*="deliver-usdt"]');
     const usdtInput = document.getElementById('usdt-pay-input');
@@ -378,7 +436,7 @@
 
     if (usdtForm) {
         usdtForm.onsubmit = function (e) {
-            const value = parseFloat(usdtInput.value);
+            const value = getCleanUSDT(usdtInput.value);
             if (value > maxUsdt) {
                 e.preventDefault();
                 alert('O valor do envio (' + value.toFixed(2) + ' USDT) não pode ser superior ao saldo restante ( ' + maxUsdt.toFixed(2) + ' USDT).');
@@ -548,13 +606,12 @@
             <div style="margin-bottom:20px;">
                 <label style="display:block;font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Quantidade USDT a alocar</label>
                 <div style="display:flex;gap:10px;align-items:center;">
-                    <input type="number" id="modal-usdt-amount" step="0.0001" min="0.0001"
-                        max="${maxAlloc}"
-                        placeholder="0.0000"
-                        oninput="updateProfitPreview()"
+                    <input type="text" id="modal-usdt-amount" inputmode="numeric"
+                        placeholder="0.00"
+                        oninput="this.value = formatUSDTMask(this.value); updateProfitPreview();"
                         style="flex:1;padding:14px 16px;background:#0f172a;border:1px solid #334155;border-radius:12px;color:white;font-size:16px;font-weight:600;outline:none;transition:border-color 0.2s;"
                         onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#334155'">
-                    <button onclick="document.getElementById('modal-usdt-amount').value='${maxAlloc}';updateProfitPreview();"
+                    <button onclick="document.getElementById('modal-usdt-amount').value=formatUSDTMask(parseFloat('${maxAlloc}').toFixed(2));updateProfitPreview();"
                         style="padding:10px 16px;background:rgba(52,211,153,0.1);color:#34d399;border:1px solid rgba(52,211,153,0.3);border-radius:10px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">
                         Tudo
                     </button>
@@ -597,7 +654,7 @@
         setTimeout(() => {
             const input = document.getElementById('modal-usdt-amount');
             if (!input) return;
-            input.value = maxAlloc.toFixed(4);
+            input.value = formatUSDTMask(maxAlloc.toFixed(2));
             input.focus();
             updateProfitPreview();
         }, 50);
@@ -605,7 +662,7 @@
 
     function updateProfitPreview() {
         const lot = selectedLot;
-        const amount = parseFloat(document.getElementById('modal-usdt-amount')?.value) || 0;
+        const amount = getCleanUSDT(document.getElementById('modal-usdt-amount')?.value) || 0;
         if (!lot) return;
 
         const margin = contractRevenuePerUsdt > 0 ? contractRevenuePerUsdt - lot.cost_per_usdt : null;
@@ -632,7 +689,7 @@
 
     function confirmAllocation() {
         const lot = selectedLot;
-        const amount = parseFloat(document.getElementById('modal-usdt-amount')?.value);
+        const amount = getCleanUSDT(document.getElementById('modal-usdt-amount')?.value);
         const errEl = document.getElementById('modal-usdt-error');
         errEl.style.display = 'none';
 
@@ -713,8 +770,8 @@
         const retro   = isRetroactiveAllocation();
         const prefill = retro ? contractUnlinkedDelivered : quickBuyUsdt;
 
-        document.getElementById('qb-usdt').value    = prefill > 0 ? prefill.toFixed(4) : '';
-        document.getElementById('qb-rate').value    = quickBuyBaseRate > 0 ? quickBuyBaseRate.toFixed(4) : '';
+        document.getElementById('qb-usdt').value    = prefill > 0 ? formatUSDTMask(prefill.toFixed(2)) : '';
+        document.getElementById('qb-rate').value    = quickBuyBaseRate > 0 ? formatRateMask(quickBuyBaseRate.toFixed(4)) : '';
         document.getElementById('qb-supplier').value = '';
         document.getElementById('qb-error').style.display = 'none';
         document.getElementById('qb-retro-note').style.display = retro ? 'block' : 'none';
@@ -729,11 +786,11 @@
     document.getElementById('quick-buy-modal')?.addEventListener('click', e => { if (e.target === e.currentTarget) closeQuickBuyModal(); });
 
     function qbRecalc() {
-        const usdt  = parseFloat(document.getElementById('qb-usdt').value)  || 0;
-        const rate  = parseFloat(document.getElementById('qb-rate').value)  || 0;
+        const usdt  = getCleanUSDT(document.getElementById('qb-usdt').value)  || 0;
+        const rate  = getCleanRate(document.getElementById('qb-rate').value)  || 0;
         const total = Math.round(usdt * rate * 100) / 100;
 
-        document.getElementById('qb-total').value = total > 0 ? total.toFixed(2) : '';
+        document.getElementById('qb-total').value = total > 0 ? formatBRLMask(total.toFixed(2)) : '';
 
         const cost = usdt > 0 ? total / usdt : 0;
         document.getElementById('qb-cost-preview').textContent = usdt > 0
@@ -742,15 +799,41 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('qb-usdt').addEventListener('input', qbRecalc);
-        document.getElementById('qb-rate').addEventListener('input', qbRecalc);
+        const usdtInput = document.getElementById('usdt-pay-input');
+        const usdtInputClean = document.getElementById('usdt-pay-input-clean');
+        if (usdtInput && usdtInputClean) {
+            if (usdtInput.value) {
+                usdtInputClean.value = getCleanUSDT(usdtInput.value);
+            }
+            usdtInput.oninput = function() {
+                const masked = formatUSDTMask(this.value);
+                this.value = masked;
+                usdtInputClean.value = getCleanUSDT(masked);
+            };
+        }
+
+        const qbUsdtInput = document.getElementById('qb-usdt');
+        if (qbUsdtInput) {
+            qbUsdtInput.addEventListener('input', function() {
+                this.value = formatUSDTMask(this.value);
+                qbRecalc();
+            });
+        }
+
+        const qbRateInput = document.getElementById('qb-rate');
+        if (qbRateInput) {
+            qbRateInput.addEventListener('input', function() {
+                this.value = formatRateMask(this.value);
+                qbRecalc();
+            });
+        }
     });
 
     function submitQuickBuy() {
         const supplier  = document.getElementById('qb-supplier').value.trim();
-        const usdt      = parseFloat(document.getElementById('qb-usdt').value);
-        const rate      = parseFloat(document.getElementById('qb-rate').value);
-        const total     = parseFloat(document.getElementById('qb-total').value) || 0;
+        const usdt      = getCleanUSDT(document.getElementById('qb-usdt').value);
+        const rate      = getCleanRate(document.getElementById('qb-rate').value);
+        const total     = getCleanBRL(document.getElementById('qb-total').value) || 0;
         const delivery  = document.getElementById('qb-delivery').value;
         const errEl     = document.getElementById('qb-error');
         const btn       = document.getElementById('qb-submit');
@@ -856,13 +939,13 @@
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
                 <div>
                     <label for="qb-usdt" style="display:block;font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Quantidade USDT *</label>
-                    <input type="number" id="qb-usdt" step="0.0001" min="0.0001"
+                    <input type="text" id="qb-usdt" inputmode="numeric" placeholder="Ex: 1,000.00"
                         style="width:100%;padding:12px 16px;background:#0f172a;border:1px solid #334155;border-radius:12px;color:white;font-size:14px;outline:none;box-sizing:border-box;"
                         onfocus="this.style.borderColor='#fbbf24'" onblur="this.style.borderColor='#334155'">
                 </div>
                 <div>
                     <label for="qb-rate" style="display:block;font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Taxa R$/USDT *</label>
-                    <input type="number" id="qb-rate" step="0.0001" min="0.0001"
+                    <input type="text" id="qb-rate" inputmode="numeric" placeholder="Ex: 5,2000"
                         style="width:100%;padding:12px 16px;background:#0f172a;border:1px solid #334155;border-radius:12px;color:white;font-size:14px;outline:none;box-sizing:border-box;"
                         onfocus="this.style.borderColor='#fbbf24'" onblur="this.style.borderColor='#334155'">
                 </div>
@@ -870,7 +953,7 @@
 
             <div>
                 <label for="qb-total" style="display:block;font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Total Pago BRL</label>
-                <input type="number" id="qb-total" step="0.01" min="0.01" placeholder="—" readonly
+                <input type="text" id="qb-total" placeholder="—" readonly
                     style="width:100%;padding:12px 16px;background:#0f172a;border:1px solid #334155;border-radius:12px;color:#94a3b8;font-size:14px;outline:none;box-sizing:border-box;cursor:default;">
             </div>
 

@@ -19,6 +19,19 @@ class ChatController extends BaseController
         $userModel = new \App\Models\UserModel();
         $data['user'] = $userModel->find(session()->get('user_id'));
         
+        $walletModel = new \App\Models\UserWalletModel();
+        $userId = session()->get('user_id');
+        $wallets = $walletModel->where('user_id', $userId)->findAll();
+        if (empty($wallets) && !empty($data['user']['usdt_wallet'])) {
+            $walletModel->insert([
+                'user_id'    => $userId,
+                'address'    => $data['user']['usdt_wallet'],
+                'is_default' => 1
+            ]);
+            $wallets = $walletModel->where('user_id', $userId)->findAll();
+        }
+        $data['wallets'] = $wallets;
+        
         $settingsModel = new \App\Models\SettingsModel();
         $data['business_hours'] = [
             'start' => $settingsModel->getConfig('business_hours_start', '08:00'),
@@ -42,6 +55,19 @@ class ChatController extends BaseController
 
         $userModel = new \App\Models\UserModel();
         $data['user'] = $userModel->find(session()->get('user_id'));
+
+        $walletModel = new \App\Models\UserWalletModel();
+        $userId = session()->get('user_id');
+        $wallets = $walletModel->where('user_id', $userId)->findAll();
+        if (empty($wallets) && !empty($data['user']['usdt_wallet'])) {
+            $walletModel->insert([
+                'user_id'    => $userId,
+                'address'    => $data['user']['usdt_wallet'],
+                'is_default' => 1
+            ]);
+            $wallets = $walletModel->where('user_id', $userId)->findAll();
+        }
+        $data['wallets'] = $wallets;
 
         $settingsModel = new \App\Models\SettingsModel();
         $data['business_hours'] = [
@@ -555,31 +581,6 @@ class ChatController extends BaseController
             if (!$lot || $lot['is_promotional'] != 1 || $lot['status'] !== 'active') {
                 return $this->response->setJSON(['error' => 'Lote promocional inválido ou esgotado.'])->setStatusCode(400);
             }
-            
-            // Check if user is targeted
-            $isTargeted = false;
-            if ($lot['target_type'] === 'all') {
-                $isTargeted = true;
-            } elseif ($lot['target_type'] === 'group') {
-                if ($lot['target_group'] === 'role_user' && $user['role'] === 'user') {
-                    $isTargeted = true;
-                } elseif ($lot['target_group'] === 'contract_d0' && $user['role'] === 'user' && strtolower($user['default_contract_type']) === 'd+0') {
-                    $isTargeted = true;
-                } elseif ($lot['target_group'] === 'contract_d1' && $user['role'] === 'user' && strtolower($user['default_contract_type']) === 'd+1') {
-                    $isTargeted = true;
-                } elseif ($lot['target_group'] === 'contract_d2' && $user['role'] === 'user' && strtolower($user['default_contract_type']) === 'd+2') {
-                    $isTargeted = true;
-                }
-            } elseif ($lot['target_type'] === 'users') {
-                $targetUsers = json_decode($lot['target_users'] ?? '[]', true);
-                if (is_array($targetUsers) && in_array($userId, $targetUsers)) {
-                    $isTargeted = true;
-                }
-            }
-            
-            if (!$isTargeted) {
-                return $this->response->setJSON(['error' => 'Você não tem acesso a esta promoção.'])->setStatusCode(403);
-            }
 
             if ($inputMode === 'brl') {
                 $usdtAmountReq = round($brlAmountReq / (float)$lot['promo_rate'], 4);
@@ -688,7 +689,18 @@ class ChatController extends BaseController
                 ]);
             }
         }
-
+ 
+        $walletAddressReq = $json->wallet_address ?? null;
+        $walletModel = new \App\Models\UserWalletModel();
+        $dbWallet = null;
+        if (!empty($walletAddressReq)) {
+            $dbWallet = $walletModel->where('user_id', $userId)->where('address', trim($walletAddressReq))->first();
+        }
+        if (!$dbWallet) {
+            $dbWallet = $walletModel->where('user_id', $userId)->where('is_default', 1)->first();
+        }
+        $walletAddress = $dbWallet ? $dbWallet['address'] : ($user['usdt_wallet'] ?: 'Não informada');
+ 
         $transactionId = $transactionModel->insert([
             'user_id'        => $userId,
             'type'           => $type,
@@ -701,7 +713,7 @@ class ChatController extends BaseController
             'fee_brl'        => $feeBrl,
             'status'         => 'pending',
             'delivery_type'  => $deliveryType,
-            'wallet_address' => session()->get('user_wallet') ?: 'Não informada'
+            'wallet_address' => $walletAddress
         ]);
 
         if ($contractId) {
@@ -727,14 +739,15 @@ class ChatController extends BaseController
             }
         }
 
-        if ($contractId && $lot) {
+        if ($lot) {
             $allocationModel = new \App\Models\LotAllocationModel();
             $allocationModel->insert([
-                'lot_id'       => $lot['id'],
-                'contract_id'  => $contractId,
-                'usdt_amount'  => $usdtAmount,
-                'status'       => 'reserved',
-                'allocated_by' => $lot['created_by'],
+                'lot_id'         => $lot['id'],
+                'contract_id'    => null,
+                'transaction_id' => $transactionId,
+                'usdt_amount'    => $usdtAmount,
+                'status'         => 'reserved',
+                'allocated_by'   => $lot['created_by'],
             ]);
             $lotModel = new \App\Models\UsdtLotModel();
             $lotModel->recalculateTotals((int)$lot['id']);
@@ -1304,14 +1317,6 @@ class ChatController extends BaseController
             return $this->response->setJSON(['error' => 'Unauthorized'])->setStatusCode(401);
         }
 
-        $userId = (int) session()->get('user_id');
-        $userModel = new \App\Models\UserModel();
-        $user = $userModel->find($userId);
-
-        if (!$user) {
-            return $this->response->setJSON([]);
-        }
-
         $lotModel = new \App\Models\UsdtLotModel();
         $lots = $lotModel->where('is_promotional', 1)
                          ->where('status', 'active')
@@ -1319,40 +1324,17 @@ class ChatController extends BaseController
 
         $targetedLots = [];
         foreach ($lots as $lot) {
-            $isTargeted = false;
-
-            if ($lot['target_type'] === 'all') {
-                $isTargeted = true;
-            } elseif ($lot['target_type'] === 'group') {
-                if ($lot['target_group'] === 'role_user' && $user['role'] === 'user') {
-                    $isTargeted = true;
-                } elseif ($lot['target_group'] === 'contract_d0' && $user['role'] === 'user' && strtolower($user['default_contract_type']) === 'd+0') {
-                    $isTargeted = true;
-                } elseif ($lot['target_group'] === 'contract_d1' && $user['role'] === 'user' && strtolower($user['default_contract_type']) === 'd+1') {
-                    $isTargeted = true;
-                } elseif ($lot['target_group'] === 'contract_d2' && $user['role'] === 'user' && strtolower($user['default_contract_type']) === 'd+2') {
-                    $isTargeted = true;
-                }
-            } elseif ($lot['target_type'] === 'users') {
-                $targetUsers = json_decode($lot['target_users'] ?? '[]', true);
-                if (is_array($targetUsers) && in_array($userId, $targetUsers)) {
-                    $isTargeted = true;
-                }
-            }
-
-            if ($isTargeted) {
-                $available = $lotModel->getAvailable((int)$lot['id']);
-                if ($available > 0) {
-                    $targetedLots[] = [
-                        'id'              => $lot['id'],
-                        'usdt_available'  => $available,
-                        'promo_rate'      => $lot['promo_rate'],
-                        'conversion_rate' => $lot['promo_rate'], // Return promo_rate as conversion_rate for the UI
-                        'cost_rate'       => $lot['conversion_rate'],
-                        'delivery_type'   => $lot['delivery_type'],
-                        'created_at'      => $lot['created_at'],
-                    ];
-                }
+            $available = $lotModel->getAvailable((int)$lot['id']);
+            if ($available > 0.0001) {
+                $targetedLots[] = [
+                    'id'              => $lot['id'],
+                    'usdt_available'  => $available,
+                    'promo_rate'      => $lot['promo_rate'],
+                    'conversion_rate' => $lot['promo_rate'], // Return promo_rate as conversion_rate for the UI
+                    'cost_rate'       => $lot['conversion_rate'],
+                    'delivery_type'   => $lot['delivery_type'],
+                    'created_at'      => $lot['created_at'],
+                ];
             }
         }
 

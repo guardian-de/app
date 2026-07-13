@@ -114,7 +114,7 @@
                 $rowBorder = 'transparent';
             }
 
-            $walletFull  = $d['usdt_wallet'] ?? '';
+            $walletFull  = $d['requested_wallet'] ?: ($d['usdt_wallet'] ?? '');
             $walletShort = $walletFull ? (substr($walletFull, 0, 8).'…'.substr($walletFull, -6)) : '';
         ?>
         <tr style="border-bottom:1px solid rgba(255,255,255,0.05); border-left:3px solid <?= $rowBorder ?>; transition:background 0.15s;"

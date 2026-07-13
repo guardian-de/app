@@ -50,7 +50,7 @@
             $brlPaid   = (float) $g['paid_amount'];
             $payPct    = $brlTotal > 0 ? min(100, ($brlPaid / $brlTotal) * 100) : 0;
 
-            $walletFull  = $g['usdt_wallet'] ?? '';
+            $walletFull  = $g['requested_wallet'] ?: ($g['usdt_wallet'] ?? '');
             $walletShort = $walletFull ? (substr($walletFull, 0, 8).'…'.substr($walletFull, -6)) : '';
 
             if ($daysLate >= 5) {
