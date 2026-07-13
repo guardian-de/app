@@ -360,6 +360,22 @@
         </div>
     </div>
 
+    <?php
+        $defaultWalletAddress = null;
+        if (!empty($wallets)) {
+            foreach ($wallets as $w) {
+                if ($w['is_default']) {
+                    $defaultWalletAddress = $w['address'];
+                    break;
+                }
+            }
+            if (!$defaultWalletAddress) {
+                $defaultWalletAddress = $wallets[0]['address'];
+            }
+        } else {
+            $defaultWalletAddress = session()->get('user_wallet');
+        }
+    ?>
     <div id="buy-modal"
         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; padding: 20px;">
         <div class="auth-container"
@@ -381,25 +397,12 @@
             </div>
 
             <div class="form-group">
-                <label for="wallet-selector"><?= lang('App.wallet_address') ?> (TRC-20)</label>
-                <?php if (!empty($wallets)): ?>
-                    <select id="wallet-selector"
-                        style="width: 100%; background: #0f172a; border: 1px solid #334155; padding: 12px; border-radius: 8px; color: white; font-size: 14px; font-family: monospace; outline: none; box-sizing: border-box; cursor: pointer;">
-                        <?php foreach ($wallets as $w): ?>
-                            <option value="<?= esc($w['address']) ?>" <?= $w['is_default'] ? 'selected' : '' ?>>
-                                <?= esc($w['address']) ?> <?= $w['is_default'] ? (session()->get('user_lang') == 'zh-CN' ? '(默认)' : ' (Padrão)') : '' ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                <?php else: ?>
-                    <div
-                        style="background: #0f172a; padding: 12px; border-radius: 8px; border: 1px dashed #334155; font-family: monospace; font-size: 13px; color: #818cf8; word-break: break-all;">
-                        <?= session()->get('user_wallet') ?: (session()->get('user_lang') == 'zh-CN' ? '未注册' : 'Não cadastrada') ?>
-                    </div>
-                    <select id="wallet-selector" style="display: none;">
-                        <option value="<?= esc(session()->get('user_wallet') ?: '') ?>" selected></option>
-                    </select>
-                <?php endif; ?>
+                <label><?= lang('App.wallet_address') ?> (TRC-20)</label>
+                <div
+                    style="background: #0f172a; padding: 12px; border-radius: 8px; border: 1px dashed #334155; font-family: monospace; font-size: 13px; color: #818cf8; word-break: break-all; line-height: 1.4;">
+                    <?= esc($defaultWalletAddress ?: (session()->get('user_lang') == 'zh-CN' ? '未注册' : 'Não cadastrada')) ?>
+                </div>
+                <input type="hidden" id="wallet-selector" value="<?= esc($defaultWalletAddress ?: '') ?>">
             </div>
 
             <div class="form-group" id="usdt-input-group" style="<?= $initialMode === 'brl' ? 'display:none;' : '' ?>">
