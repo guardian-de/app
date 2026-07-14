@@ -3574,14 +3574,25 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
 
         window.closeWalletDeactivatedModal = function() {
             document.getElementById('wallet-deactivated-alert-modal').style.display = 'none';
+            const inactive = <?= json_encode($inactiveWalletAddresses ?? []) ?>;
+            localStorage.setItem('acknowledged_inactive_wallets', JSON.stringify(inactive));
         };
 
         document.addEventListener('DOMContentLoaded', () => {
-            const hasInactive = <?= $hasInactiveWallet ? 'true' : 'false' ?>;
-            if (hasInactive) {
-                const modal = document.getElementById('wallet-deactivated-alert-modal');
-                if (modal) {
-                    modal.style.display = 'flex';
+            const inactive = <?= json_encode($inactiveWalletAddresses ?? []) ?>;
+            if (inactive.length > 0) {
+                const storedRaw = localStorage.getItem('acknowledged_inactive_wallets');
+                let stored = [];
+                try {
+                    if (storedRaw) stored = JSON.parse(storedRaw);
+                } catch(e) {}
+                
+                const hasNewInactive = inactive.some(addr => !stored.includes(addr));
+                if (hasNewInactive) {
+                    const modal = document.getElementById('wallet-deactivated-alert-modal');
+                    if (modal) {
+                        modal.style.display = 'flex';
+                    }
                 }
             }
         });
