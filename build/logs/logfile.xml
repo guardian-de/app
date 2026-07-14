@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-  <testsuite name="/Applications/MAMP/htdocs/guardian/app/phpunit.xml.dist" tests="5" assertions="7" errors="0" failures="0" skipped="0" time="0.135570">
-    <testsuite name="App" tests="5" assertions="7" errors="0" failures="0" skipped="0" time="0.135570">
-      <testsuite name="ExampleDatabaseTest" file="/Applications/MAMP/htdocs/guardian/app/tests/database/ExampleDatabaseTest.php" tests="2" assertions="3" errors="0" failures="0" skipped="0" time="0.109971">
-        <testcase name="testModelFindAll" file="/Applications/MAMP/htdocs/guardian/app/tests/database/ExampleDatabaseTest.php" line="17" class="ExampleDatabaseTest" classname="ExampleDatabaseTest" assertions="1" time="0.083968"/>
-        <testcase name="testSoftDeleteLeavesRow" file="/Applications/MAMP/htdocs/guardian/app/tests/database/ExampleDatabaseTest.php" line="28" class="ExampleDatabaseTest" classname="ExampleDatabaseTest" assertions="2" time="0.026002"/>
+  <testsuite name="/Applications/MAMP/htdocs/guardian/app/phpunit.xml.dist" tests="5" assertions="7" errors="0" failures="0" skipped="0" time="0.117591">
+    <testsuite name="App" tests="5" assertions="7" errors="0" failures="0" skipped="0" time="0.117591">
+      <testsuite name="ExampleDatabaseTest" file="/Applications/MAMP/htdocs/guardian/app/tests/database/ExampleDatabaseTest.php" tests="2" assertions="3" errors="0" failures="0" skipped="0" time="0.096073">
+        <testcase name="testModelFindAll" file="/Applications/MAMP/htdocs/guardian/app/tests/database/ExampleDatabaseTest.php" line="17" class="ExampleDatabaseTest" classname="ExampleDatabaseTest" assertions="1" time="0.068899"/>
+        <testcase name="testSoftDeleteLeavesRow" file="/Applications/MAMP/htdocs/guardian/app/tests/database/ExampleDatabaseTest.php" line="28" class="ExampleDatabaseTest" classname="ExampleDatabaseTest" assertions="2" time="0.027175"/>
       </testsuite>
-      <testsuite name="ExampleSessionTest" file="/Applications/MAMP/htdocs/guardian/app/tests/session/ExampleSessionTest.php" tests="1" assertions="1" errors="0" failures="0" skipped="0" time="0.002911">
-        <testcase name="testSessionSimple" file="/Applications/MAMP/htdocs/guardian/app/tests/session/ExampleSessionTest.php" line="10" class="ExampleSessionTest" classname="ExampleSessionTest" assertions="1" time="0.002911"/>
+      <testsuite name="ExampleSessionTest" file="/Applications/MAMP/htdocs/guardian/app/tests/session/ExampleSessionTest.php" tests="1" assertions="1" errors="0" failures="0" skipped="0" time="0.002594">
+        <testcase name="testSessionSimple" file="/Applications/MAMP/htdocs/guardian/app/tests/session/ExampleSessionTest.php" line="10" class="ExampleSessionTest" classname="ExampleSessionTest" assertions="1" time="0.002594"/>
       </testsuite>
-      <testsuite name="HealthTest" file="/Applications/MAMP/htdocs/guardian/app/tests/unit/HealthTest.php" tests="2" assertions="3" errors="0" failures="0" skipped="0" time="0.022688">
-        <testcase name="testIsDefinedAppPath" file="/Applications/MAMP/htdocs/guardian/app/tests/unit/HealthTest.php" line="12" class="HealthTest" classname="HealthTest" assertions="1" time="0.003222"/>
-        <testcase name="testBaseUrlHasBeenSet" file="/Applications/MAMP/htdocs/guardian/app/tests/unit/HealthTest.php" line="17" class="HealthTest" classname="HealthTest" assertions="2" time="0.019466"/>
+      <testsuite name="HealthTest" file="/Applications/MAMP/htdocs/guardian/app/tests/unit/HealthTest.php" tests="2" assertions="3" errors="0" failures="0" skipped="0" time="0.018923">
+        <testcase name="testIsDefinedAppPath" file="/Applications/MAMP/htdocs/guardian/app/tests/unit/HealthTest.php" line="12" class="HealthTest" classname="HealthTest" assertions="1" time="0.002828"/>
+        <testcase name="testBaseUrlHasBeenSet" file="/Applications/MAMP/htdocs/guardian/app/tests/unit/HealthTest.php" line="17" class="HealthTest" classname="HealthTest" assertions="2" time="0.016095"/>
       </testsuite>
     </testsuite>
   </testsuite>

@@ -65,14 +65,15 @@
                     <?php if (!empty($wallets)): ?>
                         <?php foreach ($wallets as $index => $w): ?>
                             <div class="wallet-row" style="display: flex; align-items: center; gap: 12px;">
-                                <input type="radio" name="default_wallet" value="<?= esc($w['address']) ?>" <?= $w['is_default'] ? 'checked' : '' ?> title="Definir como padrão" style="width: 18px; height: 18px; cursor: pointer; accent-color: #3b82f6;">
+                                <input type="radio" name="default_wallet" value="<?= esc($w['address']) ?>" <?= $w['is_default'] ? 'checked' : '' ?> <?= ($w['status'] ?? 'active') === 'inactive' ? 'disabled' : '' ?> title="Definir como padrão" style="width: 18px; height: 18px; cursor: pointer; accent-color: #3b82f6;">
                                 <input type="text" name="wallets[]" value="<?= esc($w['address']) ?>" placeholder="Endereço da carteira USDT" required
-                                    style="flex: 1; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none; font-family: monospace;"
+                                    style="flex: 1; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none; font-family: monospace; opacity: <?= ($w['status'] ?? 'active') === 'active' ? '1' : '0.5' ?>;"
                                     oninput="updateRadioValue(this)">
-                                <select name="wallet_statuses[]" style="background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none; cursor: pointer;">
-                                    <option value="active" <?= ($w['status'] ?? 'active') === 'active' ? 'selected' : '' ?>>Ativa</option>
-                                    <option value="inactive" <?= ($w['status'] ?? 'active') === 'inactive' ? 'selected' : '' ?>>Desativada</option>
-                                </select>
+                                <input type="hidden" name="wallet_statuses[]" value="<?= esc($w['status'] ?? 'active') ?>" class="wallet-status-input">
+                                <button type="button" onclick="toggleWalletStatus(this)" class="status-toggle-btn"
+                                    style="background: <?= ($w['status'] ?? 'active') === 'active' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)' ?>; border: 1px solid <?= ($w['status'] ?? 'active') === 'active' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)' ?>; color: <?= ($w['status'] ?? 'active') === 'active' ? '#f87171' : '#34d399' ?>; border-radius: 10px; padding: 12px 16px; cursor: pointer; font-weight: 600; transition: all 0.2s; min-width: 90px; text-align: center;">
+                                    <?= ($w['status'] ?? 'active') === 'active' ? 'Desativar' : 'Ativar' ?>
+                                </button>
                                 <button type="button" onclick="removeWalletRow(this)"
                                     style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171; border-radius: 10px; padding: 12px 16px; cursor: pointer; font-weight: 600; transition: all 0.2s;">
                                     Remover
@@ -85,10 +86,11 @@
                             <input type="text" name="wallets[]" value="" placeholder="Endereço da carteira USDT" required
                                 style="flex: 1; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none; font-family: monospace;"
                                 oninput="updateRadioValue(this)">
-                            <select name="wallet_statuses[]" style="background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none; cursor: pointer;">
-                                <option value="active" selected>Ativa</option>
-                                <option value="inactive">Desativada</option>
-                            </select>
+                            <input type="hidden" name="wallet_statuses[]" value="active" class="wallet-status-input">
+                            <button type="button" onclick="toggleWalletStatus(this)" class="status-toggle-btn"
+                                style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171; border-radius: 10px; padding: 12px 16px; cursor: pointer; font-weight: 600; transition: all 0.2s; min-width: 90px; text-align: center;">
+                                Desativar
+                            </button>
                             <button type="button" onclick="removeWalletRow(this)"
                                 style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171; border-radius: 10px; padding: 12px 16px; cursor: pointer; font-weight: 600; transition: all 0.2s;">
                                 Remover
@@ -236,6 +238,43 @@ function removeWalletRow(button) {
     }
 }
 
+function toggleWalletStatus(button) {
+    const row = button.closest('.wallet-row');
+    const statusInput = row.querySelector('.wallet-status-input');
+    const textInput = row.querySelector('input[type="text"]');
+    const radio = row.querySelector('input[type="radio"]');
+    
+    if (statusInput.value === 'active') {
+        statusInput.value = 'inactive';
+        button.textContent = 'Ativar';
+        button.style.background = 'rgba(16, 185, 129, 0.1)';
+        button.style.borderColor = 'rgba(16, 185, 129, 0.2)';
+        button.style.color = '#34d399';
+        textInput.style.opacity = '0.5';
+        
+        radio.disabled = true;
+        if (radio.checked) {
+            radio.checked = false;
+            
+            const container = document.getElementById('wallets-container');
+            const allRadios = container.querySelectorAll('input[type="radio"]');
+            const activeRadio = Array.from(allRadios).find(r => !r.disabled);
+            if (activeRadio) {
+                activeRadio.checked = true;
+            }
+        }
+    } else {
+        statusInput.value = 'active';
+        button.textContent = 'Desativar';
+        button.style.background = 'rgba(239, 68, 68, 0.1)';
+        button.style.borderColor = 'rgba(239, 68, 68, 0.2)';
+        button.style.color = '#f87171';
+        textInput.style.opacity = '1';
+        
+        radio.disabled = false;
+    }
+}
+
 function addWalletRow() {
     const container = document.getElementById('wallets-container');
     const div = document.createElement('div');
@@ -248,10 +287,11 @@ function addWalletRow() {
         <input type="text" name="wallets[]" value="" placeholder="Endereço da carteira USDT" required
             style="flex: 1; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none; font-family: monospace;"
             oninput="updateRadioValue(this)">
-        <select name="wallet_statuses[]" style="background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none; cursor: pointer;">
-            <option value="active" selected>Ativa</option>
-            <option value="inactive">Desativada</option>
-        </select>
+        <input type="hidden" name="wallet_statuses[]" value="active" class="wallet-status-input">
+        <button type="button" onclick="toggleWalletStatus(this)" class="status-toggle-btn"
+            style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171; border-radius: 10px; padding: 12px 16px; cursor: pointer; font-weight: 600; transition: all 0.2s; min-width: 90px; text-align: center;">
+            Desativar
+        </button>
         <button type="button" onclick="removeWalletRow(this)"
             style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171; border-radius: 10px; padding: 12px 16px; cursor: pointer; font-weight: 600; transition: all 0.2s;">
             Remover
