@@ -1392,6 +1392,42 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
     </div>
 
     <!-- My Account Modal -->
+    <!-- Proof Preview Modal -->
+    <div id="proof-preview-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 6100; justify-content: center; align-items: center; padding: 15px; backdrop-filter: blur(10px);">
+        <div style="width: 100%; max-width: 500px; background: rgba(30, 41, 59, 0.98); padding: 25px; border-radius: 24px; position: relative; border: 1px solid rgba(239, 68, 68, 0.2); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6); box-sizing: border-box; text-align: center;">
+            <button onclick="closeProofPreviewModal()"
+                style="position: absolute; right: 20px; top: 20px; background: rgba(255,255,255,0.05); border: none; color: #94a3b8; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer;">&times;</button>
+
+            <h2 style="font-size: 18px; color: white; font-weight: 700; margin-bottom: 20px; text-align: left; display: flex; align-items: center; gap: 8px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+                </svg>
+                <?= $isChinese ? '被拒绝的付款凭证' : 'Comprovante Rejeitado' ?>
+            </h2>
+
+            <div style="background: rgba(15,23,42,0.4); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 10px; margin-bottom: 20px; min-height: 200px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                <img id="proof-preview-img" src="" alt="Comprovante" style="max-width: 100%; max-height: 55vh; border-radius: 8px; display: none; object-fit: contain;">
+                
+                <div id="proof-preview-pdf-notice" style="display: none; padding: 20px; color: #94a3b8; font-size: 14px;">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 15px auto;">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                    <?= $isChinese ? '此凭证为 PDF 格式文件。点击下方按钮下载。' : 'Este comprovante é um arquivo PDF. Clique no botão abaixo para baixá-lo.' ?>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 12px;">
+                <a id="proof-preview-download" href="" target="_blank" download style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: #6366f1; color: white; padding: 12px; border-radius: 12px; font-weight: 700; text-decoration: none; font-size: 13px; transition: background 0.2s;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    <?= $isChinese ? '下载凭证' : 'Baixar Comprovante' ?>
+                </a>
+                <button onclick="closeProofPreviewModal()" style="flex: 1; background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 12px; font-weight: 700; font-size: 13px; cursor: pointer; transition: background 0.2s;">
+                    <?= $isChinese ? '关闭' : 'Fechar' ?>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div id="my-account-modal"
         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 5001; justify-content: center; align-items: center; padding: 15px; backdrop-filter: blur(10px);">
         <div
@@ -2382,7 +2418,19 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 }
 
                 document.getElementById('alert-notif-title').textContent = title;
-                document.getElementById('alert-notif-message').textContent = description;
+                const msgEl = document.getElementById('alert-notif-message');
+                msgEl.textContent = description;
+                if (item.operation_type === 'deposit_rejected' && item.proof_file) {
+                    const link = document.createElement('a');
+                    link.href = 'javascript:void(0)';
+                    link.style.cssText = 'display:block;margin-top:10px;color:#60a5fa;font-weight:700;text-decoration:underline;';
+                    link.textContent = isChinese ? '查看被拒绝的凭证' : 'Ver Comprovante Rejeitado';
+                    link.onclick = () => {
+                        closeAlertNotifModal();
+                        openProofPreviewModal(item.proof_file);
+                    };
+                    msgEl.appendChild(link);
+                }
                 
                 const iconContainer = document.getElementById('alert-notif-icon-container');
                 if (iconContainer) {
@@ -2587,7 +2635,16 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                                 <span style="font-size:13px;font-weight:700;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;">${title}</span>
                                 <span style="font-size:10px;color:#475569;white-space:nowrap;">${dateStr}</span>
                             </div>
-                            <p style="font-size:11px;color:#94a3b8;line-height:1.4;">${description}</p>
+                            <p style="font-size:11px;color:#94a3b8;line-height:1.4;">
+                                ${description}
+                                ${item.operation_type === 'deposit_rejected' && item.proof_file ? `
+                                    <span style="display:block;margin-top:4px;">
+                                        <a href="javascript:void(0)" onclick="closeNotificationsModal(); openProofPreviewModal('${item.proof_file}')" style="color:#60a5fa;font-weight:700;text-decoration:underline;">
+                                            ${isChinese ? '查看被拒绝的凭证' : 'Ver Comprovante'}
+                                        </a>
+                                    </span>
+                                ` : ''}
+                            </p>
                         </div>
                     `;
                     list.appendChild(el);
@@ -2769,6 +2826,13 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                                 <div style="font-size:11px;color:#64748b;">${dateStr}</div>
                                 ${item.description ? `<div style="font-size:11px;color:#475569;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.description}</div>` : ''}
                                 ${item.rejection_reason ? `<div style="font-size:11px;color:#f87171;margin-top:2px;">${stmtLang.rejectionReason}: ${item.rejection_reason}</div>` : ''}
+                                ${isRejectedDeposit && item.proof_file ? `
+                                    <div style="margin-top:4px;">
+                                        <a href="javascript:void(0)" onclick="closeStatementModal(); openProofPreviewModal('${item.proof_file}')" style="font-size:11px;color:#60a5fa;font-weight:700;text-decoration:underline;">
+                                            ${isChinese ? '查看被拒绝的凭证' : 'Ver Comprovante'}
+                                        </a>
+                                    </div>
+                                ` : ''}
                                 ${item.amount_edited_reason ? `<div style="font-size:11px;color:#fbbf24;margin-top:2px;">${stmtLang.amountEditedReason}: ${item.amount_edited_reason}</div>` : ''}
                             </div>
                             <div style="text-align:right;flex-shrink:0;">
@@ -3360,6 +3424,33 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
 
         window.closeMyAccountModal = function() {
             document.getElementById('my-account-modal').style.display = 'none';
+        };
+
+        window.openProofPreviewModal = function(proofFile) {
+            if (!proofFile) return;
+            const modal = document.getElementById('proof-preview-modal');
+            const img = document.getElementById('proof-preview-img');
+            const pdfNotice = document.getElementById('proof-preview-pdf-notice');
+            const downloadBtn = document.getElementById('proof-preview-download');
+            
+            const url = `<?= base_url('uploads/proofs/') ?>/${proofFile}`;
+            downloadBtn.href = url;
+            
+            const isPdf = proofFile.toLowerCase().endsWith('.pdf');
+            if (isPdf) {
+                img.style.display = 'none';
+                pdfNotice.style.display = 'block';
+            } else {
+                pdfNotice.style.display = 'none';
+                img.src = url;
+                img.style.display = 'block';
+            }
+            
+            modal.style.display = 'flex';
+        };
+        
+        window.closeProofPreviewModal = function() {
+            document.getElementById('proof-preview-modal').style.display = 'none';
         };
 
         async function load2faSettings() {
