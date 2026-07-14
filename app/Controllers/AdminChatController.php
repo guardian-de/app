@@ -10,7 +10,7 @@ class AdminChatController extends BaseController
     public function index()
     {
         if (!session()->get('isLoggedIn') || !in_array(session()->get('user_role'), ['admin', 'operator'])) {
-            return redirect()->to('/login');
+            return redirect()->to('/');
         }
 
         return view('admin/chat/index');

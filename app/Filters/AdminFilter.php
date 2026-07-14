@@ -27,7 +27,7 @@ class AdminFilter implements FilterInterface
     {
         $role = session()->get('user_role');
         if (!session()->get('isLoggedIn') || ($role !== 'admin' && $role !== 'operator')) {
-            return redirect()->to('/login')->with('error', 'Acesso restrito a administradores e operadores.');
+            return redirect()->to('/')->with('error', 'Acesso restrito a administradores e operadores.');
         }
     }
 

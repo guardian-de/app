@@ -571,7 +571,7 @@
             <p style="color: #94a3b8; font-size: 14px; line-height: 1.6; margin-bottom: 24px;">
                 <?= $isChinese ? '您的会话已过期，请重新登录。' : 'Sua sessão expirou. Você será redirecionado para o login.' ?>
             </p>
-            <button onclick="window.location.href='<?= site_url('login') ?>'"
+            <button onclick="window.location.href='<?= site_url('/') ?>'"
                 style="width: 100%; padding: 14px; border-radius: 10px; background: #ef4444; border: none; color: white; font-weight: 700; font-size: 15px; cursor: pointer;">
                 <?= $isChinese ? '重新登录' : 'Fazer login' ?>
             </button>
@@ -652,7 +652,7 @@
             if (_sessionExpiredHandled) return;
             _sessionExpiredHandled = true;
             showModal('session-expired-modal');
-            setTimeout(() => { window.location.href = '<?= site_url('login') ?>'; }, 3000);
+            setTimeout(() => { window.location.href = '<?= site_url('/') ?>'; }, 3000);
         }
 
         (function () {

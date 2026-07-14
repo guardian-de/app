@@ -5,7 +5,7 @@ use CodeIgniter\Router\RouteCollection;
 /**
  * @var RouteCollection $routes
  */
-$routes->get('/', 'Home::index');
+$routes->get('/', 'Auth::login', ['as' => 'login']);
 $routes->get('privacy', 'Home::privacy', ['as' => 'privacy']);
 $routes->get('terms', 'Home::terms', ['as' => 'terms']);
 
@@ -16,8 +16,8 @@ $routes->get('dev', function () {
 
 
 // Auth Routes
-$routes->get('login', 'Auth::login', ['as' => 'login']);
-$routes->post('login', 'Auth::authenticate', ['as' => 'authenticate']);
+$routes->post('/', 'Auth::authenticate', ['as' => 'authenticate']);
+$routes->addRedirect('login', '/');
 $routes->get('logout', 'Auth::logout', ['as' => 'logout']);
 
 // Admin Routes (Substitui o cadastro público)
