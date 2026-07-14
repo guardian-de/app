@@ -560,6 +560,13 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                         <span id="notifications-badge-desktop" style="display: none; background: #ef4444; color: white; font-size: 9px; font-weight: 800; min-width: 16px; height: 16px; border-radius: 8px; align-items: center; justify-content: center; padding: 0 3px; line-height: 1;"></span>
                     </button>
 
+                    <button onclick="openMyAccountModal(event)" style="display: flex; align-items: center; gap: 12px; width: 100%; background: none; border: 1px solid rgba(255,255,255,0.05); color: #cbd5e1; padding: 12px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; text-align: left; transition: all 0.2s;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        <span><?= $isChinese ? '我的账户' : 'Minha Conta' ?></span>
+                    </button>
+
                     <button onclick="openChangePasswordModal(event)" style="display: flex; align-items: center; gap: 12px; width: 100%; background: none; border: 1px solid rgba(255,255,255,0.05); color: #cbd5e1; padding: 12px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; text-align: left; transition: all 0.2s;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
@@ -654,6 +661,15 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                             <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
                         </svg>
                         <span id="notifications-badge" style="display: none; position: absolute; top: -2px; right: -4px; background: #ef4444; color: white; font-size: 9px; font-weight: 800; min-width: 16px; height: 16px; border-radius: 8px; align-items: center; justify-content: center; padding: 0 3px; line-height: 1;"></span>
+                    </button>
+                    <!-- Minha Conta -->
+                    <button onclick="openMyAccountModal(event)"
+                        style="background: none; border: none; color: #60a5fa; padding: 4px; display: flex; align-items: center; cursor: pointer;"
+                        title="<?= $isChinese ? '我的账户' : 'Minha Conta' ?>">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                        </svg>
                     </button>
                     <!-- Alterar Senha -->
                     <button onclick="openChangePasswordModal(event)"
@@ -1325,6 +1341,127 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             </button>
             
             <button onclick="closeProofModal()" style="margin-top: 15px; background: none; border: none; color: #64748b; font-size: 13px; cursor: pointer;"><?= $isChinese ? '稍后再说' : 'Fazer isso mais tarde' ?></button>
+        </div>
+    </div>
+
+    <!-- My Account Modal -->
+    <div id="my-account-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 5001; justify-content: center; align-items: center; padding: 15px; backdrop-filter: blur(10px);">
+        <div
+            style="background: rgba(30, 41, 59, 0.98); width: 100%; max-width: 480px; padding: 25px; border-radius: 24px; position: relative; border: 1px solid rgba(59, 130, 246, 0.25); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6); box-sizing: border-box; overflow-y: auto; max-height: 90vh;">
+            <button onclick="closeMyAccountModal()"
+                style="position: absolute; right: 20px; top: 20px; background: rgba(255,255,255,0.05); border: none; color: #94a3b8; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer;">&times;</button>
+
+            <h1 style="font-size: 20px; color: white; font-weight: 700; margin-bottom: 20px; text-align: left; display: flex; align-items: center; gap: 10px;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #60a5fa;">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                </svg>
+                <?= $isChinese ? '我的账户' : 'Minha Conta' ?>
+            </h1>
+
+            <!-- Informações do Cadastro -->
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 25px;">
+                <h3 style="font-size: 13px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 5px 0; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px;"><?= $isChinese ? '注册信息' : 'Informações do Cadastro' ?></h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px;">
+                    <div>
+                        <span style="color: #94a3b8; display: block; font-size: 11px;"><?= $isChinese ? '登录名' : 'Login' ?></span>
+                        <strong style="color: white;"><?= esc($user['login']) ?></strong>
+                    </div>
+                    <div>
+                        <span style="color: #94a3b8; display: block; font-size: 11px;"><?= $isChinese ? '角色' : 'Nível de Acesso' ?></span>
+                        <span style="background: rgba(59, 130, 246, 0.1); color: #60a5fa; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 11px; display: inline-block;">
+                            <?= $user['role'] === 'admin' ? 'Admin' : ($user['role'] === 'operator' ? 'Operador' : 'Cliente') ?>
+                        </span>
+                    </div>
+                    <div>
+                        <span style="color: #94a3b8; display: block; font-size: 11px;"><?= $isChinese ? '费率 / Spread' : 'Spread / Taxa' ?></span>
+                        <strong style="color: white;"><?= number_format($user['fee_percent'] ?? 0, 2) ?>%</strong>
+                    </div>
+                    <div>
+                        <span style="color: #94a3b8; display: block; font-size: 11px;"><?= $isChinese ? '常规合同类型' : 'Contrato Padrão' ?></span>
+                        <strong style="color: white; text-transform: uppercase;"><?= esc($user['default_contract_type'] ?? 'D+1') ?></strong>
+                    </div>
+                    <div>
+                        <span style="color: #94a3b8; display: block; font-size: 11px;"><?= $isChinese ? '日利率' : 'Juros Diários' ?></span>
+                        <strong style="color: white;"><?= number_format($user['daily_interest_rate'] ?? 0, 2) ?>%</strong>
+                    </div>
+                    <div>
+                        <span style="color: #94a3b8; display: block; font-size: 11px;"><?= $isChinese ? '支持的交易模式' : 'Modelos de Compra' ?></span>
+                        <strong style="color: white; text-transform: uppercase;"><?= esc($user['purchase_model'] ?? 'USDT') ?></strong>
+                    </div>
+                </div>
+
+                <div style="margin-top: 5px;">
+                    <span style="color: #94a3b8; display: block; font-size: 11px;"><?= $isChinese ? 'USDT (TRC-20) 钱包地址' : 'Carteira USDT (TRC-20)' ?></span>
+                    <span style="color: #818cf8; font-family: monospace; font-size: 12px; word-break: break-all; font-weight: 500;">
+                        <?= esc($user['usdt_wallet'] ?: ($isChinese ? '未注册' : 'Não cadastrada')) ?>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Autenticação de 2 Fatores -->
+            <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 20px;">
+                <h3 style="font-size: 13px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px; display: flex; align-items: center; gap: 8px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                    <?= $isChinese ? '谷歌两步验证 (2FA)' : 'Google Authenticator (2FA)' ?>
+                </h3>
+
+                <!-- Status 2FA -->
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                    <span style="font-size: 13px; color: #cbd5e1;"><?= $isChinese ? '验证状态' : 'Status do 2FA' ?>:</span>
+                    <span id="twofa-status-badge" style="padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 11px; text-transform: uppercase;">
+                        Loading...
+                    </span>
+                </div>
+
+                <!-- 2FA Setup Panel (Disabled -> Enable) -->
+                <div id="twofa-setup-panel" style="display: none; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.03);">
+                    <p style="font-size: 12px; color: #94a3b8; margin: 0 0 15px 0; line-height: 1.5; text-align: left;">
+                        <?= $isChinese ? '1. 使用 Google Authenticator 扫描下方的二维码：' : '1. Escaneie o QR Code abaixo com seu aplicativo Google Authenticator:' ?>
+                    </p>
+                    
+                    <div style="text-align: center; margin-bottom: 15px;">
+                        <img id="twofa-qrcode" src="" alt="QR Code" style="background: white; padding: 10px; border-radius: 12px; width: 140px; height: 140px; display: inline-block; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);">
+                    </div>
+
+                    <p style="font-size: 12px; color: #94a3b8; margin: 0 0 8px 0; line-height: 1.5; text-align: left;">
+                        <?= $isChinese ? '2. 或者手动输入以下密钥：' : '2. Ou digite a chave secreta manualmente:' ?>
+                    </p>
+                    
+                    <div id="twofa-secret-box" onclick="copyTwoFaSecret()" style="background: rgba(15,23,42,0.6); border: 1px solid #334155; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 14px; color: #818cf8; text-align: center; font-weight: 700; letter-spacing: 0.1em; cursor: pointer; margin-bottom: 15px; transition: all 0.2s;" title="Clique para copiar">
+                        <span id="twofa-secret-text">-</span>
+                        <div style="font-size: 9px; color: #64748b; font-weight: 400; margin-top: 3px; letter-spacing: normal;"><?= $isChinese ? '点击复制密钥' : 'Clique para copiar a chave' ?></div>
+                    </div>
+
+                    <p style="font-size: 12px; color: #94a3b8; margin: 0 0 8px 0; line-height: 1.5; text-align: left;">
+                        <?= $isChinese ? '3. 输入 Authenticator 生成 judicial 验证码：' : '3. Digite o código de 6 dígitos gerado para ativar:' ?>
+                    </p>
+
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="text" id="twofa-code-enable" placeholder="000000" inputmode="numeric" pattern="[0-9]*" maxlength="6" style="flex: 1; background: #0f172a; border: 1px solid #334155; border-radius: 10px; color: white; padding: 12px; font-size: 16px; font-weight: 700; text-align: center; letter-spacing: 0.2em; outline: none;">
+                        <button onclick="submitEnable2fa()" style="background: #10b981; color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer; height: 44px; display: inline-flex; align-items: center; justify-content: center; transition: background 0.2s;">
+                            <?= $isChinese ? '激活' : 'Ativar' ?>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 2FA Disable Panel (Enabled -> Disable) -->
+                <div id="twofa-disable-panel" style="display: none; background: rgba(239, 68, 68, 0.03); padding: 15px; border-radius: 16px; border: 1px solid rgba(239, 68, 68, 0.1);">
+                    <p style="font-size: 12px; color: #f87171; margin: 0 0 12px 0; line-height: 1.5; text-align: left;">
+                        <?= $isChinese ? '您的两步验证已激活。要停用，请输入生成器中的 6 位数字代码：' : 'Sua autenticação de 2 fatores está ativa. Para desativar, digite o código de 6 dígitos gerado no aplicativo:' ?>
+                    </p>
+
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="text" id="twofa-code-disable" placeholder="000000" inputmode="numeric" pattern="[0-9]*" maxlength="6" style="flex: 1; background: #0f172a; border: 1px solid #334155; border-radius: 10px; color: white; padding: 12px; font-size: 16px; font-weight: 700; text-align: center; letter-spacing: 0.2em; outline: none;">
+                        <button onclick="submitDisable2fa()" style="background: #ef4444; color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer; height: 44px; display: inline-flex; align-items: center; justify-content: center; transition: background 0.2s;">
+                            <?= $isChinese ? '停用' : 'Desativar' ?>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -3100,6 +3237,134 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 alertBox.textContent = isChinese ? '发生错误。' : 'Ocorreu um erro ao processar a requisição.';
                 alertBox.className = 'alert alert-error';
                 alertBox.style.display = 'block';
+            }
+        };
+
+        window.openMyAccountModal = function(e) {
+            if (e) {
+                if (typeof e.preventDefault === 'function') e.preventDefault();
+                if (typeof e.stopPropagation === 'function') e.stopPropagation();
+            }
+            showModal('my-account-modal');
+            load2faSettings();
+        };
+
+        window.closeMyAccountModal = function() {
+            document.getElementById('my-account-modal').style.display = 'none';
+        };
+
+        async function load2faSettings() {
+            const statusBadge = document.getElementById('twofa-status-badge');
+            statusBadge.textContent = isChinese ? '正在加载...' : 'Carregando...';
+            statusBadge.style.background = 'rgba(255,255,255,0.05)';
+            statusBadge.style.color = '#94a3b8';
+
+            document.getElementById('twofa-setup-panel').style.display = 'none';
+            document.getElementById('twofa-disable-panel').style.display = 'none';
+
+            try {
+                const response = await fetch('<?= url_to('chat_2fa_settings') ?>');
+                const data = await response.json();
+                
+                if (data.enabled) {
+                    statusBadge.textContent = isChinese ? '已启用' : 'Ativado';
+                    statusBadge.style.background = 'rgba(16, 185, 129, 0.1)';
+                    statusBadge.style.color = '#34d399';
+                    document.getElementById('twofa-disable-panel').style.display = 'block';
+                    document.getElementById('twofa-code-disable').value = '';
+                } else {
+                    statusBadge.textContent = isChinese ? '未启用' : 'Desativado';
+                    statusBadge.style.background = 'rgba(239, 68, 68, 0.1)';
+                    statusBadge.style.color = '#f87171';
+                    
+                    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.qr_code_data)}`;
+                    document.getElementById('twofa-qrcode').src = qrUrl;
+                    document.getElementById('twofa-secret-text').textContent = data.secret;
+                    
+                    document.getElementById('twofa-setup-panel').style.display = 'block';
+                    document.getElementById('twofa-code-enable').value = '';
+                }
+            } catch (err) {
+                statusBadge.textContent = isChinese ? '错误' : 'Erro';
+                statusBadge.style.background = 'rgba(239, 68, 68, 0.2)';
+                statusBadge.style.color = '#f87171';
+            }
+        }
+
+        window.copyTwoFaSecret = function() {
+            const secret = document.getElementById('twofa-secret-text').textContent;
+            if (secret && secret !== '-') {
+                navigator.clipboard.writeText(secret).then(() => {
+                    alert(isChinese ? '密钥已复制到剪贴板！' : 'Chave secreta copiada para a área de transferência!');
+                }).catch(() => {
+                    alert(isChinese ? '复制失败，请手动选择复制。' : 'Falha ao copiar. Por favor, copie manualmente.');
+                });
+            }
+        };
+
+        window.submitEnable2fa = async function() {
+            const secret = document.getElementById('twofa-secret-text').textContent;
+            const code = document.getElementById('twofa-code-enable').value.trim();
+
+            if (!code || code.length !== 6) {
+                alert(isChinese ? '请输入 6 位数验证码。' : 'Por favor, digite o código de 6 dígitos.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('secret', secret);
+            formData.append('code', code);
+
+            try {
+                const response = await fetch('<?= url_to('chat_enable_2fa') ?>', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        '<?= csrf_header() ?>': getCsrfToken()
+                    },
+                    body: formData
+                });
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    alert(isChinese ? '两步验证激活成功！' : 'Autenticação de 2 fatores ativada com sucesso!');
+                    load2faSettings();
+                } else {
+                    alert(data.error || (isChinese ? '验证失败，请重试。' : 'Erro ao ativar o 2FA. Verifique o código digitado.'));
+                }
+            } catch (err) {
+                alert(isChinese ? '发生错误。' : 'Ocorreu um erro ao processar a requisição.');
+            }
+        };
+
+        window.submitDisable2fa = async function() {
+            const code = document.getElementById('twofa-code-disable').value.trim();
+
+            if (!code || code.length !== 6) {
+                alert(isChinese ? '请输入 6 位数验证码。' : 'Por favor, digite o código de 6 dígitos.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('code', code);
+
+            try {
+                const response = await fetch('<?= url_to('chat_disable_2fa') ?>', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        '<?= csrf_header() ?>': getCsrfToken()
+                    },
+                    body: formData
+                });
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    alert(isChinese ? '两步验证已停用。' : 'Autenticação de 2 fatores desativada com sucesso!');
+                    load2faSettings();
+                } else {
+                    alert(data.error || (isChinese ? '验证失败，请重试。' : 'Erro ao desativar o 2FA. Verifique o código digitado.'));
+                }
+            } catch (err) {
+                alert(isChinese ? '发生错误。' : 'Ocorreu um erro ao processar a requisição.');
             }
         };
 

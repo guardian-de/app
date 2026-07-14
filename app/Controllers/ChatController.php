@@ -1650,4 +1650,91 @@ class ChatController extends BaseController
                 : 'Depósito enviado e aguardando validação.',
         ]);
     }
+
+    public function get2faSettings()
+    {
+        $userId = session()->get('user_id');
+        $userModel = new \App\Models\UserModel();
+        $user = $userModel->find($userId);
+
+        if (!$user) {
+            return $this->response->setJSON(['error' => 'Usuário não encontrado.'])->setStatusCode(404);
+        }
+
+        $secret = $user['two_factor_secret'];
+        if (empty($secret)) {
+            $secret = \App\Libraries\GoogleAuthenticator::createSecret();
+        }
+
+        $qrCodeData = 'otpauth://totp/Guardian:' . urlencode($user['login']) . '?secret=' . $secret . '&issuer=Guardian';
+
+        return $this->response->setJSON([
+            'enabled' => (bool) $user['two_factor_enabled'],
+            'secret'  => $secret,
+            'qr_code_data' => $qrCodeData
+        ]);
+    }
+
+    public function enable2fa()
+    {
+        $userId = session()->get('user_id');
+        $userModel = new \App\Models\UserModel();
+        $user = $userModel->find($userId);
+
+        if (!$user) {
+            return $this->response->setJSON(['error' => 'Usuário não encontrado.'])->setStatusCode(404);
+        }
+
+        $secret = $this->request->getPost('secret');
+        $code   = $this->request->getPost('code');
+
+        if (empty($secret) || empty($code)) {
+            return $this->response->setJSON(['error' => 'Secret e código são obrigatórios.'])->setStatusCode(400);
+        }
+
+        if (!\App\Libraries\GoogleAuthenticator::verifyCode($secret, $code)) {
+            return $this->response->setJSON(['error' => 'Código de verificação inválido ou expirado.'])->setStatusCode(400);
+        }
+
+        $userModel->update($userId, [
+            'two_factor_secret'  => $secret,
+            'two_factor_enabled' => 1
+        ]);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Autenticação de 2 fatores ativada com sucesso!'
+        ]);
+    }
+
+    public function disable2fa()
+    {
+        $userId = session()->get('user_id');
+        $userModel = new \App\Models\UserModel();
+        $user = $userModel->find($userId);
+
+        if (!$user) {
+            return $this->response->setJSON(['error' => 'Usuário não encontrado.'])->setStatusCode(404);
+        }
+
+        $code = $this->request->getPost('code');
+
+        if (empty($code)) {
+            return $this->response->setJSON(['error' => 'O código de verificação é obrigatório.'])->setStatusCode(400);
+        }
+
+        if (!\App\Libraries\GoogleAuthenticator::verifyCode($user['two_factor_secret'], $code)) {
+            return $this->response->setJSON(['error' => 'Código de verificação inválido ou expirado.'])->setStatusCode(400);
+        }
+
+        $userModel->update($userId, [
+            'two_factor_secret'  => null,
+            'two_factor_enabled' => 0
+        ]);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Autenticação de 2 fatores desativada com sucesso!'
+        ]);
+    }
 }
