@@ -24,6 +24,10 @@ class AdminController extends BaseController
         $search = $this->request->getGet('search') ?? '';
         $role   = $this->request->getGet('role') ?? '';
 
+        if (session()->get('user_role') === 'operator') {
+            $role = 'user';
+        }
+
         $userModel = new UserModel();
         $builder = $userModel->orderBy('role', 'ASC')->orderBy('login', 'ASC');
 
@@ -66,6 +70,9 @@ class AdminController extends BaseController
         $userModel = new UserModel();
         
         $role = $this->request->getPost('role') ?: 'user';
+        if (session()->get('user_role') === 'operator') {
+            $role = 'user';
+        }
         $permissions = $this->request->getPost('permissions');
         $canSetPurchaseModel = session()->get('user_role') === 'admin' || in_array('purchase_model', session()->get('user_permissions') ?? []);
 
@@ -110,6 +117,10 @@ class AdminController extends BaseController
             return redirect()->to('/admin/users')->with('error', 'Usuário não encontrado.');
         }
 
+        if (session()->get('user_role') === 'operator' && $data['user']['role'] !== 'user') {
+            return redirect()->to('/admin/users')->with('error', 'Acesso negado: operadores só podem gerenciar clientes.');
+        }
+
         $walletModel = new \App\Models\UserWalletModel();
         $wallets = $walletModel->where('user_id', $id)->findAll();
         // Fallback migration on the fly
@@ -134,6 +145,10 @@ class AdminController extends BaseController
         $user = $userModel->find($id);
         if (!$user) {
             return redirect()->to('/admin/users')->with('error', 'Usuário não encontrado.');
+        }
+
+        if (session()->get('user_role') === 'operator' && $user['role'] !== 'user') {
+            return redirect()->to('/admin/users')->with('error', 'Acesso negado: operadores só podem gerenciar clientes.');
         }
 
         $financialModel = new \App\Models\FinancialStatementModel();
@@ -165,7 +180,18 @@ class AdminController extends BaseController
         $userModel = new UserModel();
         $existingUser = $userModel->find($id);
 
+        if (!$existingUser) {
+            return redirect()->to('/admin/users')->with('error', 'Usuário não encontrado.');
+        }
+
+        if (session()->get('user_role') === 'operator' && $existingUser['role'] !== 'user') {
+            return redirect()->to('/admin/users')->with('error', 'Acesso negado: operadores só podem gerenciar clientes.');
+        }
+
         $role = $this->request->getPost('role') ?: 'user';
+        if (session()->get('user_role') === 'operator') {
+            $role = 'user';
+        }
         $permissions = $this->request->getPost('permissions');
         $canSetPurchaseModel = session()->get('user_role') === 'admin' || in_array('purchase_model', session()->get('user_permissions') ?? []);
 
@@ -1342,6 +1368,10 @@ class AdminController extends BaseController
             return redirect()->back()->with('error', 'Usuário não encontrado.');
         }
 
+        if (session()->get('user_role') === 'operator' && $user['role'] !== 'user') {
+            return redirect()->back()->with('error', 'Acesso negado: operadores só podem gerenciar clientes.');
+        }
+
         $amount = (float)$this->request->getPost('amount');
         $operation = $this->request->getPost('operation');
         $notes = $this->request->getPost('notes') ?: 'Ajuste de Saldo/Limite';
@@ -1658,6 +1688,10 @@ class AdminController extends BaseController
             return $this->response->setJSON(['error' => 'Usuário não encontrado.'])->setStatusCode(404);
         }
 
+        if (session()->get('user_role') === 'operator' && $user['role'] !== 'user') {
+            return $this->response->setJSON(['error' => 'Acesso negado: operadores só podem gerenciar clientes.'])->setStatusCode(403);
+        }
+
         $financialModel = new \App\Models\FinancialStatementModel();
         $history = $financialModel->select('financial_statements.*, admins.login as admin_name')
                                   ->join('users as admins', 'admins.id = financial_statements.admin_id', 'left')
@@ -1671,12 +1705,174 @@ class AdminController extends BaseController
         ]);
     }
 
+    public function exportUserStatementJson(int $id)
+    {
+        if ($response = $this->checkPermission('usuarios')) return $response;
+
+        $userModel = new UserModel();
+        $user = $userModel->find($id);
+        if (!$user) {
+            return redirect()->back()->with('error', 'Usuário não encontrado.');
+        }
+
+        if (session()->get('user_role') === 'operator' && $user['role'] !== 'user') {
+            return redirect()->back()->with('error', 'Acesso negado: operadores só podem gerenciar clientes.');
+        }
+
+        $financialModel = new \App\Models\FinancialStatementModel();
+        $history = $financialModel->select('financial_statements.*, admins.login as admin_name')
+                                  ->join('users as admins', 'admins.id = financial_statements.admin_id', 'left')
+                                  ->where('financial_statements.user_id', $id)
+                                  ->orderBy('transaction_date', 'DESC')
+                                  ->findAll();
+
+        $cleanName = preg_replace('/[^a-zA-Z0-9_]/', '_', $user['login']);
+        $filename = 'extrato_' . strtolower($cleanName) . '_' . date('Ymd_His') . '.json';
+
+        $data = [
+            'user' => [
+                'id' => $user['id'],
+                'login' => $user['login'],
+                'fee_percent' => $user['fee_percent'],
+                'role' => $user['role'],
+                'created_at' => $user['created_at']
+            ],
+            'statement' => $history
+        ];
+
+        return $this->response->setHeader('Content-Type', 'application/json')
+                              ->setHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
+                              ->setBody(json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    }
+
+    public function exportUserStatementPdf(int $id)
+    {
+        if ($response = $this->checkPermission('usuarios')) return $response;
+
+        $userModel = new UserModel();
+        $user = $userModel->find($id);
+        if (!$user) {
+            return redirect()->back()->with('error', 'Usuário não encontrado.');
+        }
+
+        if (session()->get('user_role') === 'operator' && $user['role'] !== 'user') {
+            return redirect()->back()->with('error', 'Acesso negado: operadores só podem gerenciar clientes.');
+        }
+
+        $financialModel = new \App\Models\FinancialStatementModel();
+        $history = $financialModel->select('financial_statements.*, admins.login as admin_name')
+                                  ->join('users as admins', 'admins.id = financial_statements.admin_id', 'left')
+                                  ->where('financial_statements.user_id', $id)
+                                  ->orderBy('transaction_date', 'DESC')
+                                  ->findAll();
+
+        $typeLabels = [
+            'deposit'              => 'Depósito Aprovado',
+            'withdrawal'           => 'Saída / Retirada',
+            'margin_lock'          => 'Bloqueio de Margem',
+            'limit_release'        => 'Liberação de Limite',
+            'partial_amortization' => 'Amortização Parcial',
+            'full_settlement'      => 'Liquidação Integral',
+            'late_fee'             => 'Multa / Juros',
+            'adjustment_add'       => 'Saldo Adicionado',
+            'adjustment_subtract'  => 'Saldo Subtraído',
+        ];
+
+        echo '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Extrato Financeiro - ' . esc($user['login']) . '</title>
+    <style>
+        body { font-family: "Segoe UI", Helvetica, Arial, sans-serif; color: #1e293b; background: #fff; margin: 30px; font-size: 13px; line-height: 1.5; }
+        .header { display: flex; justify-content: space-between; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px; }
+        .header h1 { font-size: 18px; font-weight: 700; margin: 0 0 5px 0; color: #0f172a; }
+        .header p { margin: 2px 0; color: #64748b; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #f8fafc; border-bottom: 2px solid #cbd5e1; color: #475569; font-weight: 600; text-align: left; padding: 10px 12px; font-size: 11px; text-transform: uppercase; }
+        td { border-bottom: 1px solid #e2e8f0; padding: 12px; vertical-align: top; }
+        tr:nth-child(even) td { background: #fafafa; }
+        .amount-c { color: #16a34a; font-weight: bold; }
+        .amount-d { color: #dc2626; font-weight: bold; }
+        @media print {
+            body { margin: 15px; font-size: 12px; }
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>GUARDIAN CORRETORA</h1>
+            <p>Relatório de Extrato Financeiro - Área Administrativa</p>
+        </div>
+        <div style="text-align: right;">
+            <p><span>Cliente:</span> ' . esc($user['login']) . '</p>
+            <p>Gerado em: ' . date('d/m/Y H:i') . '</p>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Tipo</th>
+                <th>Operação</th>
+                <th>Descrição</th>
+                <th style="text-align: right;">Valor</th>
+            </tr>
+        </thead>
+        <tbody>';
+
+        if (empty($history)) {
+            echo '<tr><td colspan="5" style="text-align: center; color: #94a3b8; padding: 30px;">Nenhuma transação encontrada.</td></tr>';
+        } else {
+            foreach ($history as $row) {
+                $isCredit = $row['nature'] === 'C';
+                $class = $isCredit ? 'amount-c' : 'amount-d';
+                $sign = $isCredit ? '+ ' : '− ';
+
+                $label = $typeLabels[$row['operation_type']] ?? $row['operation_type'];
+                $dateStr = date('d/m/Y H:i', strtotime($row['transaction_date']));
+                
+                $isBrl = in_array($row['operation_type'], ['adjustment_add', 'adjustment_subtract', 'partial_amortization', 'full_settlement', 'late_fee']);
+                $amount = $isBrl ? 'R$ ' . number_format($row['amount'], 2, ',', '.') : number_format($row['amount'], 2, '.', ',') . ' USDT';
+
+                echo '<tr>
+                    <td style="white-space: nowrap;">' . $dateStr . '</td>
+                    <td>' . ($isCredit ? 'Entrada' : 'Saída') . '</td>
+                    <td><strong>' . esc($label) . '</strong></td>
+                    <td>
+                        ' . esc($row['description']) . '
+                    </td>
+                    <td style="text-align: right;" class="' . $class . '">' . $sign . $amount . '</td>
+                </tr>';
+            }
+        }
+
+        echo '</tbody>
+    </table>
+
+    <script>
+        window.onload = function() {
+            window.print();
+        }
+    </script>
+</body>
+</html>';
+        exit;
+    }
+
     public function exportUserStatementCsv(int $id)
     {
         $userModel = new UserModel();
         $user = $userModel->find($id);
         if (!$user) {
             return redirect()->back()->with('error', 'Usuário não encontrado.');
+        }
+
+        if (session()->get('user_role') === 'operator' && $user['role'] !== 'user') {
+            return redirect()->back()->with('error', 'Acesso negado: operadores só podem gerenciar clientes.');
         }
 
         $financialModel = new \App\Models\FinancialStatementModel();
@@ -1745,6 +1941,10 @@ class AdminController extends BaseController
     public function userActivity(int $id)
     {
         if ($response = $this->checkPermission('usuarios')) return $response;
+
+        if (session()->get('user_role') === 'operator') {
+            return redirect()->to('/admin/users')->with('error', 'Acesso negado.');
+        }
 
         $userModel = new \App\Models\UserModel();
         $operator  = $userModel->find($id);

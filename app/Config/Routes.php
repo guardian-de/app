@@ -34,6 +34,8 @@ $routes->group('admin', ['filter' => 'admin'], function ($routes) {
         $routes->post('register-purchase/(:num)', 'AdminController::registerPurchase/$1', ['as' => 'admin_users_register_purchase']);
         $routes->get('statement/(:num)', 'AdminController::getUserStatement/$1', ['as' => 'admin_users_statement']);
         $routes->get('statement/export/(:num)', 'AdminController::exportUserStatementCsv/$1', ['as' => 'admin_users_statement_export']);
+        $routes->get('statement/export-json/(:num)', 'AdminController::exportUserStatementJson/$1', ['as' => 'admin_users_statement_export_json']);
+        $routes->get('statement/export-pdf/(:num)', 'AdminController::exportUserStatementPdf/$1', ['as' => 'admin_users_statement_export_pdf']);
         $routes->get('activity/(:num)', 'AdminController::userActivity/$1', ['as' => 'admin_users_activity']);
     });
     $routes->get('transactions', 'AdminController::transactions', ['as' => 'admin_transactions']);

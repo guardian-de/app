@@ -37,8 +37,10 @@
             <select id="role" name="role" onchange="toggleFields()"
                 style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none; cursor: pointer;">
                 <option value="user"     <?= old('role') == 'user'     ? 'selected' : '' ?>>Cliente (Acesso ao Chat/App)</option>
-                <option value="operator" <?= old('role') == 'operator' ? 'selected' : '' ?>>Operador (Suporte/Financeiro)</option>
-                <option value="admin"    <?= old('role') == 'admin'    ? 'selected' : '' ?>>Administrador (Acesso Total)</option>
+                <?php if (session()->get('user_role') === 'admin'): ?>
+                    <option value="operator" <?= old('role') == 'operator' ? 'selected' : '' ?>>Operador (Suporte/Financeiro)</option>
+                    <option value="admin"    <?= old('role') == 'admin'    ? 'selected' : '' ?>>Administrador (Acesso Total)</option>
+                <?php endif; ?>
             </select>
         </div>
 
