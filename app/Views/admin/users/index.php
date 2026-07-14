@@ -62,7 +62,6 @@
                 <th style="padding: 18px 25px; text-align: left; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Login</th>
                 <th style="padding: 18px 25px; text-align: left; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Permissão</th>
                 <th style="padding: 18px 25px; text-align: left; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Spread (%)</th>
-                <th style="padding: 18px 25px; text-align: left; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Limite (Saldo)</th>
                 <th style="padding: 18px 25px; text-align: left; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Criado em</th>
                 <th style="padding: 18px 25px; text-align: right; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Ações</th>
             </tr>
@@ -84,9 +83,6 @@
                     <span style="background: rgba(59, 130, 246, 0.1); color: #60a5fa; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 13px;">
                         <?= number_format($user['fee_percent'] ?? 0, 2) ?>%
                     </span>
-                </td>
-                <td style="padding: 20px 25px; color: white; font-weight: 700; font-size: 14px;">
-                    Saldo: R$ <?= number_format($user['balance'] ?? 0, 2, ',', '.') ?>
                 </td>
                 <td style="padding: 20px 25px; color: #64748b; font-size: 13px;"><?= date('d/m/Y', strtotime($user['created_at'])) ?></td>
                 <td style="padding: 20px 25px; text-align: right;">
