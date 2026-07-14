@@ -1,1 +1,1 @@
-{"version":2,"defects":[],"times":{"ExampleDatabaseTest::testModelFindAll":0.028,"ExampleDatabaseTest::testSoftDeleteLeavesRow":0.006,"ExampleSessionTest::testSessionSimple":0.002,"HealthTest::testIsDefinedAppPath":0.002,"HealthTest::testBaseUrlHasBeenSet":0.03}}
+{"version":2,"defects":[],"times":{"ExampleDatabaseTest::testModelFindAll":0.034,"ExampleDatabaseTest::testSoftDeleteLeavesRow":0.009,"ExampleSessionTest::testSessionSimple":0.003,"HealthTest::testIsDefinedAppPath":0.003,"HealthTest::testBaseUrlHasBeenSet":0.04}}
