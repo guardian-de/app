@@ -1530,6 +1530,33 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
         </div>
     </div>
 
+    <!-- Wallet Deactivated Alert Modal -->
+    <div id="wallet-deactivated-alert-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 6000; justify-content: center; align-items: center; padding: 15px; backdrop-filter: blur(10px);">
+        <div
+            style="background: rgba(30, 41, 59, 0.98); width: 100%; max-width: 400px; padding: 30px; border-radius: 24px; position: relative; border: 1px solid rgba(239, 68, 68, 0.35); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6); box-sizing: border-box; text-align: center;">
+            <div style="background: rgba(239, 68, 68, 0.1); width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; border: 1px solid rgba(239, 68, 68, 0.2);">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+            </div>
+            
+            <h1 style="font-size: 20px; color: white; font-weight: 700; margin-bottom: 12px;">
+                <?= $isChinese ? '钱包已被禁用' : 'Carteira Desativada' ?>
+            </h1>
+            
+            <p style="font-size: 14px; color: #94a3b8; line-height: 1.5; margin-bottom: 25px;">
+                <?= $isChinese 
+                    ? '您的一个或多个 USDT (TRC-20) 接收钱包已被管理员停用。您将无法使用它们进行新的交易。请检查“我的账户”以获取详细信息。' 
+                    : 'Uma ou mais de suas carteiras USDT (TRC-20) foram desativadas pelo administrador do sistema. Elas não estarão disponíveis para novas operações. Verifique a seção "Minha Conta".' ?>
+            </p>
+
+            <button onclick="closeWalletDeactivatedModal()" style="width: 100%; background: #ef4444; border: none; padding: 14px; border-radius: 12px; color: white; font-weight: 700; font-size: 14px; cursor: pointer; transition: background 0.2s;">
+                <?= $isChinese ? '我知道了' : 'Entendido' ?>
+            </button>
+        </div>
+    </div>
+
     <!-- Change Password Modal -->
     <div id="change-password-modal"
         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 5001; justify-content: center; align-items: center; padding: 15px; backdrop-filter: blur(10px);">
@@ -3432,6 +3459,20 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 alert(isChinese ? '发生错误。' : 'Ocorreu um erro ao processar a requisição.');
             }
         };
+
+        window.closeWalletDeactivatedModal = function() {
+            document.getElementById('wallet-deactivated-alert-modal').style.display = 'none';
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const hasInactive = <?= $hasInactiveWallet ? 'true' : 'false' ?>;
+            if (hasInactive) {
+                const modal = document.getElementById('wallet-deactivated-alert-modal');
+                if (modal) {
+                    modal.style.display = 'flex';
+                }
+            }
+        });
 
     </script>
 </body>
