@@ -19,6 +19,8 @@ $routes->get('dev', function () {
 $routes->post('/', 'Auth::authenticate', ['as' => 'authenticate']);
 $routes->addRedirect('login', '/');
 $routes->get('logout', 'Auth::logout', ['as' => 'logout']);
+$routes->get('login/2fa', 'Auth::login2fa', ['as' => 'login_2fa']);
+$routes->post('login/verify-2fa', 'Auth::verifyLogin2fa', ['as' => 'verify_login_2fa']);
 
 // Admin Routes (Substitui o cadastro público)
 $routes->group('admin', ['filter' => 'admin'], function ($routes) {
@@ -100,6 +102,9 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->post('change-password', 'Auth::updatePassword', ['as' => 'update_password']);
     $routes->get('dashboard', 'ChatController::mobile', ['as' => 'dashboard']);
     $routes->get('m', 'ChatController::mobile', ['as' => 'dashboard_mobile']);
+    $routes->get('chat/2fa', 'ChatController::get2faSettings', ['as' => 'chat_2fa_settings']);
+    $routes->post('chat/2fa/enable', 'ChatController::enable2fa', ['as' => 'chat_enable_2fa']);
+    $routes->post('chat/2fa/disable', 'ChatController::disable2fa', ['as' => 'chat_disable_2fa']);
     $routes->post('chat/send', 'ChatController::send', ['as' => 'chat_send']);
     $routes->post('chat/buy', 'ChatController::createTransaction', ['as' => 'chat_buy']);
     $routes->post('chat/update-language', 'ChatController::updateLanguage', ['as' => 'update_language']);

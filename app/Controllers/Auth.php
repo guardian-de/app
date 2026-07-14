@@ -139,6 +139,12 @@ class Auth extends BaseController
             if (!$db->fieldExists('last_purchase_mode', 'users')) {
                 $db->query("ALTER TABLE `users` ADD COLUMN `last_purchase_mode` ENUM('usdt','brl') NULL AFTER `purchase_model`");
             }
+            if (!$db->fieldExists('two_factor_secret', 'users')) {
+                $db->query("ALTER TABLE `users` ADD COLUMN `two_factor_secret` VARCHAR(100) NULL AFTER `last_purchase_mode`");
+            }
+            if (!$db->fieldExists('two_factor_enabled', 'users')) {
+                $db->query("ALTER TABLE `users` ADD COLUMN `two_factor_enabled` TINYINT(1) NOT NULL DEFAULT 0 AFTER `two_factor_secret`");
+            }
         } catch (\Throwable $e) {}
     }
 
@@ -154,6 +160,11 @@ class Auth extends BaseController
 
         if ($user) {
             if (password_verify($password, $user['password'])) {
+                if (!empty($user['two_factor_enabled']) && !empty($user['two_factor_secret'])) {
+                    $session->set('temp_2fa_user_id', $user['id']);
+                    return redirect()->to('/login/2fa');
+                }
+
                 $sessionData = [
                     'user_id'    => $user['id'],
                     'user_name'  => $user['login'],
@@ -275,5 +286,82 @@ class Auth extends BaseController
         }
 
         return redirect()->back()->with('success', 'Senha alterada com sucesso!');
+    }
+
+    public function login2fa()
+    {
+        if (!session()->get('temp_2fa_user_id')) {
+            return redirect()->to('/');
+        }
+        return view('auth/login_2fa');
+    }
+
+    public function verifyLogin2fa()
+    {
+        $tempUserId = session()->get('temp_2fa_user_id');
+        if (!$tempUserId) {
+            return redirect()->to('/');
+        }
+
+        $code = $this->request->getPost('two_factor_code');
+        if (empty($code)) {
+            return redirect()->back()->with('error', 'Por favor, digite o código de 2 fatores.');
+        }
+
+        $userModel = new UserModel();
+        $user = $userModel->find($tempUserId);
+        if (!$user) {
+            session()->destroy();
+            return redirect()->to('/');
+        }
+
+        if (!\App\Libraries\GoogleAuthenticator::verifyCode($user['two_factor_secret'], $code)) {
+            return redirect()->back()->with('error', 'Código de 2 fatores inválido ou expirado.');
+        }
+
+        $session = session();
+        $sessionData = [
+            'user_id'    => $user['id'],
+            'user_name'  => $user['login'],
+            'user_login' => $user['login'],
+            'user_fee'   => $user['fee_percent'],
+            'user_lang'  => $user['language'],
+            'user_wallet'=> $user['usdt_wallet'],
+            'user_role'  => $user['role'],
+            'user_permissions' => !empty($user['permissions']) ? json_decode($user['permissions'], true) : [],
+            'score' => $user['score'],
+            'isLoggedIn' => true,
+        ];
+        $session->set($sessionData);
+        $session->remove('temp_2fa_user_id');
+
+        if ($user['role'] === 'admin') {
+            return redirect()->to('/admin/contracts');
+        } elseif ($user['role'] === 'operator') {
+            $perms = !empty($user['permissions']) ? json_decode($user['permissions'], true) : [];
+            if (!is_array($perms)) {
+                $perms = [];
+            }
+            if (in_array('enviar_usdt', $perms)) {
+                return redirect()->to('/admin/contracts');
+            } elseif (in_array('transacoes', $perms)) {
+                return redirect()->to('/admin/transactions');
+            } elseif (in_array('usuarios', $perms)) {
+                return redirect()->to('/admin/users');
+            } elseif (in_array('lots', $perms)) {
+                return redirect()->to('/admin/lots');
+            } elseif (in_array('deposits', $perms)) {
+                return redirect()->to('/admin/deposits');
+            } elseif (in_array('suppliers', $perms)) {
+                return redirect()->to('/admin/suppliers');
+            } elseif (in_array('settings', $perms)) {
+                return redirect()->to('/admin/settings');
+            } else {
+                $session->destroy();
+                return redirect()->to('/')->with('error', 'Acesso negado: você não tem permissão para acessar esta área.');
+            }
+        }
+
+        return redirect()->to('/dashboard');
     }
 }
