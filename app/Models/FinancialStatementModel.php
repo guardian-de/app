@@ -82,7 +82,8 @@ class FinancialStatementModel extends Model
                     JOIN usdt_lots ul ON ul.id = la.lot_id
                     WHERE la.contract_id = fs.contract_id AND la.status IN ('reserved','delivered')
                 ) USING utf8mb4) AS purchase_hash,
-                CONVERT(fs.notes USING utf8mb4) AS notes
+                CONVERT(fs.notes USING utf8mb4) AS notes,
+                CONVERT(NULL USING utf8mb4) AS proof_file
             FROM financial_statements fs
             LEFT JOIN contracts c ON c.id = fs.contract_id
             WHERE fs.user_id = ?";
@@ -128,7 +129,8 @@ class FinancialStatementModel extends Model
                     NULL AS fee_percent, NULL AS fee_brl, NULL AS usdt_amount,
                     NULL AS spot_rate,
                     CONVERT(NULL USING utf8mb4) AS purchase_hash,
-                    CONVERT(NULL USING utf8mb4) AS notes
+                    CONVERT(NULL USING utf8mb4) AS notes,
+                    CONVERT(d.proof_file USING utf8mb4) AS proof_file
                 FROM deposits d
                 WHERE d.user_id = ?";
             $depositParams = [$userId];
