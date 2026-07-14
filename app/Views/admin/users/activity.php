@@ -84,7 +84,7 @@ $payloadValueLabels = [
 
 <!-- Cabeçalho -->
 <div class="header" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-    <a href="<?= url_to('admin_users') ?>"
+    <a href="<?= url_to('admin_users_view', $operator['id']) ?>"
        style="display:inline-flex;align-items:center;gap:6px;color:#64748b;font-size:13px;text-decoration:none;padding:6px 12px;border:1px solid rgba(255,255,255,0.08);border-radius:8px;background:rgba(255,255,255,0.03);"
        onmouseover="this.style.color='white'" onmouseout="this.style.color='#64748b'">
         ← Voltar
