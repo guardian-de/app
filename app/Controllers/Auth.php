@@ -145,6 +145,9 @@ class Auth extends BaseController
             if (!$db->fieldExists('two_factor_enabled', 'users')) {
                 $db->query("ALTER TABLE `users` ADD COLUMN `two_factor_enabled` TINYINT(1) NOT NULL DEFAULT 0 AFTER `two_factor_secret`");
             }
+            if (!$db->fieldExists('status', 'user_wallets')) {
+                $db->query("ALTER TABLE `user_wallets` ADD COLUMN `status` ENUM('active','inactive') NOT NULL DEFAULT 'active' AFTER `is_default`");
+            }
         } catch (\Throwable $e) {}
     }
 

@@ -197,39 +197,54 @@ class AdminController extends BaseController
 
         // Processamento das carteiras
         $walletsPost = (array)$this->request->getPost('wallets');
+        $walletStatusesPost = (array)$this->request->getPost('wallet_statuses');
         $defaultWalletPost = $this->request->getPost('default_wallet');
-        $walletsPost = array_filter(array_map('trim', $walletsPost));
+        
+        $cleanedWallets = [];
+        $cleanedStatuses = [];
+        foreach ($walletsPost as $idx => $addr) {
+            $trimmed = trim($addr);
+            if ($trimmed !== '') {
+                $cleanedWallets[] = $trimmed;
+                $cleanedStatuses[] = isset($walletStatusesPost[$idx]) ? $walletStatusesPost[$idx] : 'active';
+            }
+        }
 
         $walletModel = new \App\Models\UserWalletModel();
         $existingWallets = $walletModel->where('user_id', $id)->findAll();
 
         foreach ($existingWallets as $ew) {
-            if (!in_array($ew['address'], $walletsPost)) {
+            if (!in_array($ew['address'], $cleanedWallets)) {
                 $walletModel->delete($ew['id']);
             }
         }
 
         $defaultAddress = null;
-        foreach ($walletsPost as $addr) {
+        foreach ($cleanedWallets as $index => $addr) {
             $isDefault = ($addr === $defaultWalletPost) ? 1 : 0;
+            $status = $cleanedStatuses[$index] === 'inactive' ? 'inactive' : 'active';
             if ($isDefault) {
                 $defaultAddress = $addr;
             }
 
             $existing = $walletModel->where('user_id', $id)->where('address', $addr)->first();
             if ($existing) {
-                $walletModel->update($existing['id'], ['is_default' => $isDefault]);
+                $walletModel->update($existing['id'], [
+                    'is_default' => $isDefault,
+                    'status'     => $status
+                ]);
             } else {
                 $walletModel->insert([
                     'user_id'    => $id,
                     'address'    => $addr,
-                    'is_default' => $isDefault
+                    'is_default' => $isDefault,
+                    'status'     => $status
                 ]);
             }
         }
 
-        if (!$defaultAddress && !empty($walletsPost)) {
-            $firstAddr = reset($walletsPost);
+        if (!$defaultAddress && !empty($cleanedWallets)) {
+            $firstAddr = reset($cleanedWallets);
             $existing = $walletModel->where('user_id', $id)->where('address', $firstAddr)->first();
             if ($existing) {
                 $walletModel->update($existing['id'], ['is_default' => 1]);

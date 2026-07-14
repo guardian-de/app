@@ -695,6 +695,24 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 </div>
                 </header>
 
+                <?php
+                    $hasInactiveWallet = false;
+                    if (!empty($wallets)) {
+                        foreach ($wallets as $w) {
+                            if (($w['status'] ?? 'active') === 'inactive') {
+                                $hasInactiveWallet = true;
+                                break;
+                            }
+                        }
+                    }
+                ?>
+                <?php if ($hasInactiveWallet): ?>
+                    <div style="background: rgba(239, 68, 68, 0.15); border-bottom: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; padding: 10px 20px; font-size: 12px; text-align: center; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #ef4444; flex-shrink: 0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        <span><?= $isChinese ? '您的某张/些钱包已被管理员禁用，请检查“我的账户”。' : 'Uma ou mais de suas carteiras foram desativadas pelo administrador. Verifique em "Minha Conta".' ?></span>
+                    </div>
+                <?php endif; ?>
+
                 <!-- Saldo Mobile -->
                 <div style="background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); padding: 10px 20px; border-bottom: 1px solid rgba(59, 130, 246, 0.2);">
                     <p style="font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">
@@ -827,11 +845,28 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 <label style="display: block; color: #94a3b8; font-size: 13px; font-weight: 500; margin-bottom: 8px;">
                     <?= session()->get('user_lang') == 'zh-CN' ? 'USDT 接收钱包 (TRC-20)' : 'Carteira de Destino USDT (TRC-20)' ?>
                 </label>
-                <div
-                    style="background: rgba(15, 23, 42, 0.5); padding: 12px; border-radius: 8px; border: 1px dashed #334155; font-family: monospace; font-size: 13px; color: #818cf8; word-break: break-all; line-height: 1.4;">
-                    <?= esc($defaultWalletAddress ?: ($isChinese ? '未注册' : 'Não cadastrada')) ?>
-                </div>
-                <input type="hidden" id="wallet-selector" value="<?= esc($defaultWalletAddress ?: '') ?>">
+                <?php
+                    $activeWallets = array_filter($wallets, function($w) {
+                        return ($w['status'] ?? 'active') === 'active';
+                    });
+                ?>
+                <?php if (count($activeWallets) > 1): ?>
+                    <select id="wallet-selector" style="width: 100%; background: #0f172a; border: 1px solid #334155; padding: 12px; border-radius: 8px; color: #818cf8; font-family: monospace; font-size: 13px; outline: none; cursor: pointer;">
+                        <?php foreach ($activeWallets as $w): ?>
+                            <option value="<?= esc($w['address']) ?>" <?= $w['address'] === $defaultWalletAddress ? 'selected' : '' ?>>
+                                <?= esc($w['address']) ?> <?= $w['is_default'] ? ($isChinese ? '(默认)' : '(Padrão)') : '' ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                <?php else: ?>
+                    <?php 
+                        $singleActiveWallet = !empty($activeWallets) ? reset($activeWallets)['address'] : null;
+                    ?>
+                    <div style="background: rgba(15, 23, 42, 0.5); padding: 12px; border-radius: 8px; border: 1px dashed #334155; font-family: monospace; font-size: 13px; color: #818cf8; word-break: break-all; line-height: 1.4;">
+                        <?= esc($singleActiveWallet ?: ($isChinese ? '无活跃钱包' : 'Nenhuma carteira ativa')) ?>
+                    </div>
+                    <input type="hidden" id="wallet-selector" value="<?= esc($singleActiveWallet ?: '') ?>">
+                <?php endif; ?>
             </div>
 
 
@@ -940,11 +975,23 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 <label style="display: block; color: #94a3b8; font-size: 13px; font-weight: 500; margin-bottom: 8px;">
                     <?= session()->get('user_lang') == 'zh-CN' ? 'USDT 接收钱包 (TRC-20)' : 'Carteira de Destino USDT (TRC-20)' ?>
                 </label>
-                <div
-                    style="background: rgba(15, 23, 42, 0.5); padding: 12px; border-radius: 8px; border: 1px dashed #334155; font-family: monospace; font-size: 13px; color: #818cf8; word-break: break-all; line-height: 1.4;">
-                    <?= esc($defaultWalletAddress ?: ($isChinese ? '未注册' : 'Não cadastrada')) ?>
-                </div>
-                <input type="hidden" id="promo-wallet-selector" value="<?= esc($defaultWalletAddress ?: '') ?>">
+                <?php if (count($activeWallets) > 1): ?>
+                    <select id="promo-wallet-selector" style="width: 100%; background: #0f172a; border: 1px solid #334155; padding: 12px; border-radius: 8px; color: #818cf8; font-family: monospace; font-size: 13px; outline: none; cursor: pointer;">
+                        <?php foreach ($activeWallets as $w): ?>
+                            <option value="<?= esc($w['address']) ?>" <?= $w['address'] === $defaultWalletAddress ? 'selected' : '' ?>>
+                                <?= esc($w['address']) ?> <?= $w['is_default'] ? ($isChinese ? '(默认)' : '(Padrão)') : '' ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                <?php else: ?>
+                    <?php 
+                        $singleActiveWallet = !empty($activeWallets) ? reset($activeWallets)['address'] : null;
+                    ?>
+                    <div style="background: rgba(15, 23, 42, 0.5); padding: 12px; border-radius: 8px; border: 1px dashed #334155; font-family: monospace; font-size: 13px; color: #818cf8; word-break: break-all; line-height: 1.4;">
+                        <?= esc($singleActiveWallet ?: ($isChinese ? '无活跃钱包' : 'Nenhuma carteira ativa')) ?>
+                    </div>
+                    <input type="hidden" id="promo-wallet-selector" value="<?= esc($singleActiveWallet ?: '') ?>">
+                <?php endif; ?>
             </div>
 
             <div id="promo-usdt-input-group" style="margin-bottom: 20px;">
@@ -1392,11 +1439,29 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                     </div>
                 </div>
 
-                <div style="margin-top: 5px;">
-                    <span style="color: #94a3b8; display: block; font-size: 11px;"><?= $isChinese ? 'USDT (TRC-20) 钱包地址' : 'Carteira USDT (TRC-20)' ?></span>
-                    <span style="color: #818cf8; font-family: monospace; font-size: 12px; word-break: break-all; font-weight: 500;">
-                        <?= esc($user['usdt_wallet'] ?: ($isChinese ? '未注册' : 'Não cadastrada')) ?>
-                    </span>
+                <div style="margin-top: 5px; display: flex; flex-direction: column; gap: 8px;">
+                    <span style="color: #94a3b8; display: block; font-size: 11px;"><?= $isChinese ? 'USDT (TRC-20) 钱包地址' : 'Carteira(s) USDT (TRC-20)' ?></span>
+                    <?php if (!empty($wallets)): ?>
+                        <?php foreach ($wallets as $w): ?>
+                            <div style="background: rgba(15,23,42,0.4); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                                <span style="color: #818cf8; font-family: monospace; font-size: 12px; word-break: break-all; font-weight: 500; flex: 1;">
+                                    <?= esc($w['address']) ?>
+                                    <?php if ($w['is_default']): ?>
+                                        <small style="color: #6366f1; font-weight: 700; font-size: 9px; margin-left: 5px;"><?= $isChinese ? '[默认]' : '[PADRÃO]' ?></small>
+                                    <?php endif; ?>
+                                </span>
+                                <?php if (($w['status'] ?? 'active') === 'active'): ?>
+                                    <span style="color: #10b981; font-size: 10px; font-weight: 700; text-transform: uppercase; background: rgba(16,185,129,0.1); padding: 2px 6px; border-radius: 4px;"><?= $isChinese ? '活跃' : 'Ativa' ?></span>
+                                <?php else: ?>
+                                    <span style="color: #ef4444; font-size: 10px; font-weight: 700; text-transform: uppercase; background: rgba(239,68,68,0.1); padding: 2px 6px; border-radius: 4px; cursor: help;" title="<?= $isChinese ? '此钱包已被管理员禁用' : 'Esta carteira foi desativada pelo administrador' ?>">
+                                        <?= $isChinese ? '已禁用' : 'Desativada' ?>
+                                    </span>
+                                <?php endif; ?>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <span style="color: #cbd5e1; font-size: 12px;"><?= $isChinese ? '未注册' : 'Nenhuma carteira cadastrada' ?></span>
+                    <?php endif; ?>
                 </div>
             </div>
 

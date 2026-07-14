@@ -13,7 +13,7 @@ class UserWalletModel extends Model
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
     protected $allowedFields    = [
-        'user_id', 'address', 'is_default', 'created_at', 'updated_at'
+        'user_id', 'address', 'is_default', 'status', 'created_at', 'updated_at'
     ];
 
     protected bool $allowEmptyInserts = false;
