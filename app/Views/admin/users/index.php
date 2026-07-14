@@ -39,6 +39,7 @@
             <label>Login / Nome</label>
             <input type="text" name="search" value="<?= esc($filters['search'] ?? '') ?>" placeholder="Pesquisar usuário...">
         </div>
+        <?php if (session()->get('user_role') === 'admin'): ?>
         <div class="filter-group">
             <label>Tipo de Usuário</label>
             <select name="role">
@@ -48,6 +49,7 @@
                 <option value="admin" <?= ($filters['role'] ?? '') === 'admin' ? 'selected' : '' ?>>Admin</option>
             </select>
         </div>
+        <?php endif; ?>
         <button type="submit" class="btn btn-primary" style="padding: 9px 20px; height: fit-content; align-self: flex-end;">Filtrar</button>
         <a href="<?= url_to('admin_users') ?>" class="btn" style="padding: 9px 20px; height: fit-content; align-self: flex-end; background: rgba(255,255,255,0.05); color: #94a3b8; text-decoration: none;">Limpar</a>
     </div>

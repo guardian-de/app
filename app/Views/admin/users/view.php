@@ -122,12 +122,20 @@
 <div class="card" style="padding: 25px; margin-bottom: 30px;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h2 style="font-size: 18px; color: white; margin: 0;">Extrato de Entradas e Saídas</h2>
-        <a id="statement-export-btn" href="<?= site_url('admin/users/statement/export/' . $user['id']) ?>" class="btn" style="background: #10b981; color: white; border: none; padding: 10px 16px; font-size: 13px; text-decoration: none; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; font-weight: 600;">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"></path>
-            </svg>
-            Exportar CSV
-        </a>
+        <div style="display: flex; gap: 10px;">
+            <a id="statement-export-btn" href="<?= site_url('admin/users/statement/export/' . $user['id']) ?>" class="btn" style="background: #10b981; color: white; border: none; padding: 10px 16px; font-size: 13px; text-decoration: none; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; font-weight: 600;">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"></path>
+                </svg>
+                CSV
+            </a>
+            <a href="<?= site_url('admin/users/statement/export-json/' . $user['id']) ?>" class="btn" style="background: rgba(99, 102, 241, 0.2); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.4); padding: 10px 16px; font-size: 13px; text-decoration: none; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; font-weight: 600;">
+                JSON
+            </a>
+            <a href="<?= site_url('admin/users/statement/export-pdf/' . $user['id']) ?>" target="_blank" class="btn" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 10px 16px; font-size: 13px; text-decoration: none; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; font-weight: 600;">
+                PDF
+            </a>
+        </div>
     </div>
     
     <div style="overflow-x: auto; border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; background: rgba(0,0,0,0.2);">
