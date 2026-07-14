@@ -3433,7 +3433,11 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             const pdfNotice = document.getElementById('proof-preview-pdf-notice');
             const downloadBtn = document.getElementById('proof-preview-download');
             
-            const url = `<?= base_url('uploads/proofs/') ?>/${proofFile}`;
+            let path = proofFile;
+            if (!path.startsWith('uploads/')) {
+                path = 'uploads/proofs/' + path;
+            }
+            const url = `<?= base_url() ?>/` + path;
             downloadBtn.href = url;
             
             const isPdf = proofFile.toLowerCase().endsWith('.pdf');
