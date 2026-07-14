@@ -69,6 +69,10 @@
                                 <input type="text" name="wallets[]" value="<?= esc($w['address']) ?>" placeholder="Endereço da carteira USDT" required
                                     style="flex: 1; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none; font-family: monospace;"
                                     oninput="updateRadioValue(this)">
+                                <select name="wallet_statuses[]" style="background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none; cursor: pointer;">
+                                    <option value="active" <?= ($w['status'] ?? 'active') === 'active' ? 'selected' : '' ?>>Ativa</option>
+                                    <option value="inactive" <?= ($w['status'] ?? 'active') === 'inactive' ? 'selected' : '' ?>>Desativada</option>
+                                </select>
                                 <button type="button" onclick="removeWalletRow(this)"
                                     style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171; border-radius: 10px; padding: 12px 16px; cursor: pointer; font-weight: 600; transition: all 0.2s;">
                                     Remover
@@ -81,6 +85,10 @@
                             <input type="text" name="wallets[]" value="" placeholder="Endereço da carteira USDT" required
                                 style="flex: 1; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none; font-family: monospace;"
                                 oninput="updateRadioValue(this)">
+                            <select name="wallet_statuses[]" style="background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none; cursor: pointer;">
+                                <option value="active" selected>Ativa</option>
+                                <option value="inactive">Desativada</option>
+                            </select>
                             <button type="button" onclick="removeWalletRow(this)"
                                 style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171; border-radius: 10px; padding: 12px 16px; cursor: pointer; font-weight: 600; transition: all 0.2s;">
                                 Remover
@@ -240,6 +248,10 @@ function addWalletRow() {
         <input type="text" name="wallets[]" value="" placeholder="Endereço da carteira USDT" required
             style="flex: 1; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none; font-family: monospace;"
             oninput="updateRadioValue(this)">
+        <select name="wallet_statuses[]" style="background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none; cursor: pointer;">
+            <option value="active" selected>Ativa</option>
+            <option value="inactive">Desativada</option>
+        </select>
         <button type="button" onclick="removeWalletRow(this)"
             style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171; border-radius: 10px; padding: 12px 16px; cursor: pointer; font-weight: 600; transition: all 0.2s;">
             Remover
