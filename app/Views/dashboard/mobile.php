@@ -1545,11 +1545,28 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 <?= $isChinese ? '钱包已被禁用' : 'Carteira Desativada' ?>
             </h1>
             
-            <p style="font-size: 14px; color: #94a3b8; line-height: 1.5; margin-bottom: 25px;">
+            <?php
+                $inactiveWalletAddresses = [];
+                if (!empty($wallets)) {
+                    foreach ($wallets as $w) {
+                        if (($w['status'] ?? 'active') === 'inactive') {
+                            $inactiveWalletAddresses[] = $w['address'];
+                        }
+                    }
+                }
+            ?>
+            <p style="font-size: 14px; color: #94a3b8; line-height: 1.5; margin-bottom: 15px;">
                 <?= $isChinese 
-                    ? '您的一个或多个 USDT (TRC-20) 接收钱包已被管理员停用。您将无法使用它们进行新的交易。请检查“我的账户”以获取详细信息。' 
-                    : 'Uma ou mais de suas carteiras USDT (TRC-20) foram desativadas pelo administrador do sistema. Elas não estarão disponíveis para novas operações. Verifique a seção "Minha Conta".' ?>
+                    ? '以下 USDT (TRC-20) 接收钱包已被系统管理员禁用，它们将无法进行新交易：' 
+                    : 'A(s) seguinte(s) carteira(s) USDT (TRC-20) foi(ram) desativada(s) pelo administrador do sistema e não estará(ão) disponível(is) para novas operações:' ?>
             </p>
+            <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.15); border-radius: 12px; padding: 12px; margin-bottom: 25px; display: flex; flex-direction: column; gap: 8px;">
+                <?php foreach ($inactiveWalletAddresses as $addr): ?>
+                    <div style="font-family: monospace; font-size: 12px; color: #fca5a5; word-break: break-all; text-align: center; font-weight: 600;">
+                        <?= esc($addr) ?>
+                    </div>
+                <?php endforeach; ?>
+            </div>
 
             <button onclick="closeWalletDeactivatedModal()" style="width: 100%; background: #ef4444; border: none; padding: 14px; border-radius: 12px; color: white; font-weight: 700; font-size: 14px; cursor: pointer; transition: background 0.2s;">
                 <?= $isChinese ? '我知道了' : 'Entendido' ?>
