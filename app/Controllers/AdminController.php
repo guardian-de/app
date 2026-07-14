@@ -126,6 +126,39 @@ class AdminController extends BaseController
         return view('admin/users/edit', $data);
     }
 
+    public function view(int $id)
+    {
+        if ($response = $this->checkPermission('usuarios')) return $response;
+
+        $userModel = new UserModel();
+        $user = $userModel->find($id);
+        if (!$user) {
+            return redirect()->to('/admin/users')->with('error', 'Usuário não encontrado.');
+        }
+
+        $financialModel = new \App\Models\FinancialStatementModel();
+        $user['balance'] = $financialModel->getBalance($id);
+
+        $walletModel = new \App\Models\UserWalletModel();
+        $wallets = $walletModel->where('user_id', $id)->findAll();
+
+        $db = \Config\Database::connect();
+        $latestRecord = $db->table('dollar_history')
+                           ->orderBy('created_at', 'DESC')
+                           ->limit(1)
+                           ->get()
+                           ->getRow();
+        $latestRate = $latestRecord ? (float) $latestRecord->base_rate : 5.0000;
+
+        $data = [
+            'user'        => $user,
+            'wallets'     => $wallets,
+            'latest_rate' => $latestRate
+        ];
+
+        return view('admin/users/view', $data);
+    }
+
     public function update(int $id)
     {
         if ($response = $this->checkPermission('usuarios')) return $response;
@@ -210,7 +243,7 @@ class AdminController extends BaseController
             return redirect()->back()->withInput()->with('errors', $userModel->errors());
         }
 
-        return redirect()->to('/admin/users')->with('success', 'Usuário atualizado com sucesso!');
+        return redirect()->to(url_to('admin_users_view', $id))->with('success', 'Usuário atualizado com sucesso!');
     }
 
     public function transactions()

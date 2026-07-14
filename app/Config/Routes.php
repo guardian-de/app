@@ -27,6 +27,7 @@ $routes->group('admin', ['filter' => 'admin'], function ($routes) {
         $routes->get('create', 'AdminController::create', ['as' => 'admin_users_create']);
         $routes->post('store', 'AdminController::store', ['as' => 'admin_users_store']);
         $routes->get('edit/(:num)', 'AdminController::edit/$1', ['as' => 'admin_users_edit']);
+        $routes->get('view/(:num)', 'AdminController::view/$1', ['as' => 'admin_users_view']);
         $routes->post('update/(:num)', 'AdminController::update/$1', ['as' => 'admin_users_update']);
         $routes->post('adjust-limit/(:num)', 'AdminController::adjustLimit/$1', ['as' => 'admin_users_adjust_limit']);
         $routes->post('transfer-limit/(:num)', 'AdminController::transferLimit/$1', ['as' => 'admin_users_transfer_limit']);

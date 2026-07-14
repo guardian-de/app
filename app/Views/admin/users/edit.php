@@ -179,7 +179,7 @@
 
         <div style="display: flex; gap: 15px; margin-top: 10px;">
             <button type="submit" class="btn btn-primary" style="flex: 1; justify-content: center;">Salvar Alterações</button>
-            <a href="<?= url_to('admin_users') ?>" class="btn" style="background: rgba(255,255,255,0.05); color: #94a3b8;">Cancelar</a>
+            <a href="<?= url_to('admin_users_view', $user['id']) ?>" class="btn" style="background: rgba(255,255,255,0.05); color: #94a3b8;">Cancelar</a>
         </div>
     </form>
 </div>
