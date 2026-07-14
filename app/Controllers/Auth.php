@@ -64,7 +64,7 @@ class Auth extends BaseController
             ]);
         }
 
-        return redirect()->to('/login')->with('success', 'Cadastro realizado com sucesso! Faça login.');
+        return redirect()->to('/')->with('success', 'Cadastro realizado com sucesso! Faça login.');
     }
 
     private function runSchemaGuards(): void
@@ -191,7 +191,7 @@ class Auth extends BaseController
                         return redirect()->to('/admin/settings');
                     } else {
                         $session->destroy();
-                        return redirect()->to('/login')->with('error', 'Acesso negado: você não tem permissão para acessar esta área.');
+                        return redirect()->to('/')->with('error', 'Acesso negado: você não tem permissão para acessar esta área.');
                     }
                 }
 
@@ -207,13 +207,13 @@ class Auth extends BaseController
     public function logout()
     {
         session()->destroy();
-        return redirect()->to('/login');
+        return redirect()->to('/');
     }
 
     public function changePassword()
     {
         if (!session()->get('isLoggedIn')) {
-            return redirect()->to('/login');
+            return redirect()->to('/');
         }
         $data['role'] = session()->get('user_role');
         return view('auth/change_password', $data);
@@ -225,7 +225,7 @@ class Auth extends BaseController
             if ($this->request->isAJAX()) {
                 return $this->response->setJSON(['error' => 'Sessão expirada. Faça login novamente.'])->setStatusCode(401);
             }
-            return redirect()->to('/login');
+            return redirect()->to('/');
         }
 
         $userId = session()->get('user_id');
@@ -236,7 +236,7 @@ class Auth extends BaseController
             if ($this->request->isAJAX()) {
                 return $this->response->setJSON(['error' => 'Usuário não encontrado.'])->setStatusCode(404);
             }
-            return redirect()->to('/login');
+            return redirect()->to('/');
         }
 
         $currentPassword = $this->request->getPost('current_password');

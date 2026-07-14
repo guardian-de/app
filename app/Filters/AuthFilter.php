@@ -31,7 +31,7 @@ class AuthFilter implements FilterInterface
                     ->setStatusCode(401)
                     ->setJSON(['status' => 'error', 'code' => 'SESSION_EXPIRED']);
             }
-            return redirect()->to('/login')->with('error', 'Por favor, faça login para acessar esta área.');
+            return redirect()->to('/')->with('error', 'Por favor, faça login para acessar esta área.');
         }
 
         $role = session()->get('user_role');

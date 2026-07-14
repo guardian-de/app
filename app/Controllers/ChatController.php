@@ -11,7 +11,7 @@ class ChatController extends BaseController
     public function index()
     {
         if (!session()->get('isLoggedIn')) {
-            return redirect()->to('/login');
+            return redirect()->to('/');
         }
         
         $this->recordCurrentRate();
@@ -20,7 +20,7 @@ class ChatController extends BaseController
         $user = $userModel->find(session()->get('user_id'));
         if (!$user) {
             session()->destroy();
-            return redirect()->to('/login');
+            return redirect()->to('/');
         }
         $data['user'] = $user;
         
@@ -53,7 +53,7 @@ class ChatController extends BaseController
     public function mobile()
     {
         if (!session()->get('isLoggedIn')) {
-            return redirect()->to('/login');
+            return redirect()->to('/');
         }
         
         $this->recordCurrentRate();
@@ -62,7 +62,7 @@ class ChatController extends BaseController
         $user = $userModel->find(session()->get('user_id'));
         if (!$user) {
             session()->destroy();
-            return redirect()->to('/login');
+            return redirect()->to('/');
         }
         $data['user'] = $user;
 
