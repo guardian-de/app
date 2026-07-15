@@ -15,7 +15,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
     <link rel="stylesheet" href="<?= base_url('css/dashboard.css') ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
@@ -114,7 +114,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
         select,
         textarea,
         button {
-            font-family: 'Outfit', sans-serif !important;
+            font-family: 'Plus Jakarta Sans', 'Outfit', sans-serif !important;
         }
 
         .mobile-wrapper {
@@ -618,12 +618,41 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 border-bottom-right-radius: 0 !important;
                 border-top-left-radius: 28px !important;
                 border-top-right-radius: 28px !important;
-                padding: 24px 24px 100px !important; /* bottom padding to not overlap bottom-nav */
+                padding: 32px 24px 100px !important; /* bottom padding to not overlap bottom-nav */
                 animation: slideUpModal 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-                border: 1px solid rgba(255, 255, 255, 0.08) !important;
+                border: 1px solid var(--border-light) !important;
                 border-bottom: none !important;
-                box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5) !important;
+                box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.25) !important;
+                position: relative;
             }
+            [id$="-modal"] > div::before {
+                content: '';
+                display: block;
+                width: 44px;
+                height: 5px;
+                background: var(--text-muted);
+                opacity: 0.25;
+                border-radius: 10px;
+                position: absolute;
+                top: 12px;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+        }
+
+        /* Globally style all modal close buttons to be theme-aware */
+        [id$="-modal"] button[onclick*="close"], 
+        [id$="-modal"] button[onclick*="display='none'"],
+        [id$="-modal"] button[onclick*="hide"] {
+            background: var(--bg-input) !important;
+            color: var(--text-muted) !important;
+            border: 1px solid var(--border-light) !important;
+            transition: all 0.2s !important;
+        }
+        [id$="-modal"] button[onclick*="close"]:hover, 
+        [id$="-modal"] button[onclick*="display='none'"]:hover {
+            opacity: 0.8;
+            transform: scale(1.05);
         }
 
         @keyframes slideUpModal {
