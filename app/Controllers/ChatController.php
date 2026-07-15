@@ -519,6 +519,7 @@ class ChatController extends BaseController
         $type = $json->type ?? 'buy'; // 'buy' ou 'sell'
         $inputMode = $json->input_mode ?? ($usdtAmountReq > 0 ? 'usdt' : 'brl');
         $promoLotId = $json->promo_lot_id ?? null;
+        $clientRate = isset($json->rate) ? (float)$json->rate : null;
         if ($inputMode === 'brl' && !$promoLotId) {
             // Recalcula o USDT a partir do BRL informado, ignorando qualquer amount_usdt pré-calculado no cliente
             $usdtAmountReq = 0;
@@ -615,6 +616,9 @@ class ChatController extends BaseController
             $baseRate = (float)$lot['conversion_rate'];
             $rate = (float)$lot['promo_rate'];
             $feePercent = $baseRate > 0 ? round((($rate / $baseRate) - 1) * 100, 2) : 0.0;
+        } elseif ($clientRate > 0) {
+            $rate = (float)$clientRate;
+            $baseRate = $rate / (1 + ($feePercent / 100));
         } else {
             // Pega cotação direto do Transfero OTC / Binance em tempo real na hora de comprar
             $baseRate = $this->getDollarRate(0, $settlement);
