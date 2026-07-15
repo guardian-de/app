@@ -89,7 +89,7 @@ return [
     'stmt_amount_edited_reason'     => 'Motivo da correção',
     'stmt_usdt_label'               => 'Valor USDT',
     'stmt_fee_label'                => 'Taxa',
-    'stmt_spot_label'               => 'Cotação Spot',
+    'stmt_spot_label'               => 'Valor da Compra',
     'stmt_hash_label'               => 'Hash da Transação',
     'stmt_page_prev'                => 'Anterior',
     'stmt_page_next'                => 'Próximo',
