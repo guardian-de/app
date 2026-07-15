@@ -912,7 +912,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 </div>
                 <div id="conversion-info"
                     style="margin-bottom: 25px; background: rgba(15, 23, 42, 0.4); padding: 15px; border-radius: 12px; border: 1px solid #1e293b;">
-                    <div style="display: none; justify-content: space-between; margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                         <span
                             style="color: #94a3b8; font-size: 13px; font-weight: 500;"><?= lang('App.live_rate') ?>:</span>
                         <span id="modal-base-rate"
@@ -2159,12 +2159,17 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                     return;
                 }
 
+                const selectedWallet = document.getElementById('wallet-selector')?.value || '';
+                if (!selectedWallet) {
+                    alert(isChinese ? '无活跃钱包。请在购买前注册钱包地址。' : 'Nenhuma carteira ativa. Por favor, cadastre uma carteira antes de prosseguir.');
+                    return;
+                }
+
                 const btn = this;
                 btn.disabled = true;
                 btn.textContent = isChinese ? '处理中...' : 'Processando...';
                 btn.style.opacity = '0.7';
 
-                const selectedWallet = document.getElementById('wallet-selector')?.value || '';
                 try {
                     const response = await fetch('<?= url_to('chat_buy') ?>', {
                         method: 'POST',

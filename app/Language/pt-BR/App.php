@@ -2,7 +2,7 @@
 
 return [
     'dashboard' => 'Dashboard',
-    'live_rate' => 'Dólar Comercial',
+    'live_rate' => 'Spot',
     'final_rate' => 'Cotação Final',
     'fee' => 'Taxa',
     'history' => 'Histórico',

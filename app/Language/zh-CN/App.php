@@ -2,7 +2,7 @@
 
 return [
     'dashboard' => '仪表板',
-    'live_rate' => '商业汇率',
+    'live_rate' => '现货价',
     'final_rate' => '最终汇率',
     'fee' => '手续费',
     'history' => '历史记录',
