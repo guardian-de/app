@@ -1549,8 +1549,8 @@ class AdminController extends BaseController
             return redirect()->back()->with('error', 'Prazo de entrega inválido.');
         }
 
-        $feePercent = (float)($user['fee_percent'] ?? 0);
-        $rate = $baseRate * (1 + ($feePercent / 100));
+        $feePercent = 0.0;
+        $rate = $baseRate;
         $brlAmount = round($usdtAmount * $rate, 2);
         $comercialBrl = round($usdtAmount * $baseRate, 2);
         $feeBrl = round($brlAmount - $comercialBrl, 2);

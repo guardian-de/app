@@ -1251,7 +1251,7 @@ class ChatController extends BaseController
                 <th>Taxa %</th>
                 <th>Taxa R$</th>
                 <th>USDT Adquirido</th>
-                <th>Taxa Comercial</th>
+                <th>Valor da Compra</th>
                 <th>Hash / Obs</th>
             </tr>
         </thead>
