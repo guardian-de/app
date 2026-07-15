@@ -43,6 +43,7 @@ class DepositModel extends Model
             'amount'           => $deposit['amount'],
             'description'      => $description,
             'transaction_date' => $now,
+            'attachment'       => $deposit['proof_file'] ?? null,
         ]);
 
         $contractModel = new ContractModel();

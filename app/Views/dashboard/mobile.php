@@ -2434,11 +2434,11 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 document.getElementById('alert-notif-title').textContent = title;
                 const msgEl = document.getElementById('alert-notif-message');
                 msgEl.textContent = description;
-                if (item.operation_type === 'deposit_rejected' && item.proof_file) {
+                if (['deposit', 'deposit_pending', 'deposit_rejected'].includes(item.operation_type) && item.proof_file) {
                     const link = document.createElement('a');
                     link.href = 'javascript:void(0)';
                     link.style.cssText = 'display:block;margin-top:10px;color:#60a5fa;font-weight:700;text-decoration:underline;';
-                    link.textContent = isChinese ? '查看被拒绝的凭证' : 'Ver Comprovante Rejeitado';
+                    link.textContent = isChinese ? '查看凭证' : 'Ver Comprovante';
                     link.onclick = () => {
                         closeAlertNotifModal();
                         openProofPreviewModal(item.proof_file);
@@ -2651,10 +2651,10 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                             </div>
                             <p style="font-size:11px;color:#94a3b8;line-height:1.4;">
                                 ${description}
-                                ${item.operation_type === 'deposit_rejected' && item.proof_file ? `
+                                ${['deposit', 'deposit_pending', 'deposit_rejected'].includes(item.operation_type) && item.proof_file ? `
                                     <span style="display:block;margin-top:4px;">
                                         <a href="javascript:void(0)" onclick="closeNotificationsModal(); openProofPreviewModal('${item.proof_file}')" style="color:#60a5fa;font-weight:700;text-decoration:underline;">
-                                            ${isChinese ? '查看被拒绝的凭证' : 'Ver Comprovante'}
+                                            ${isChinese ? '查看凭证' : 'Ver Comprovante'}
                                         </a>
                                     </span>
                                 ` : ''}
@@ -2840,10 +2840,10 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                                 <div style="font-size:11px;color:#64748b;">${dateStr}</div>
                                 ${item.description ? `<div style="font-size:11px;color:#475569;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.description}</div>` : ''}
                                 ${item.rejection_reason ? `<div style="font-size:11px;color:#f87171;margin-top:2px;">${stmtLang.rejectionReason}: ${item.rejection_reason}</div>` : ''}
-                                ${isRejectedDeposit && item.proof_file ? `
+                                ${['deposit', 'deposit_pending', 'deposit_rejected'].includes(item.operation_type) && item.proof_file ? `
                                     <div style="margin-top:4px;">
                                         <a href="javascript:void(0)" onclick="closeStatementModal(); openProofPreviewModal('${item.proof_file}')" style="font-size:11px;color:#60a5fa;font-weight:700;text-decoration:underline;">
-                                            ${isChinese ? '查看被拒绝的凭证' : 'Ver Comprovante'}
+                                            ${isChinese ? '查看凭证' : 'Ver Comprovante'}
                                         </a>
                                     </div>
                                 ` : ''}
