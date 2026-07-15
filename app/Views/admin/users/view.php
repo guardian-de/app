@@ -223,8 +223,8 @@
         
         <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
             <div>
-                <span style="color: #64748b; font-size: 12px; display: block;">Spread do Cliente:</span>
-                <span style="color: #3b82f6; font-weight: 700; font-size: 15px;"><?= number_format($user['fee_percent'] ?? 0, 2, ',', '.') ?>%</span>
+                <span style="color: #64748b; font-size: 12px; display: block;">Spread Aplicado:</span>
+                <span style="color: #3b82f6; font-weight: 700; font-size: 15px;">0,00%</span>
             </div>
             <div style="text-align: right;">
                 <span style="color: #64748b; font-size: 12px; display: block;">Saldo do Cliente:</span>
@@ -260,7 +260,7 @@
             </div>
             
             <div id="brl-estimation-box" style="background: rgba(16, 185, 129, 0.03); border: 1px dashed rgba(16, 185, 129, 0.2); padding: 12px; border-radius: 8px; text-align: center;">
-                <span style="color: #64748b; font-size: 12px; display: block; margin-bottom: 2px;">Total BRL Estimado (com taxa):</span>
+                <span style="color: #64748b; font-size: 12px; display: block; margin-bottom: 2px;">Total BRL Estimado:</span>
                 <span id="purchase-total-brl" style="color: #10b981; font-weight: 800; font-size: 18px;">R$ 0,00</span>
             </div>
             
@@ -273,7 +273,7 @@
 </div>
 
 <script>
-    const currentClientFee = <?= (float)($user['fee_percent'] ?? 0) ?>;
+    const currentClientFee = 0.0;
     const currentClientBalance = <?= (float)($user['balance'] ?? 0) ?>;
 
     document.addEventListener('DOMContentLoaded', function() {

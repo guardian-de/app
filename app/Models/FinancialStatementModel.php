@@ -75,7 +75,7 @@ class FinancialStatementModel extends Model
                 CONVERT(NULL USING utf8mb4) AS amount_edited_reason,
                 CONVERT(NULL USING utf8mb4) AS ocr_status,
                 fs.fee_percent, fs.fee_brl, c.total_amount AS usdt_amount,
-                ROUND(c.comercial_brl / NULLIF(c.total_amount, 0), 4) AS spot_rate,
+                ROUND(c.total_brl / NULLIF(c.total_amount, 0), 4) AS spot_rate,
                 CONVERT((
                     SELECT GROUP_CONCAT(DISTINCT ul.purchase_hash SEPARATOR ', ')
                     FROM lot_allocations la
