@@ -437,11 +437,11 @@
             </div>
 
             <div id="conversion-info" style="margin-bottom: 25px; background: rgba(15, 23, 42, 0.4); padding: 15px; border-radius: 12px; border: 1px solid #1e293b;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <div style="display: none; justify-content: space-between; margin-bottom: 10px;">
                     <span style="color: #94a3b8; font-size: 13px; font-weight: 500;"><?= lang('App.live_rate') ?>:</span>
                     <span id="modal-base-rate" style="color: #cbd5e1; font-weight: 600;">R$ 0,0000</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 15px; padding-top: 10px; border-top: 1px solid #334155;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
                     <span style="color: #94a3b8; font-size: 14px; font-weight: 600;"><?= lang('App.final_rate') ?>:</span>
                     <span id="modal-rate" style="color: #a78bfa; font-weight: 700; font-size: 18px;">R$ 0,0000</span>
                 </div>
@@ -788,7 +788,7 @@
         }
 
         updateLiveRate();
-        setInterval(updateLiveRate, 1000); // Atualiza a cada 1 segundo para dinâmica ultrarrápida
+        setInterval(updateLiveRate, 2000); // Atualiza a cada 2 segundos para dinâmica em tempo real
 
         async function updateDebtBalance() {
             try {
@@ -944,7 +944,9 @@
             document.getElementById('success-modal').style.display = 'none';
         }
 
-        document.getElementById('confirm-buy-btn').onclick = async () => {
+        document.getElementById('confirm-buy-btn').onclick = async function () {
+            const btn = this;
+
             let amountUsdt, amountBrl;
             if (currentInputMode === 'brl') {
                 amountBrl = getCleanBRL(document.getElementById('brl-amount').value) || 0;
@@ -964,6 +966,11 @@
                 return;
             }
 
+            btn.disabled = true;
+            const originalText = btn.textContent;
+            btn.textContent = isChinese ? '处理中...' : 'Processando...';
+            btn.style.opacity = '0.7';
+
             const selectedWallet = document.getElementById('wallet-selector')?.value || '';
             try {
                 const response = await fetch('<?= url_to('chat_buy') ?>', {
@@ -976,6 +983,7 @@
                     body: JSON.stringify({
                         amount_brl: amountBrl,
                         amount_usdt: amountUsdt,
+                        rate: currentExchangeRate,
                         delivery_type: selectedDeliveryType,
                         input_mode: currentInputMode,
                         wallet_address: selectedWallet
@@ -1007,6 +1015,10 @@
                 if (!_sessionExpiredHandled) {
                     alert(isChinese ? '处理请求时出错' : 'Erro ao processar solicitação');
                 }
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+                btn.style.opacity = '1';
             }
         };
 

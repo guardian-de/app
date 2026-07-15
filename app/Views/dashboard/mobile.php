@@ -912,7 +912,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 </div>
                 <div id="conversion-info"
                     style="margin-bottom: 25px; background: rgba(15, 23, 42, 0.4); padding: 15px; border-radius: 12px; border: 1px solid #1e293b;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <div style="display: none; justify-content: space-between; margin-bottom: 10px;">
                         <span
                             style="color: #94a3b8; font-size: 13px; font-weight: 500;"><?= lang('App.live_rate') ?>:</span>
                         <span id="modal-base-rate"
@@ -920,7 +920,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                             0,0000</span>
                     </div>
                     <div
-                        style="display: flex; justify-content: space-between; margin-bottom: 15px; padding-top: 10px; border-top: 1px solid #334155;">
+                        style="display: flex; justify-content: space-between; margin-bottom: 15px;">
                         <span
                             style="color: #94a3b8; font-size: 14px; font-weight: 600;"><?= lang('App.final_rate') ?>:</span>
                         <span id="modal-rate"
@@ -2176,6 +2176,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                         body: JSON.stringify({
                             amount_usdt: amountUsdt,
                             amount_brl: amountBrl,
+                            rate: currentExchangeRate,
                             delivery_type: selectedDeliveryType,
                             input_mode: currentInputMode,
                             promo_lot_id: activePromoLotId,
@@ -2248,6 +2249,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                         body: JSON.stringify({
                             amount_usdt: usdtAmount,
                             amount_brl: brlAmount,
+                            rate: activePromoRate,
                             delivery_type: activePromoDelivery,
                             input_mode: 'usdt',
                             promo_lot_id: activePromoLotId,
@@ -3012,7 +3014,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             checkNotifications();
             checkPromotionalLots();
 
-            setInterval(updateLiveRate, 1000); // 1s interval for fast real-time updates
+            setInterval(updateLiveRate, 2000); // 2s interval for real-time updates
             setInterval(updateDebtBalance, 30000);
             setInterval(checkNotifications, 30000);
             setInterval(checkPromotionalLots, 5000);
