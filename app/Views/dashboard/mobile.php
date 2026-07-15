@@ -1195,14 +1195,18 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             <!-- Posição Financeira (resumo) -->
             <button onclick="openContractsModal()"
                 style="display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%; background:rgba(15,23,42,0.6); border:1px solid #334155; border-radius:14px; padding:12px 14px; margin-bottom:16px; cursor:pointer; text-align:left; flex-shrink:0;">
-                <div style="display:flex; gap:20px; flex:1; min-width:0;">
-                    <div style="min-width:0;">
-                        <p style="font-size:9px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px;">A Pagar</p>
-                        <p id="stmt-pos-brl" style="font-size:15px;font-weight:800;color:#f87171;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">R$ 0,00</p>
+                <div style="display:flex; gap:12px; flex:1; min-width:0; justify-content:space-between;">
+                    <div style="min-width:0; flex:1;">
+                        <p style="font-size:9px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px;white-space:nowrap;">Meu Saldo</p>
+                        <p id="stmt-balance" style="font-size:13px;font-weight:800;color:#4ade80;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">R$ 0,00</p>
                     </div>
-                    <div style="min-width:0;">
-                        <p style="font-size:9px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px;">A Receber</p>
-                        <p id="stmt-pos-usdt" style="font-size:15px;font-weight:800;color:#a78bfa;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">0,00 USDT</p>
+                    <div style="min-width:0; flex:1;">
+                        <p style="font-size:9px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px;white-space:nowrap;">A Pagar</p>
+                        <p id="stmt-pos-brl" style="font-size:13px;font-weight:800;color:#f87171;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">R$ 0,00</p>
+                    </div>
+                    <div style="min-width:0; flex:1;">
+                        <p style="font-size:9px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px;white-space:nowrap;">A Receber</p>
+                        <p id="stmt-pos-usdt" style="font-size:13px;font-weight:800;color:#a78bfa;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">0,00 USDT</p>
                     </div>
                 </div>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="m9 18 6-6-6-6"/></svg>
@@ -3098,6 +3102,17 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 const fmtUsdt = v => v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 document.getElementById('stmt-pos-brl').textContent  = 'R$ ' + fmt(debtsData.todos.total_brl_owed);
                 document.getElementById('stmt-pos-usdt').textContent = fmtUsdt(debtsData.todos.total_usdt_owed) + ' USDT';
+
+                const balanceResponse = await fetch('<?= url_to('chat_debt') ?>');
+                const balanceData = await balanceResponse.json();
+                if (balanceData.balance !== undefined) {
+                    const stmtBalEl = document.getElementById('stmt-balance');
+                    if (stmtBalEl) {
+                        stmtBalEl.textContent = 'R$ ' + fmt(balanceData.balance);
+                        const isNeg = balanceData.balance < 0;
+                        stmtBalEl.style.color = isNeg ? '#f87171' : '#4ade80';
+                    }
+                }
             } catch (e) {}
         }
 

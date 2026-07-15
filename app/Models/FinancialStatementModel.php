@@ -225,7 +225,9 @@ class FinancialStatementModel extends Model
         $result = $this->db->query(
             "SELECT SUM(CASE WHEN nature = 'C' THEN amount ELSE -amount END) AS balance
              FROM financial_statements
-             WHERE user_id = ?",
+             WHERE user_id = ?
+               AND operation_type != 'withdrawal'
+               AND description NOT LIKE 'Depósito de USDT%'",
             [$userId]
         )->getRowArray();
 
