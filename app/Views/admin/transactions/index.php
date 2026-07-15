@@ -310,12 +310,18 @@
                 </td>
                 <td style="padding: 20px 25px;">
                     <div style="font-weight: 700; display: flex; align-items: center; gap: 6px;">
-                        <?php if ($t['nature'] === 'C'): ?>
-                            <span style="color: #10b981;">+ R$ <?= number_format($t['amount'], 2, ',', '.') ?></span>
-                        <?php elseif ($t['operation_type'] === 'withdrawal'): ?>
-                            <span style="color: #ef4444;">- <?= number_format($t['amount'], 2, '.', ',') ?> USDT</span>
+                        <?php 
+                        $isUsdt = ($t['operation_type'] === 'withdrawal' || (isset($t['description']) && str_contains($t['description'], 'Depósito de USDT')));
+                        $isCredit = ($t['nature'] === 'C');
+                        ?>
+                        <?php if ($isUsdt): ?>
+                            <span style="color: <?= $isCredit ? '#10b981' : '#ef4444' ?>;">
+                                <?= $isCredit ? '+' : '-' ?> <?= number_format($t['amount'], 2, '.', ',') ?> USDT
+                            </span>
                         <?php else: ?>
-                            <span style="color: #ef4444;">- R$ <?= number_format($t['amount'], 2, ',', '.') ?></span>
+                            <span style="color: <?= $isCredit ? '#10b981' : '#ef4444' ?>;">
+                                <?= $isCredit ? '+' : '-' ?> R$ <?= number_format($t['amount'], 2, ',', '.') ?>
+                            </span>
                         <?php endif; ?>
                     </div>
                 </td>
@@ -420,8 +426,10 @@
             if (matchesType && matchesNature && matchesSearch && matchesStart && matchesEnd) {
                 filteredRows.push(row);
                 
+                const isUsdt = (type === 'withdrawal' || description.includes('depósito de usdt') || description.includes('deposito de usdt'));
+                
                 if (nature === 'D') {
-                    if (type === 'withdrawal') {
+                    if (isUsdt) {
                         totalDebitsUsdt += amount;
                     } else {
                         // margin_lock (débito), adjustment_subtract, etc. — tudo em BRL
@@ -429,7 +437,11 @@
                     }
                 } else {
                     // Natureza 'C' (Crédito/Entrada) — depósitos, ajustes, etc.
-                    totalCreditsBrl += amount;
+                    if (isUsdt) {
+                        totalCreditsUsdt += amount;
+                    } else {
+                        totalCreditsBrl += amount;
+                    }
                 }
             } else {
                 row.style.display = 'none';

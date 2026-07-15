@@ -1029,6 +1029,17 @@
             const message = userInput.value.trim();
             if (!message || isSendingMessage) return;
 
+            // Se a mensagem contiver "taxa" ou semelhante, abre o modal de compras
+            const lowerMessage = message.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            const keywords = ['taxa', 'cotac', 'tarifa', 'compr'];
+            const matchesKeyword = keywords.some(keyword => lowerMessage.includes(keyword));
+            
+            if (matchesKeyword) {
+                openBuyModal(currentExchangeRate || 0);
+                userInput.value = '';
+                return;
+            }
+
             isSendingMessage = true;
             addMessage(message, 'user');
             userInput.value = '';

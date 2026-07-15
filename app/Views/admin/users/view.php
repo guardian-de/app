@@ -320,7 +320,8 @@
                     else if (opType === 'withdrawal') opType = 'Saque';
                     else if (opType === 'late_fee') opType = 'Multa / Juros';
                     
-                    const isBrl = ['adjustment_add', 'adjustment_subtract', 'partial_amortization', 'full_settlement', 'late_fee'].includes(row.operation_type);
+                    const isUsdt = row.operation_type === 'withdrawal' || (row.description && row.description.includes('Depósito de USDT'));
+                    const isBrl = !isUsdt;
                     const formattedAmount = isBrl 
                         ? 'R$ ' + (parseFloat(row.amount) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                         : (parseFloat(row.amount) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' USDT';
