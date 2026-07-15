@@ -1850,7 +1850,8 @@ class AdminController extends BaseController
                 $label = $typeLabels[$row['operation_type']] ?? $row['operation_type'];
                 $dateStr = date('d/m/Y H:i', strtotime($row['transaction_date']));
                 
-                $isBrl = in_array($row['operation_type'], ['adjustment_add', 'adjustment_subtract', 'partial_amortization', 'full_settlement', 'late_fee']);
+                $isUsdt = ($row['operation_type'] === 'withdrawal' || str_contains($row['description'] ?? '', 'Depósito de USDT'));
+                $isBrl = !$isUsdt;
                 $amount = $isBrl ? 'R$ ' . number_format($row['amount'], 2, ',', '.') : number_format($row['amount'], 2, '.', ',') . ' USDT';
 
                 echo '<tr>
@@ -1927,7 +1928,8 @@ class AdminController extends BaseController
         foreach ($history as $row) {
             $nature = $row['nature'] === 'C' ? 'Credito (Entrada)' : 'Debito (Saida)';
             
-            $isBrl = in_array($row['operation_type'], ['adjustment_add', 'adjustment_subtract', 'partial_amortization', 'full_settlement', 'late_fee']);
+            $isUsdt = ($row['operation_type'] === 'withdrawal' || str_contains($row['description'] ?? '', 'Depósito de USDT'));
+            $isBrl = !$isUsdt;
             $unit = $isBrl ? 'R$' : 'USDT';
             $formattedAmount = $isBrl 
                 ? 'R$ ' . number_format($row['amount'], 2, ',', '.') 
