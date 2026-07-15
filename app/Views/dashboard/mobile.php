@@ -1200,7 +1200,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                         <p style="font-size:9px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px;white-space:nowrap;">Meu Saldo</p>
                         <p id="stmt-balance" style="font-size:13px;font-weight:800;color:#4ade80;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">R$ 0,00</p>
                     </div>
-                    <div style="min-width:0; flex:1;">
+                    <div style="min-width:0; flex:1; display:none;">
                         <p style="font-size:9px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px;white-space:nowrap;">A Pagar</p>
                         <p id="stmt-pos-brl" style="font-size:13px;font-weight:800;color:#f87171;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">R$ 0,00</p>
                     </div>
