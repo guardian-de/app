@@ -102,6 +102,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->post('change-password', 'Auth::updatePassword', ['as' => 'update_password']);
     $routes->get('dashboard', 'ChatController::mobile', ['as' => 'dashboard']);
     $routes->get('m', 'ChatController::mobile', ['as' => 'dashboard_mobile']);
+    $routes->get('v3', 'ChatController::v3', ['as' => 'dashboard_v3']);
     $routes->get('chat/2fa', 'ChatController::get2faSettings', ['as' => 'chat_2fa_settings']);
     $routes->post('chat/2fa/enable', 'ChatController::enable2fa', ['as' => 'chat_enable_2fa']);
     $routes->post('chat/2fa/disable', 'ChatController::disable2fa', ['as' => 'chat_disable_2fa']);
