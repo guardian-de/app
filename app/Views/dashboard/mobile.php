@@ -1445,18 +1445,22 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                             <?= $user['role'] === 'admin' ? 'Admin' : ($user['role'] === 'operator' ? 'Operador' : 'Cliente') ?>
                         </span>
                     </div>
+                    <?php if (isset($user['fee_percent']) && floatval($user['fee_percent']) != 0): ?>
                     <div>
                         <span style="color: #94a3b8; display: block; font-size: 11px;"><?= $isChinese ? '费率 / Spread' : 'Spread / Taxa' ?></span>
                         <strong style="color: white;"><?= number_format($user['fee_percent'] ?? 0, 2) ?>%</strong>
                     </div>
+                    <?php endif; ?>
                     <div>
                         <span style="color: #94a3b8; display: block; font-size: 11px;"><?= $isChinese ? '常规合同类型' : 'Contrato Padrão' ?></span>
                         <strong style="color: white; text-transform: uppercase;"><?= esc($user['default_contract_type'] ?? 'D+1') ?></strong>
                     </div>
+                    <?php if (isset($user['daily_interest_rate']) && floatval($user['daily_interest_rate']) != 0): ?>
                     <div>
                         <span style="color: #94a3b8; display: block; font-size: 11px;"><?= $isChinese ? '日利率' : 'Juros Diários' ?></span>
                         <strong style="color: white;"><?= number_format($user['daily_interest_rate'] ?? 0, 2) ?>%</strong>
                     </div>
+                    <?php endif; ?>
                     <div>
                         <span style="color: #94a3b8; display: block; font-size: 11px;"><?= $isChinese ? '支持的交易模式' : 'Modelos de Compra' ?></span>
                         <strong style="color: white; text-transform: uppercase;"><?= esc($user['purchase_model'] ?? 'USDT') ?></strong>
