@@ -83,7 +83,7 @@ class FinancialStatementModel extends Model
                     WHERE la.contract_id = fs.contract_id AND la.status IN ('reserved','delivered')
                 ) USING utf8mb4) AS purchase_hash,
                 CONVERT(fs.notes USING utf8mb4) AS notes,
-                CONVERT(NULL USING utf8mb4) AS proof_file
+                CONVERT(fs.attachment USING utf8mb4) AS proof_file
             FROM financial_statements fs
             LEFT JOIN contracts c ON c.id = fs.contract_id
             WHERE fs.user_id = ?";
