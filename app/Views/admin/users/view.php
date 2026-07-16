@@ -74,6 +74,12 @@
                     </span>
                 </div>
             </div>
+            <?php if (($user['role'] ?? 'user') === 'user'): ?>
+                <div class="info-item">
+                    <span>Contrato Padrão</span>
+                    <strong style="color: white; text-transform: uppercase;"><?= esc($user['default_contract_type'] ?? 'D+1') ?></strong>
+                </div>
+            <?php endif; ?>
             <div class="info-item">
                 <span>Criado em</span>
                 <strong style="font-weight: 500; color: #cbd5e1;"><?= date('d/m/Y H:i', strtotime($user['created_at'])) ?></strong>

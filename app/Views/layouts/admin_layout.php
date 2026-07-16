@@ -627,6 +627,12 @@ $adminAlertSound = $settingsModel->getConfig('admin_alert_sound', 'chime_premium
                 ? parseInt(localStorage.getItem(STORAGE_KEY))
                 : <?= $initialLastId ?>;
 
+            // Se o ID salvo no localStorage for maior que o máximo atual no banco de dados (ex: banco resetado), redefinimos para o inicial.
+            if (lastCheckedId > <?= $initialLastId ?>) {
+                lastCheckedId = <?= $initialLastId ?>;
+                localStorage.setItem(STORAGE_KEY, <?= $initialLastId ?>);
+            }
+
             // Se for a primeira vez no navegador, inicia salvando o ID atual de referência
             if (!localStorage.getItem(STORAGE_KEY)) {
                 localStorage.setItem(STORAGE_KEY, <?= $initialLastId ?>);
@@ -650,13 +656,14 @@ $adminAlertSound = $settingsModel->getConfig('admin_alert_sound', 'chime_premium
                     .then(response => response.json())
                     .then(data => {
                         if (data && data.length > 0) {
-                            // Ordena cronologicamente por ID do menor para o maior para disparar alertas na ordem exata dos fatos
-                            data.sort((a, b) => a.id - b.id);
+                            // Ordena cronologicamente por ID convertido para inteiro para evitar bugs de ordenação de strings
+                            data.sort((a, b) => parseInt(a.id) - parseInt(b.id));
 
                             data.forEach(tx => {
-                                if (tx.id > lastCheckedId) {
-                                    lastCheckedId = tx.id;
-                                    localStorage.setItem(STORAGE_KEY, tx.id);
+                                const txId = parseInt(tx.id);
+                                if (txId > lastCheckedId) {
+                                    lastCheckedId = txId;
+                                    localStorage.setItem(STORAGE_KEY, txId);
 
                                     // Dispara a notificação
                                     triggerNotification(tx);
@@ -670,15 +677,30 @@ $adminAlertSound = $settingsModel->getConfig('admin_alert_sound', 'chime_premium
             // --- Monitoramento de novos depósitos pendentes ---
             const DEPOSIT_STORAGE_KEY = 'admin_last_checked_deposit_id';
             const DEPOSIT_SEEN_KEY = 'admin_deposits_seen_id';
+            
             let lastCheckedDepositId = localStorage.getItem(DEPOSIT_STORAGE_KEY)
                 ? parseInt(localStorage.getItem(DEPOSIT_STORAGE_KEY))
                 : <?= $initialLastDepositId ?>;
+
+            // Se o ID salvo do depósito for maior que o máximo atual (banco resetado), redefinimos.
+            if (lastCheckedDepositId > <?= $initialLastDepositId ?>) {
+                lastCheckedDepositId = <?= $initialLastDepositId ?>;
+                localStorage.setItem(DEPOSIT_STORAGE_KEY, <?= $initialLastDepositId ?>);
+            }
+
             if (!localStorage.getItem(DEPOSIT_STORAGE_KEY)) {
                 localStorage.setItem(DEPOSIT_STORAGE_KEY, <?= $initialLastDepositId ?>);
             }
+
             let depositsSeenId = localStorage.getItem(DEPOSIT_SEEN_KEY)
                 ? parseInt(localStorage.getItem(DEPOSIT_SEEN_KEY))
                 : <?= $initialLastDepositId ?>;
+
+            if (depositsSeenId > <?= $initialLastDepositId ?>) {
+                depositsSeenId = <?= $initialLastDepositId ?>;
+                localStorage.setItem(DEPOSIT_SEEN_KEY, <?= $initialLastDepositId ?>);
+            }
+
             if (!localStorage.getItem(DEPOSIT_SEEN_KEY)) {
                 localStorage.setItem(DEPOSIT_SEEN_KEY, <?= $initialLastDepositId ?>);
             }
@@ -701,18 +723,19 @@ $adminAlertSound = $settingsModel->getConfig('admin_alert_sound', 'chime_premium
                     .then(response => response.json())
                     .then(data => {
                         if (!data) return;
-                        data.sort((a, b) => a.id - b.id);
+                        data.sort((a, b) => parseInt(a.id) - parseInt(b.id));
 
                         const dot = document.getElementById('deposits-nav-dot');
-                        const hasUnseen = data.some(d => d.id > depositsSeenId);
+                        const hasUnseen = data.some(d => parseInt(d.id) > depositsSeenId);
                         if (dot) dot.style.display = hasUnseen ? 'block' : 'none';
 
                         data.forEach(dep => {
-                            if (dep.id > lastCheckedDepositId) {
-                                lastCheckedDepositId = dep.id;
-                                localStorage.setItem(DEPOSIT_STORAGE_KEY, dep.id);
+                            const depId = parseInt(dep.id);
+                            if (depId > lastCheckedDepositId) {
+                                lastCheckedDepositId = depId;
+                                localStorage.setItem(DEPOSIT_STORAGE_KEY, depId);
                                 triggerNotification({
-                                    id: dep.id,
+                                    id: depId,
                                     type: 'deposit',
                                     user_name: dep.user_name,
                                     amount_brl: dep.amount_brl,
@@ -725,9 +748,9 @@ $adminAlertSound = $settingsModel->getConfig('admin_alert_sound', 'chime_premium
             }
 
             function triggerNotification(tx) {
-                // Apenas para compra de USDT (type === 'buy') e apenas para os operadores (user_role === 'operator')
+                // Apenas para operadores e administradores (user_role === 'operator' || user_role === 'admin')
                 const currentUserRole = '<?= session()->get('user_role') ?>';
-                if (tx.type !== 'buy' || currentUserRole !== 'operator') {
+                if (currentUserRole !== 'operator' && currentUserRole !== 'admin') {
                     return;
                 }
 
