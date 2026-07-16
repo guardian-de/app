@@ -1838,19 +1838,19 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
     <div id="proof-preview-modal"
         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 6100; justify-content: center; align-items: center; padding: 15px; backdrop-filter: blur(10px);">
         <div
-            style="width: 100%; max-width: 500px; background: rgba(30, 41, 59, 0.98); padding: 25px; border-radius: 24px; position: relative; border: 1px solid rgba(239, 68, 68, 0.2); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6); box-sizing: border-box; text-align: center;">
+            style="width: 100%; max-width: 500px; background: rgba(30, 41, 59, 0.98); padding: 25px; border-radius: 24px; position: relative; border: 1px solid rgba(99, 102, 241, 0.2); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6); box-sizing: border-box; text-align: center;">
             <button onclick="closeProofPreviewModal()"
                 style="position: absolute; right: 20px; top: 20px; background: rgba(255,255,255,0.05); border: none; color: #94a3b8; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer;">&times;</button>
 
             <h2
                 style="font-size: 18px; color: white; font-weight: 700; margin-bottom: 20px; text-align: left; display: flex; align-items: center; gap: 8px;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                     <circle cx="9" cy="9" r="2" />
                     <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
                 </svg>
-                <?= $isChinese ? '被拒绝的付款凭证' : 'Comprovante Rejeitado' ?>
+                <?= $isChinese ? '付款凭证' : 'Comprovante' ?>
             </h2>
 
             <div
@@ -1860,7 +1860,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
 
                 <div id="proof-preview-pdf-notice"
                     style="display: none; padding: 20px; color: #94a3b8; font-size: 14px;">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 15px auto;">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                         <polyline points="14 2 14 8 20 8" />
