@@ -74,56 +74,14 @@
                     <div style="padding:12px 16px;background:rgba(15,23,42,0.6);border:1px solid #1e293b;border-radius:12px;color:#60a5fa;font-size:16px;font-weight:700;" id="cost-preview">R$ —</div>
                 </div>
             </div>
-            
-            <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 20px;">
-                <label style="display:flex;align-items:center;gap:10px;color:white;font-size:14px;font-weight:600;cursor:pointer;user-select:none;margin-bottom:15px;">
-                    <input type="checkbox" name="is_promotional" id="is_promotional" value="1" style="width:18px;height:18px;accent-color:#3b82f6;cursor:pointer;">
-                    Lote Promocional
-                </label>
-                
-                <div id="promotional_settings" style="display:none;flex-direction:column;gap:15px;background:rgba(15,23,42,0.4);border:1px solid rgba(59,130,246,0.2);padding:15px;border-radius:12px;margin-bottom:10px;">
-                    <div>
-                        <label style="display:block;font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Custo por USDT para o Cliente (Taxa da Promoção) *</label>
-                        <input type="number" name="promo_rate" id="promo_rate" step="0.0001" min="0.0001" placeholder="Ex: 5.1500"
-                            style="width:100%;padding:12px 16px;background:#0f172a;border:1px solid #334155;border-radius:12px;color:white;font-size:14px;outline:none;transition:border-color 0.2s;"
-                            onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#334155'">
-                    </div>
 
-                    <div>
-                        <label style="display:block;font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Destinatários</label>
-                        <select name="target_type" id="target_type"
-                            style="width:100%;padding:12px 16px;background:#0f172a;border:1px solid #334155;border-radius:12px;color:white;font-size:14px;outline:none;transition:border-color 0.2s;"
-                            onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#334155'">
-                            <option value="all">Todos os Usuários</option>
-                            <option value="group">Grupos</option>
-                            <option value="users">Selecionar por Usuário</option>
-                        </select>
-                    </div>
-
-                    <div id="group_target_div" style="display:none;">
-                        <label style="display:block;font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Selecionar Grupo</label>
-                        <select name="target_group" id="target_group"
-                            style="width:100%;padding:12px 16px;background:#0f172a;border:1px solid #334155;border-radius:12px;color:white;font-size:14px;outline:none;"
-                            onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#334155'">
-                            <option value="role_user">Todos os Clientes</option>
-                            <option value="contract_d0">Clientes D+0</option>
-                            <option value="contract_d1">Clientes D+1</option>
-                            <option value="contract_d2">Clientes D+2</option>
-                        </select>
-                    </div>
-
-                    <div id="users_target_div" style="display:none;">
-                        <label style="display:block;font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Selecionar Usuários (Segure Ctrl/Cmd para múltipla escolha)</label>
-                        <select name="target_users[]" id="target_users" multiple size="5"
-                            style="width:100%;padding:12px 16px;background:#0f172a;border:1px solid #334155;border-radius:12px;color:white;font-size:14px;outline:none;height:auto;"
-                            onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#334155'">
-                            <?php foreach ($users as $u): ?>
-                                <option value="<?= $u['id'] ?>"><?= esc($u['login']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                </div>
+            <div>
+                <label style="display:block;font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Data de Fechamento</label>
+                <input type="date" name="closing_date" id="closing_date" value="<?= old('closing_date') ?>"
+                    style="width:100%;padding:12px 16px;background:#0f172a;border:1px solid #334155;border-radius:12px;color:white;font-size:14px;outline:none;transition:border-color 0.2s;color-scheme:dark;"
+                    onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#334155'">
             </div>
+
 
             <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;">
                 Registrar Lote
@@ -158,36 +116,7 @@
 
     recalc();
 
-    // Promotional toggle logic
-    const isPromoCheckbox = document.getElementById('is_promotional');
-    const promoSettings = document.getElementById('promotional_settings');
-    const targetTypeSelect = document.getElementById('target_type');
-    const groupTargetDiv = document.getElementById('group_target_div');
-    const usersTargetDiv = document.getElementById('users_target_div');
 
-    isPromoCheckbox.addEventListener('change', function() {
-        const promoRateInput = document.getElementById('promo_rate');
-        if (this.checked) {
-            promoSettings.style.display = 'flex';
-            promoRateInput.setAttribute('required', 'required');
-        } else {
-            promoSettings.style.display = 'none';
-            promoRateInput.removeAttribute('required');
-        }
-    });
-
-    targetTypeSelect.addEventListener('change', function() {
-        if (this.value === 'group') {
-            groupTargetDiv.style.display = 'block';
-            usersTargetDiv.style.display = 'none';
-        } else if (this.value === 'users') {
-            groupTargetDiv.style.display = 'none';
-            usersTargetDiv.style.display = 'block';
-        } else {
-            groupTargetDiv.style.display = 'none';
-            usersTargetDiv.style.display = 'none';
-        }
-    });
 })();
 </script>
 <?= $this->endSection() ?>

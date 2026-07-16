@@ -108,6 +108,10 @@
         <p style="font-size:13px;color:#94a3b8;"><?= date('d/m/Y H:i', strtotime($lot['created_at'])) ?></p>
     </div>
     <div>
+        <p style="font-size:11px;color:#64748b;text-transform:uppercase;margin-bottom:4px;">Data de Fechamento</p>
+        <p style="font-size:13px;color:#cbd5e1;"><?= $lot['closing_date'] ? date('d/m/y', strtotime($lot['closing_date'])) : '—' ?></p>
+    </div>
+    <div>
         <p style="font-size:11px;color:#64748b;text-transform:uppercase;margin-bottom:4px;">Por</p>
         <p style="font-size:13px;color:#94a3b8;"><?= esc($lot['created_by_name'] ?? '—') ?></p>
     </div>
