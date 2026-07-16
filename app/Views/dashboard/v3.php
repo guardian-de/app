@@ -15,7 +15,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
     <link rel="stylesheet" href="<?= base_url('css/dashboard.css') ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
@@ -55,13 +55,57 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
         };
     </script>
     <style>
+        :root {
+            --bg-page: #020617;
+            --bg-card: rgba(15, 23, 42, 0.8);
+            --bg-input: #0f172a;
+            --bg-message-bot: #1e293b;
+            --bg-message-user: linear-gradient(135deg, #2563eb, #1d4ed8);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-dynamic-white: #ffffff;
+            --text-dynamic-light: #cbd5e1;
+            --bg-dynamic-input: #0f172a;
+            --border-color: rgba(59, 130, 246, 0.2);
+            --border-light: rgba(255, 255, 255, 0.05);
+            --nav-bg: rgba(15, 23, 42, 0.95);
+            --nav-text: #94a3b8;
+            --nav-active: #60a5fa;
+            --modal-bg: rgba(30, 41, 59, 0.98);
+            --modal-content-bg: #0b1329;
+            --alert-bg: rgba(239, 68, 68, 0.15);
+            --alert-text: #fca5a5;
+        }
+
+        :root.light-mode {
+            --bg-page: #f8fafc;
+            --bg-card: rgba(255, 255, 255, 0.9);
+            --bg-input: #f1f5f9;
+            --bg-message-bot: #e2e8f0;
+            --bg-message-user: linear-gradient(135deg, #3b82f6, #2563eb);
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --text-dynamic-white: #0f172a;
+            --text-dynamic-light: #1e293b;
+            --bg-dynamic-input: #e2e8f0;
+            --border-color: rgba(59, 130, 246, 0.3);
+            --border-light: rgba(15, 23, 42, 0.08);
+            --nav-bg: rgba(255, 255, 255, 0.95);
+            --nav-text: #64748b;
+            --nav-active: #2563eb;
+            --modal-bg: rgba(255, 255, 255, 0.98);
+            --modal-content-bg: #f8fafc;
+            --alert-bg: rgba(239, 68, 68, 0.08);
+            --alert-text: #ef4444;
+        }
+
         body,
         html {
             height: 100%;
             overflow: hidden;
-            background: #020617;
-            /* Deep Blue Night */
-            color: #f8fafc;
+            background: var(--bg-page);
+            color: var(--text-main);
+            transition: background 0.3s, color 0.3s;
         }
 
         body,
@@ -70,7 +114,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
         select,
         textarea,
         button {
-            font-family: 'Outfit', sans-serif !important;
+            font-family: 'Plus Jakarta Sans', 'Outfit', sans-serif !important;
         }
 
         .mobile-wrapper {
@@ -83,8 +127,69 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             bottom: 0;
             height: 100dvh;
             width: 100vw;
-            background: radial-gradient(circle at top right, #1e3a8a11, transparent);
+            background: var(--bg-page);
             overflow: hidden;
+            transition: background 0.3s;
+        }
+
+        /* Universal light mode overrides for modals and inputs */
+        .modal-content, [id$="-modal"] > div {
+            background: var(--modal-bg) !important;
+            color: var(--text-main) !important;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        [id$="-modal"] h1, [id$="-modal"] h2, [id$="-modal"] h3, [id$="-modal"] h4 {
+            color: var(--text-dynamic-white) !important;
+        }
+
+        [id$="-modal"] p, [id$="-modal"] label, [id$="-modal"] span.text-muted {
+            color: var(--text-muted) !important;
+        }
+
+        [id$="-modal"] input, [id$="-modal"] select, [id$="-modal"] textarea {
+            background: var(--bg-input) !important;
+            color: var(--text-main) !important;
+            border-color: var(--border-light) !important;
+        }
+
+        /* Fix specific text selectors */
+        [style*="color: white"], [style*="color:white"], [style*="color:  white"] {
+            color: var(--text-dynamic-white) !important;
+        }
+
+        [style*="color: #cbd5e1"] {
+            color: var(--text-dynamic-light) !important;
+        }
+
+        [style*="color: #cbd5e1 !important"] {
+            color: var(--text-dynamic-light) !important;
+        }
+
+        [style*="color: #94a3b8"] {
+            color: var(--text-muted) !important;
+        }
+
+        [style*="background: #0f172a"], [style*="background:#0f172a"] {
+            background: var(--bg-input) !important;
+        }
+
+        /* Light-theme specific adjustments for clean contrast */
+        :root.light-mode .bot-text, :root.light-mode .message.bot {
+            color: #1e293b !important;
+        }
+        :root.light-mode .chat-container-mobile {
+            background: #f1f5f9;
+        }
+        :root.light-mode #balance-badge {
+            background: rgba(34, 197, 94, 0.15) !important;
+            border-color: rgba(34, 197, 94, 0.3) !important;
+            color: #15803d !important; 
+        }
+        :root.light-mode .live-rate-mobile {
+            background: rgba(59, 130, 246, 0.12) !important;
+            border-color: rgba(59, 130, 246, 0.25) !important;
+            color: #1d4ed8 !important; 
         }
 
         .desktop-sidebar-menu {
@@ -195,14 +300,15 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
         }
 
         .mobile-header {
-            background: rgba(15, 23, 42, 0.8);
+            background: var(--nav-bg);
             backdrop-filter: blur(12px);
             padding: 12px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+            border-bottom: 1px solid var(--border-color);
             z-index: 5000;
+            transition: background 0.3s, border-color 0.3s;
         }
 
         .profile-badge {
@@ -293,14 +399,15 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
 
         .message.bot {
             align-self: flex-start;
-            background: #1e293b;
-            color: #f1f5f9;
+            background: var(--bg-message-bot);
+            color: var(--text-main);
             border-bottom-left-radius: 4px;
+            transition: background 0.3s, color 0.3s;
         }
 
         .message.user {
             align-self: flex-end;
-            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            background: var(--bg-message-user);
             color: white;
             border-bottom-right-radius: 4px;
         }
@@ -408,32 +515,169 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
 
         .mobile-input-area {
             position: fixed;
-            bottom: 0;
+            bottom: 80px !important;
             left: 0;
             right: 0;
-            background: rgba(15, 23, 42, 0.9);
+            background: var(--nav-bg);
             backdrop-filter: blur(20px);
-            padding: 16px 20px 24px;
-            border-top: 1px solid rgba(59, 130, 246, 0.2);
+            padding: 12px 20px 12px !important;
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-light);
             display: flex;
             gap: 12px;
             align-items: center;
+            z-index: 9999;
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        .chat-container-mobile {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-bottom: 180px !important; /* spacing for both input-area and bottom-nav */
+            scroll-behavior: smooth;
+        }
+
+        /* Bottom Tab Navigator */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: var(--nav-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border-light);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+            z-index: 10000;
+            padding: 8px 12px 24px; /* extra bottom padding for mobile safe area */
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: none;
+            color: var(--nav-text);
+            cursor: pointer;
+            flex: 1;
+            height: 100%;
+            gap: 4px;
+            transition: color 0.25s, transform 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .nav-item svg {
+            width: 22px;
+            height: 22px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+            transition: transform 0.2s;
+        }
+
+        .nav-item span {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        .nav-item.active {
+            color: var(--nav-active);
+        }
+
+        .nav-item.active svg {
+            transform: translateY(-2px);
+            stroke-width: 2.5;
+        }
+
+        /* Modals inside V3 styled dynamically as drawer sheets on mobile */
+        @media (max-width: 1023px) {
+            [id$="-modal"] {
+                align-items: flex-end !important;
+                justify-content: center !important;
+                background: rgba(2, 6, 23, 0.7) !important;
+                backdrop-filter: blur(6px) !important;
+                -webkit-backdrop-filter: blur(6px) !important;
+            }
+            [id$="-modal"] > div {
+                width: 100% !important;
+                max-width: 500px !important;
+                border-bottom-left-radius: 0 !important;
+                border-bottom-right-radius: 0 !important;
+                border-top-left-radius: 28px !important;
+                border-top-right-radius: 28px !important;
+                padding: 32px 24px 100px !important; /* bottom padding to not overlap bottom-nav */
+                animation: slideUpModal 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                border: 1px solid var(--border-light) !important;
+                border-bottom: none !important;
+                box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.25) !important;
+                position: relative;
+            }
+            [id$="-modal"] > div::before {
+                content: '';
+                display: block;
+                width: 44px;
+                height: 5px;
+                background: var(--text-muted);
+                opacity: 0.25;
+                border-radius: 10px;
+                position: absolute;
+                top: 12px;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+        }
+
+        /* Globally style all modal close buttons to be theme-aware */
+        [id$="-modal"] button[onclick*="close"], 
+        [id$="-modal"] button[onclick*="display='none'"],
+        [id$="-modal"] button[onclick*="hide"] {
+            background: var(--bg-input) !important;
+            color: var(--text-muted) !important;
+            border: 1px solid var(--border-light) !important;
+            transition: all 0.2s !important;
+        }
+        [id$="-modal"] button[onclick*="close"]:hover, 
+        [id$="-modal"] button[onclick*="display='none'"]:hover {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+
+        @keyframes slideUpModal {
+            from {
+                transform: translateY(100%);
+            }
+            to {
+                transform: translateY(0);
+            }
         }
 
         .mobile-input {
             flex: 1;
-            background: #0f172a;
-            border: 1px solid #334155;
+            background: var(--bg-input);
+            border: 1px solid var(--border-light);
             padding: 14px 20px;
             border-radius: 30px;
-            color: white;
+            color: var(--text-main);
             font-size: 15px;
             outline: none;
-            transition: border-color 0.2s;
+            transition: all 0.3s;
         }
 
         .mobile-input:focus {
-            border-color: #3b82f6;
+            border-color: var(--border-color);
         }
 
         .send-btn-mobile {
@@ -466,6 +710,18 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 transform: scale(0.95);
                 opacity: 0.7;
             }
+        }
+
+        /* Unified Theme Utility Classes */
+        .theme-text-muted {
+            color: var(--text-muted) !important;
+        }
+
+        .theme-bg-card {
+            background: var(--bg-card) !important;
+            border-color: var(--border-light) !important;
+            color: var(--text-main) !important;
+            transition: background 0.3s, border-color 0.3s;
         }
     </style>
 </head>
@@ -676,33 +932,6 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                                 <path d="M14 18h6" />
                             </svg>
                         </div>
-                        <!-- Operações -->
-                        <button onclick="openContractsModal()" id="contracts-btn"
-                            style="background: none; border: none; color: #3b82f6; padding: 4px; display: flex; align-items: center; position: relative; cursor: pointer;"
-                            title="Minhas Operações">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                <polyline points="14 2 14 8 20 8" />
-                                <line x1="16" y1="13" x2="8" y2="13" />
-                                <line x1="16" y1="17" x2="8" y2="17" />
-                                <polyline points="10 9 9 9 8 9" />
-                            </svg>
-                            <span id="contracts-badge"
-                                style="display: none; position: absolute; top: -2px; right: -4px; background: #ef4444; color: white; font-size: 9px; font-weight: 800; min-width: 16px; height: 16px; border-radius: 8px; align-items: center; justify-content: center; padding: 0 3px; line-height: 1;"></span>
-                        </button>
-                        <!-- Extrato -->
-                        <button onclick="openStatementModal()"
-                            style="background: none; border: none; color: #3b82f6; padding: 4px; display: flex; align-items: center; cursor: pointer;"
-                            title="Extrato">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="18" y1="20" x2="18" y2="10" />
-                                <line x1="12" y1="20" x2="12" y2="4" />
-                                <line x1="6" y1="20" x2="6" y2="14" />
-                                <line x1="2" y1="20" x2="22" y2="20" />
-                            </svg>
-                        </button>
                         <!-- Notificações -->
                         <button onclick="openNotificationsModal()" id="notifications-btn"
                             style="background: none; border: none; color: #3b82f6; padding: 4px; display: flex; align-items: center; position: relative; cursor: pointer;"
@@ -715,37 +944,14 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                             <span id="notifications-badge"
                                 style="display: none; position: absolute; top: -2px; right: -4px; background: #ef4444; color: white; font-size: 9px; font-weight: 800; min-width: 16px; height: 16px; border-radius: 8px; align-items: center; justify-content: center; padding: 0 3px; line-height: 1;"></span>
                         </button>
-                        <!-- Minha Conta -->
-                        <button onclick="openMyAccountModal(event)"
-                            style="background: none; border: none; color: #60a5fa; padding: 4px; display: flex; align-items: center; cursor: pointer;"
-                            title="<?= $isChinese ? '我的账户' : 'Minha Conta' ?>">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                                <circle cx="12" cy="7" r="4" />
+                        <!-- Theme Toggle -->
+                        <button id="theme-toggle-btn" onclick="toggleTheme()"
+                            style="background: none; border: none; color: #3b82f6; padding: 4px; display: flex; align-items: center; cursor: pointer; -webkit-tap-highlight-color: transparent;"
+                            title="Alterar Tema">
+                            <svg id="theme-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
                             </svg>
                         </button>
-                        <!-- Alterar Senha -->
-                        <button onclick="openChangePasswordModal(event)"
-                            style="background: none; border: none; color: #60a5fa; padding: 4px; display: flex; align-items: center; cursor: pointer;"
-                            title="Alterar Senha">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                            </svg>
-                        </button>
-                        <!-- Sair -->
-                        <a href="<?= url_to('logout') ?>"
-                            style="text-decoration: none; color: #f87171; padding: 4px; display: flex; align-items: center; cursor: pointer;"
-                            title="Sair">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                                <polyline points="16 17 21 12 16 7" />
-                                <line x1="21" y1="12" x2="9" y2="12" />
-                            </svg>
-                        </a>
                     </div>
                 </header>
 
@@ -1254,23 +1460,23 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             <!-- Filter Tabs -->
             <div style="display:flex;gap:6px;margin-bottom:20px;overflow-x:auto;padding-bottom:2px;">
                 <button id="cf-btn-todos" onclick="setContractsFilter('todos')"
-                    style="flex-shrink:0;padding:9px 14px;border-radius:10px;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.35);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">
+                    style="flex-shrink:0;padding:9px 14px;border-radius:10px;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.35);color:var(--nav-active);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">
                     Todos
                 </button>
                 <button id="cf-btn-d0" onclick="setContractsFilter('d0')"
-                    style="flex-shrink:0;padding:9px 14px;border-radius:10px;background:rgba(15,23,42,0.5);border:1px solid #334155;color:#94a3b8;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">
+                    style="flex-shrink:0;padding:9px 14px;border-radius:10px;background:var(--bg-input);border:1px solid var(--border-light);color:var(--text-muted);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">
                     D+0
                 </button>
                 <button id="cf-btn-d1" onclick="setContractsFilter('d1')"
-                    style="flex-shrink:0;padding:9px 14px;border-radius:10px;background:rgba(15,23,42,0.5);border:1px solid #334155;color:#94a3b8;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">
+                    style="flex-shrink:0;padding:9px 14px;border-radius:10px;background:var(--bg-input);border:1px solid var(--border-light);color:var(--text-muted);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">
                     D+1
                 </button>
                 <button id="cf-btn-d2" onclick="setContractsFilter('d2')"
-                    style="flex-shrink:0;padding:9px 14px;border-radius:10px;background:rgba(15,23,42,0.5);border:1px solid #334155;color:#94a3b8;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">
+                    style="flex-shrink:0;padding:9px 14px;border-radius:10px;background:var(--bg-input);border:1px solid var(--border-light);color:var(--text-muted);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">
                     D+2
                 </button>
                 <button id="cf-btn-atrasado" onclick="setContractsFilter('atrasado')"
-                    style="flex-shrink:0;padding:9px 14px;border-radius:10px;background:rgba(15,23,42,0.5);border:1px solid #334155;color:#94a3b8;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">
+                    style="flex-shrink:0;padding:9px 14px;border-radius:10px;background:var(--bg-input);border:1px solid var(--border-light);color:var(--text-muted);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">
                     Atrasados
                 </button>
             </div>
@@ -1483,6 +1689,44 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             </div>
             <div id="statement-pagination"
                 style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center;padding-top:12px;flex-shrink:0;">
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profile-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 5001; justify-content: center; align-items: center; padding: 15px; backdrop-filter: blur(10px);">
+        <div
+            style="background: rgba(30, 41, 59, 0.98); width: 100%; max-width: 420px; padding: 25px; border-radius: 24px; position: relative; border: 1px solid rgba(59, 130, 246, 0.2); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+            <button onclick="document.getElementById('profile-modal').style.display='none'"
+                style="position: absolute; right: 20px; top: 20px; background: rgba(255,255,255,0.05); border: none; color: #94a3b8; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer;">&times;</button>
+            <h2 style="color: white; font-size: 18px; font-weight: 700; margin-bottom: 20px;"><?= $isChinese ? '个人中心' : 'Perfil do Usuário' ?></h2>
+            <div style="background: rgba(255,255,255,0.02); padding: 16px; border-radius: 12px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.05); text-align: center;">
+                <div style="font-size: 18px; font-weight: 700; color: white;">@<?= esc($user['login']) ?></div>
+                <div style="font-size: 12px; color: #94a3b8; margin-top: 4px; text-transform: capitalize;"><?= $user['role'] === 'admin' ? 'Admin' : ($user['role'] === 'operator' ? 'Operador' : 'Cliente') ?></div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <button onclick="openMyAccountModal(event)" style="display: flex; align-items: center; gap: 12px; width: 100%; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.15); color: #60a5fa; padding: 14px; border-radius: 12px; font-weight: 600; font-size: 14px; cursor: pointer; text-align: left; transition: all 0.2s;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <span><?= $isChinese ? '我的账户' : 'Minha Conta' ?></span>
+                </button>
+                <button onclick="openChangePasswordModal(event)" style="display: flex; align-items: center; gap: 12px; width: 100%; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.15); color: #60a5fa; padding: 14px; border-radius: 12px; font-weight: 600; font-size: 14px; cursor: pointer; text-align: left; transition: all 0.2s;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <span><?= $isChinese ? '修改密码' : 'Alterar Senha' ?></span>
+                </button>
+                
+                <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); margin-top: 4px;">
+                    <label style="font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">Idioma / 语言</label>
+                    <select onchange="changeLanguage(this.value)" style="width: 100%; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); color: white; padding: 10px; border-radius: 8px; outline: none; font-size: 13px; cursor: pointer;">
+                        <option value="pt-BR" <?= session()->get('user_lang') == 'pt-BR' ? 'selected' : '' ?>>🇧🇷 Português</option>
+                        <option value="zh-CN" <?= session()->get('user_lang') == 'zh-CN' ? 'selected' : '' ?>>🇨🇳 中文</option>
+                    </select>
+                </div>
+
+                <a href="<?= url_to('logout') ?>" style="display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; border: 1px solid rgba(239, 68, 68, 0.25); background: rgba(239, 68, 68, 0.08); color: #f87171; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 14px; text-decoration: none; cursor: pointer; text-align: center; transition: all 0.2s; margin-top: 10px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    <span><?= $isChinese ? '退出' : 'Sair' ?></span>
+                </a>
             </div>
         </div>
     </div>
@@ -3107,19 +3351,19 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                         parts.push(`<div style="font-family:monospace;word-break:break-all;">${stmtLang.hashLabel}: ${item.purchase_hash}</div>`);
                     }
                     if (parts.length) {
-                        marginLockDetails = `<div style="font-size:11px;color:#94a3b8;background:rgba(15,23,42,0.4);border-radius:8px;padding:8px 10px;margin-top:6px;display:flex;flex-direction:column;gap:3px;">${parts.join('')}</div>`;
+                        marginLockDetails = `<div style="font-size:11px;color:#94a3b8;background:var(--bg-card);border:1px solid var(--border-light);border-radius:8px;padding:8px 10px;margin-top:6px;display:flex;flex-direction:column;gap:3px;">${parts.join('')}</div>`;
                     }
                 } else if (item.operation_type === 'withdrawal' && item.notes) {
-                    marginLockDetails = `<div style="font-size:11px;color:#94a3b8;background:rgba(15,23,42,0.4);border-radius:8px;padding:8px 10px;margin-top:6px;">`
+                    marginLockDetails = `<div style="font-size:11px;color:#94a3b8;background:var(--bg-card);border:1px solid var(--border-light);border-radius:8px;padding:8px 10px;margin-top:6px;">`
                         + `<div style="font-family:monospace;word-break:break-all;">${stmtLang.hashLabel}: ${item.notes}</div></div>`;
                 }
-
+ 
                 const el = document.createElement('div');
-                el.style.cssText = 'display:flex;flex-direction:column;padding:14px 0;border-bottom:1px solid rgba(51,65,85,0.4);';
+                el.style.cssText = 'display:flex;flex-direction:column;padding:14px 0;border-bottom:1px solid var(--border-light);';
                 el.innerHTML = `
                         <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
                             <div style="flex:1;min-width:0;">
-                                <div style="font-size:14px;font-weight:600;color:${isRejectedDeposit ? '#f87171' : (isPendingDeposit ? '#fbbf24' : 'white')};margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${label}</div>
+                                <div style="font-size:14px;font-weight:600;color:${isRejectedDeposit ? '#f87171' : (isPendingDeposit ? '#fbbf24' : 'var(--text-dynamic-white)')};margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${label}</div>
                                 <div style="font-size:11px;color:#64748b;">${dateStr}</div>
                                 ${item.description ? `<div style="font-size:11px;color:#475569;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.description}</div>` : ''}
                                 ${item.rejection_reason ? `<div style="font-size:11px;color:#f87171;margin-top:2px;">${stmtLang.rejectionReason}: ${item.rejection_reason}</div>` : ''}
@@ -3149,8 +3393,8 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             if (totalPages <= 1) return;
 
             const btnStyle = (active, disabled) =>
-                `background:${active ? '#ffffff' : 'rgba(15,23,42,0.5)'};border:1px solid ${active ? '#ffffff' : '#334155'};` +
-                `color:${active ? '#0f172a' : '#e2e8f0'};padding:5px 10px;border-radius:8px;font-size:12px;` +
+                `background:${active ? 'var(--text-dynamic-white)' : 'var(--bg-input)'};border:1px solid var(--border-light);` +
+                `color:${active ? 'var(--bg-page)' : 'var(--text-main)'};padding:5px 10px;border-radius:8px;font-size:12px;` +
                 `font-weight:${active ? '700' : '500'};cursor:${disabled ? 'default' : 'pointer'};opacity:${disabled ? '0.4' : '1'};`;
 
             const makeBtn = (text, page, active, disabled) => {
@@ -3322,8 +3566,8 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
         let debtsData = null;
         let activeDebtsFilter = 'todos';
 
-        const activeTabStyle = 'flex-shrink:0;padding:9px 14px;border-radius:10px;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.35);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;';
-        const inactiveTabStyle = 'flex-shrink:0;padding:9px 14px;border-radius:10px;background:rgba(15,23,42,0.5);border:1px solid #334155;color:#94a3b8;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;';
+        const activeTabStyle = 'flex-shrink:0;padding:9px 14px;border-radius:10px;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.35);color:var(--nav-active);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;';
+        const inactiveTabStyle = 'flex-shrink:0;padding:9px 14px;border-radius:10px;background:var(--bg-input);border:1px solid var(--border-light);color:var(--text-muted);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;';
 
         const filterButtons = ['todos', 'd0', 'd1', 'd2', 'atrasado'];
 
@@ -3905,6 +4149,144 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             }
         });
 
+    </script>
+
+    <!-- Bottom Nav Bar -->
+    <div class="bottom-nav">
+        <button class="nav-item active" data-tab="chat" onclick="switchTab('chat')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <span><?= $isChinese ? '对话' : 'Conversa' ?></span>
+        </button>
+        <button class="nav-item" data-tab="operacoes" onclick="switchTab('operacoes')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            <span><?= $isChinese ? '我的操作' : 'Operações' ?></span>
+        </button>
+        <button class="nav-item" data-tab="extrato" onclick="switchTab('extrato')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
+                <line x1="2" y1="20" x2="22" y2="20"></line>
+            </svg>
+            <span><?= $isChinese ? '对账单' : 'Extrato' ?></span>
+        </button>
+        <button class="nav-item" data-tab="perfil" onclick="switchTab('perfil')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <span><?= $isChinese ? '个人中心' : 'Perfil' ?></span>
+        </button>
+    </div>
+
+    <script>
+        // Monkeypatch window.showModal to update bottom nav state
+        if (window.showModal) {
+            const originalShowModal = window.showModal;
+            window.showModal = function(id) {
+                originalShowModal(id);
+                updateBottomNavActive(id);
+            };
+        }
+
+        // Intercept closing actions by monitoring visibility
+        const observer = new MutationObserver(() => {
+            let activeModal = null;
+            document.querySelectorAll('[id$="-modal"]').forEach(m => {
+                if (m.style.display === 'flex' || m.style.display === 'block') {
+                    activeModal = m.id;
+                }
+            });
+            updateBottomNavActive(activeModal);
+        });
+
+        document.querySelectorAll('[id$="-modal"]').forEach(m => {
+            observer.observe(m, { attributes: true, attributeFilter: ['style'] });
+        });
+
+        function updateBottomNavActive(modalId) {
+            document.querySelectorAll('.bottom-nav .nav-item').forEach(item => item.classList.remove('active'));
+            if (!modalId) {
+                const chatTab = document.querySelector('.bottom-nav .nav-item[data-tab="chat"]');
+                if (chatTab) chatTab.classList.add('active');
+                return;
+            }
+            let tabName = 'chat';
+            if (modalId === 'contracts-modal') tabName = 'operacoes';
+            else if (modalId === 'statement-modal') tabName = 'extrato';
+            else if (modalId === 'profile-modal') tabName = 'perfil';
+            
+            const activeItem = document.querySelector(`.bottom-nav .nav-item[data-tab="${tabName}"]`);
+            if (activeItem) activeItem.classList.add('active');
+        }
+
+        function switchTab(tab) {
+            if (tab === 'chat') {
+                document.querySelectorAll('[id$="-modal"]').forEach(m => m.style.display = 'none');
+                updateBottomNavActive(null);
+            } else if (tab === 'operacoes') {
+                openContractsModal();
+            } else if (tab === 'extrato') {
+                openStatementModal();
+            } else if (tab === 'perfil') {
+                document.getElementById('profile-modal').style.display = 'flex';
+                updateBottomNavActive('profile-modal');
+            }
+        }
+
+        function toggleTheme() {
+            const isLight = document.documentElement.classList.toggle('light-mode');
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            
+            const themeIcon = document.getElementById('theme-icon');
+            if (themeIcon) {
+                themeIcon.innerHTML = isLight ? `
+                    <circle cx="12" cy="12" r="4"/>
+                    <path d="M12 2v2"/>
+                    <path d="M12 20v2"/>
+                    <path d="M4.93 4.93l1.41 1.41"/>
+                    <path d="M17.66 17.66l1.41 1.41"/>
+                    <path d="M2 12h2"/>
+                    <path d="M20 12h2"/>
+                    <path d="M6.34 17.66l-1.41 1.41"/>
+                    <path d="M19.07 4.93l-1.41 1.41"/>
+                ` : `
+                    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                `;
+            }
+        }
+
+        // Apply saved theme early
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') {
+                document.documentElement.classList.add('light-mode');
+                document.addEventListener('DOMContentLoaded', () => {
+                    const themeIcon = document.getElementById('theme-icon');
+                    if (themeIcon) {
+                        themeIcon.innerHTML = `
+                            <circle cx="12" cy="12" r="4"/>
+                            <path d="M12 2v2"/>
+                            <path d="M12 20v2"/>
+                            <path d="M4.93 4.93l1.41 1.41"/>
+                            <path d="M17.66 17.66l1.41 1.41"/>
+                            <path d="M2 12h2"/>
+                            <path d="M20 12h2"/>
+                            <path d="M6.34 17.66l-1.41 1.41"/>
+                            <path d="M19.07 4.93l-1.41 1.41"/>
+                        `;
+                    }
+                });
+            }
+        })();
     </script>
 </body>
 

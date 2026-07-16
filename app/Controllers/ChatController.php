@@ -92,6 +92,48 @@ class ChatController extends BaseController
         return view('dashboard/mobile', $data);
     }
 
+    public function v3()
+    {
+        if (!session()->get('isLoggedIn')) {
+            return redirect()->to('/');
+        }
+        
+        $this->recordCurrentRate();
+
+        $userModel = new \App\Models\UserModel();
+        $user = $userModel->find(session()->get('user_id'));
+        if (!$user) {
+            session()->destroy();
+            return redirect()->to('/');
+        }
+        $data['user'] = $user;
+
+        $walletModel = new \App\Models\UserWalletModel();
+        $userId = session()->get('user_id');
+        $wallets = $walletModel->where('user_id', $userId)->findAll();
+        if (empty($wallets) && !empty($data['user']['usdt_wallet'])) {
+            $walletModel->insert([
+                'user_id'    => $userId,
+                'address'    => $data['user']['usdt_wallet'],
+                'is_default' => 1
+            ]);
+            $wallets = $walletModel->where('user_id', $userId)->findAll();
+        }
+        $data['wallets'] = $wallets;
+
+        $settingsModel = new \App\Models\SettingsModel();
+        $data['business_hours'] = [
+            'start' => $settingsModel->getConfig('business_hours_start', '08:00'),
+            'end'   => $settingsModel->getConfig('business_hours_end', '16:30')
+        ];
+        $data['quotation_flow'] = $settingsModel->getConfig('quotation_flow', 'direct');
+        $data['operator_whatsapp'] = $settingsModel->getConfig('operator_whatsapp', '');
+        $data['disable_d1'] = $settingsModel->getConfig('disable_d1', '0') === '1';
+        $data['disable_d2'] = $settingsModel->getConfig('disable_d2', '0') === '1';
+        
+        return view('dashboard/v3', $data);
+    }
+
     private function recordCurrentRate()
     {
         $db = \Config\Database::connect();
