@@ -144,6 +144,7 @@
                     <th style="padding:14px 20px;text-align:right;font-size:11px;color:#64748b;text-transform:uppercase;font-weight:600;">Entregue</th>
                     <th style="padding:14px 20px;text-align:right;font-size:11px;color:#64748b;text-transform:uppercase;font-weight:600;">Taxa R$/USDT</th>
                     <th style="padding:14px 20px;text-align:left;font-size:11px;color:#64748b;text-transform:uppercase;font-weight:600;">Status</th>
+                    <th style="padding:14px 20px;text-align:left;font-size:11px;color:#64748b;text-transform:uppercase;font-weight:600;">Fechamento</th>
                     <th style="padding:14px 20px;text-align:left;font-size:11px;color:#64748b;text-transform:uppercase;font-weight:600;">Data</th>
                     <th style="padding:14px 20px;text-align:left;font-size:11px;color:#64748b;text-transform:uppercase;font-weight:600;">Por</th>
                     <th style="padding:14px 20px;"></th>
@@ -152,7 +153,7 @@
             <tbody>
                 <?php if (empty($lots)): ?>
                     <tr>
-                        <td colspan="11" style="padding:40px;text-align:center;color:#64748b;font-size:14px;">Nenhum lote encontrado com os filtros aplicados.</td>
+                        <td colspan="12" style="padding:40px;text-align:center;color:#64748b;font-size:14px;">Nenhum lote encontrado com os filtros aplicados.</td>
                     </tr>
                 <?php else: ?>
                     <?php foreach ($lots as $lot): ?>
@@ -193,6 +194,9 @@
                             <td style="padding:14px 20px;text-align:right;font-size:13px;color:#94a3b8;">R$ <?= number_format((float)$lot['conversion_rate'], 4, ',', '.') ?></td>
                             <td style="padding:14px 20px;">
                                 <span style="font-size:11px;padding:3px 10px;border-radius:20px;font-weight:700;background:<?= $statusColor ?>22;color:<?= $statusColor ?>;"><?= $statusLabel ?></span>
+                            </td>
+                            <td style="padding:14px 20px;font-size:12px;color:#cbd5e1;white-space:nowrap;">
+                                <?= $lot['closing_date'] ? date('d/m/y', strtotime($lot['closing_date'])) : '—' ?>
                             </td>
                             <td style="padding:14px 20px;font-size:12px;color:#64748b;white-space:nowrap;"><?= date('d/m/y H:i', strtotime($lot['created_at'])) ?></td>
                             <td style="padding:14px 20px;font-size:12px;color:#64748b;"><?= esc($lot['created_by_name'] ?? '—') ?></td>

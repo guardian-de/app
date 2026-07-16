@@ -89,6 +89,7 @@ class LotsController extends BaseController
         $targetGroup    = $this->request->getPost('target_group');
         $targetUsersArr = $this->request->getPost('target_users');
         $promoRate      = $isPromotional ? (float)$this->request->getPost('promo_rate') : null;
+        $closingDate    = $this->request->getPost('closing_date') ?: null;
 
         if ($usdtAmount <= 0 || $conversionRate <= 0 || empty($supplier)) {
             return redirect()->back()->withInput()->with('error', 'Preencha todos os campos obrigatórios.');
@@ -114,6 +115,7 @@ class LotsController extends BaseController
             'target_group'   => ($isPromotional && $targetType === 'group') ? $targetGroup : null,
             'target_users'   => $targetUsers,
             'promo_rate'     => $promoRate,
+            'closing_date'   => !empty($closingDate) ? $closingDate : null,
         ]);
 
         $logModel->record('lot.created', 'lot', $lotId, [
@@ -128,6 +130,7 @@ class LotsController extends BaseController
             'target_group'    => $targetGroup,
             'target_users'    => $targetUsers,
             'promo_rate'      => $promoRate,
+            'closing_date'    => $closingDate ?: null,
         ]);
 
         return redirect()->to("/admin/lots/{$lotId}")->with('success', 'Lote registrado com sucesso!');
