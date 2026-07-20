@@ -145,6 +145,12 @@ class Auth extends BaseController
             if (!$db->fieldExists('two_factor_enabled', 'users')) {
                 $db->query("ALTER TABLE `users` ADD COLUMN `two_factor_enabled` TINYINT(1) NOT NULL DEFAULT 0 AFTER `two_factor_secret`");
             }
+            if (!$db->fieldExists('login_attempts', 'users')) {
+                $db->query("ALTER TABLE `users` ADD COLUMN `login_attempts` INT(11) NOT NULL DEFAULT 0 AFTER `two_factor_enabled`");
+            }
+            if (!$db->fieldExists('blocked_until', 'users')) {
+                $db->query("ALTER TABLE `users` ADD COLUMN `blocked_until` DATETIME NULL AFTER `login_attempts`");
+            }
             if (!$db->fieldExists('status', 'user_wallets')) {
                 $db->query("ALTER TABLE `user_wallets` ADD COLUMN `status` ENUM('active','inactive') NOT NULL DEFAULT 'active' AFTER `is_default`");
             }
@@ -162,7 +168,22 @@ class Auth extends BaseController
         $user = $userModel->where('login', $login)->first();
 
         if ($user) {
+            if (!empty($user['blocked_until'])) {
+                $blockedUntil = strtotime($user['blocked_until']);
+                if ($blockedUntil > time()) {
+                    $remaining = ceil(($blockedUntil - time()) / 60);
+                    return redirect()->back()->with('error', "Esta conta está temporariamente bloqueada. Tente novamente em {$remaining} minutos.");
+                }
+            }
+
             if (password_verify($password, $user['password'])) {
+                if ($user['login_attempts'] > 0 || !empty($user['blocked_until'])) {
+                    $userModel->update($user['id'], [
+                        'login_attempts' => 0,
+                        'blocked_until'  => null
+                    ]);
+                }
+
                 if (!empty($user['two_factor_enabled']) && !empty($user['two_factor_secret'])) {
                     $session->set('temp_2fa_user_id', $user['id']);
                     return redirect()->to('/login/2fa');
@@ -211,7 +232,19 @@ class Auth extends BaseController
 
                 return redirect()->to('/dashboard');
             } else {
-                return redirect()->back()->with('error', 'Senha incorreta.');
+                $attempts = $user['login_attempts'] + 1;
+                $updateData = ['login_attempts' => $attempts];
+
+                if ($attempts >= 3) {
+                    $updateData['blocked_until'] = date('Y-m-d H:i:s', strtotime('+30 minutes'));
+                    $updateData['login_attempts'] = 0;
+                    $userModel->update($user['id'], $updateData);
+                    return redirect()->back()->with('error', 'Senha incorreta. Conta bloqueada por 30 minutos devido a 3 tentativas falhas.');
+                } else {
+                    $userModel->update($user['id'], $updateData);
+                    $remainingAttempts = 3 - $attempts;
+                    return redirect()->back()->with('error', "Senha incorreta. Você tem mais {$remainingAttempts} tentativas antes do bloqueio.");
+                }
             }
         } else {
             return redirect()->back()->with('error', 'Login não encontrado.');
