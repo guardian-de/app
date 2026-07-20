@@ -725,16 +725,6 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                                 <circle cx="12" cy="7" r="4" />
                             </svg>
                         </button>
-                        <!-- Alterar Senha -->
-                        <button onclick="openChangePasswordModal(event)"
-                            style="background: none; border: none; color: #60a5fa; padding: 4px; display: flex; align-items: center; cursor: pointer;"
-                            title="Alterar Senha">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                            </svg>
-                        </button>
                         <!-- Sair -->
                         <a href="<?= url_to('logout') ?>"
                             style="text-decoration: none; color: #f87171; padding: 4px; display: flex; align-items: center; cursor: pointer;"
