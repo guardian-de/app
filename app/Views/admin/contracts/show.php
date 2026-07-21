@@ -726,17 +726,30 @@
         body.append('retroactive', retro ? '1' : '0');
 
         fetch('<?= url_to('admin_lots_allocate') ?>', {method: 'POST', body})
-            .then(r => r.json())
+            .then(r => {
+                if (!r.ok) {
+                    throw new Error('Erro na requisição (Código ' + r.status + ')');
+                }
+                return r.json().catch(() => {
+                    throw new Error('Resposta inválida do servidor');
+                });
+            })
             .then(data => {
                 if (data.success) {
                     closeLotModal();
                     location.reload();
                 } else {
-                    errEl.textContent = data.message;
+                    errEl.textContent = data.message || 'Erro ao vincular o lote.';
                     errEl.style.display = 'block';
                     confirmBtn.disabled = false;
                     confirmBtn.textContent = 'Confirmar Vinculação';
                 }
+            })
+            .catch(err => {
+                errEl.textContent = err.message || 'Erro de conexão ou erro no servidor.';
+                errEl.style.display = 'block';
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = 'Confirmar Vinculação';
             });
     }
 
@@ -747,10 +760,25 @@
         body.append(allocCsrfName, allocCsrfHash);
 
         fetch('<?= base_url('admin/lots/allocation/cancel/') ?>' + id, {method: 'POST', body})
-            .then(r => r.json())
+            .then(r => {
+                if (!r.ok) {
+                    throw new Error('Erro na requisição (Código ' + r.status + ')');
+                }
+                return r.json().catch(() => {
+                    throw new Error('Resposta inválida do servidor');
+                });
+            })
             .then(data => {
-                if (data.success) location.reload();
-                else { alert(data.message); btn.disabled = false; }
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Erro ao cancelar vinculação.');
+                    btn.disabled = false;
+                }
+            })
+            .catch(err => {
+                alert(err.message || 'Erro de conexão ou erro no servidor.');
+                btn.disabled = false;
             });
     }
 
@@ -859,17 +887,30 @@
         body.append('retroactive',     isRetroactiveAllocation() ? '1' : '0');
 
         fetch('<?= url_to('admin_lots_quick_buy') ?>', {method: 'POST', body})
-            .then(r => r.json())
+            .then(r => {
+                if (!r.ok) {
+                    throw new Error('Erro na requisição (Código ' + r.status + ')');
+                }
+                return r.json().catch(() => {
+                    throw new Error('Resposta inválida do servidor');
+                });
+            })
             .then(data => {
                 if (data.success) {
                     closeQuickBuyModal();
                     location.reload();
                 } else {
-                    errEl.textContent = data.message;
+                    errEl.textContent = data.message || 'Erro ao realizar a compra.';
                     errEl.style.display = 'block';
                     btn.disabled = false;
                     btn.textContent = 'Confirmar Compra e Reservar';
                 }
+            })
+            .catch(err => {
+                errEl.textContent = err.message || 'Erro de conexão ou erro no servidor.';
+                errEl.style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = 'Confirmar Compra e Reservar';
             });
     }
 
