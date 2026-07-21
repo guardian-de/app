@@ -77,7 +77,7 @@
             <?php if (($user['role'] ?? 'user') === 'user'): ?>
                 <div class="info-item">
                     <span>Contrato Padrão</span>
-                    <strong style="color: white; text-transform: uppercase;"><?= esc($user['default_contract_type'] ?? 'D+1') ?></strong>
+                    <strong style="color: white; text-transform: uppercase;"><?= esc($user['default_contract_type'] ?? 'D+0') ?></strong>
                 </div>
             <?php endif; ?>
             <div class="info-item">
