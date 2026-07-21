@@ -1787,12 +1787,12 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                         <?= $isChinese ? '3. 输入 Authenticator 生成 judicial 验证码：' : '3. Digite o código de 6 dígitos gerado para ativar:' ?>
                     </p>
 
-                    <div style="display: flex; gap: 10px; align-items: center;">
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
                         <input type="text" id="twofa-code-enable" placeholder="000000" inputmode="numeric"
                             pattern="[0-9]*" maxlength="6"
-                            style="flex: 1; background: #0f172a; border: 1px solid #334155; border-radius: 10px; color: white; padding: 12px; font-size: 16px; font-weight: 700; text-align: center; letter-spacing: 0.2em; outline: none;">
+                            style="width: 100%; box-sizing: border-box; background: #0f172a; border: 1px solid #334155; border-radius: 10px; color: white; padding: 12px; font-size: 16px; font-weight: 700; text-align: center; letter-spacing: 0.2em; outline: none;">
                         <button onclick="submitEnable2fa()"
-                            style="background: #10b981; color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer; height: 44px; display: inline-flex; align-items: center; justify-content: center; transition: background 0.2s;">
+                            style="width: 100%; background: #10b981; color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer; height: 44px; display: inline-flex; align-items: center; justify-content: center; transition: background 0.2s;">
                             <?= $isChinese ? '激活' : 'Ativar' ?>
                         </button>
                     </div>
@@ -1805,12 +1805,12 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                         <?= $isChinese ? '您的两步验证已激活。要停用，请输入生成器中的 6 位数字代码：' : 'Sua autenticação de 2 fatores está ativa. Para desativar, digite o código de 6 dígitos gerado no aplicativo:' ?>
                     </p>
 
-                    <div style="display: flex; gap: 10px; align-items: center;">
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
                         <input type="text" id="twofa-code-disable" placeholder="000000" inputmode="numeric"
                             pattern="[0-9]*" maxlength="6"
-                            style="flex: 1; background: #0f172a; border: 1px solid #334155; border-radius: 10px; color: white; padding: 12px; font-size: 16px; font-weight: 700; text-align: center; letter-spacing: 0.2em; outline: none;">
+                            style="width: 100%; box-sizing: border-box; background: #0f172a; border: 1px solid #334155; border-radius: 10px; color: white; padding: 12px; font-size: 16px; font-weight: 700; text-align: center; letter-spacing: 0.2em; outline: none;">
                         <button onclick="submitDisable2fa()"
-                            style="background: #ef4444; color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer; height: 44px; display: inline-flex; align-items: center; justify-content: center; transition: background 0.2s;">
+                            style="width: 100%; background: #ef4444; color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer; height: 44px; display: inline-flex; align-items: center; justify-content: center; transition: background 0.2s;">
                             <?= $isChinese ? '停用' : 'Desativar' ?>
                         </button>
                     </div>
