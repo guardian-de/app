@@ -15,7 +15,9 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
     <link rel="stylesheet" href="<?= base_url('css/dashboard.css') ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
@@ -133,28 +135,38 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
         }
 
         /* Universal light mode overrides for modals and inputs */
-        .modal-content, [id$="-modal"] > div {
+        .modal-content,
+        [id$="-modal"]>div {
             background: var(--modal-bg) !important;
             color: var(--text-main) !important;
             transition: background 0.3s, color 0.3s;
         }
 
-        [id$="-modal"] h1, [id$="-modal"] h2, [id$="-modal"] h3, [id$="-modal"] h4 {
+        [id$="-modal"] h1,
+        [id$="-modal"] h2,
+        [id$="-modal"] h3,
+        [id$="-modal"] h4 {
             color: var(--text-dynamic-white) !important;
         }
 
-        [id$="-modal"] p, [id$="-modal"] label, [id$="-modal"] span.text-muted {
+        [id$="-modal"] p,
+        [id$="-modal"] label,
+        [id$="-modal"] span.text-muted {
             color: var(--text-muted) !important;
         }
 
-        [id$="-modal"] input, [id$="-modal"] select, [id$="-modal"] textarea {
+        [id$="-modal"] input,
+        [id$="-modal"] select,
+        [id$="-modal"] textarea {
             background: var(--bg-input) !important;
             color: var(--text-main) !important;
             border-color: var(--border-light) !important;
         }
 
         /* Fix specific text selectors */
-        [style*="color: white"], [style*="color:white"], [style*="color:  white"] {
+        [style*="color: white"],
+        [style*="color:white"],
+        [style*="color:  white"] {
             color: var(--text-dynamic-white) !important;
         }
 
@@ -170,26 +182,31 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             color: var(--text-muted) !important;
         }
 
-        [style*="background: #0f172a"], [style*="background:#0f172a"] {
+        [style*="background: #0f172a"],
+        [style*="background:#0f172a"] {
             background: var(--bg-input) !important;
         }
 
         /* Light-theme specific adjustments for clean contrast */
-        :root.light-mode .bot-text, :root.light-mode .message.bot {
+        :root.light-mode .bot-text,
+        :root.light-mode .message.bot {
             color: #1e293b !important;
         }
+
         :root.light-mode .chat-container-mobile {
             background: #f1f5f9;
         }
+
         :root.light-mode #balance-badge {
             background: rgba(34, 197, 94, 0.15) !important;
             border-color: rgba(34, 197, 94, 0.3) !important;
-            color: #15803d !important; 
+            color: #15803d !important;
         }
+
         :root.light-mode .live-rate-mobile {
             background: rgba(59, 130, 246, 0.12) !important;
             border-color: rgba(59, 130, 246, 0.25) !important;
-            color: #1d4ed8 !important; 
+            color: #1d4ed8 !important;
         }
 
         .desktop-sidebar-menu {
@@ -538,7 +555,8 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             display: flex;
             flex-direction: column;
             gap: 12px;
-            padding-bottom: 180px !important; /* spacing for both input-area and bottom-nav */
+            padding-bottom: 180px !important;
+            /* spacing for both input-area and bottom-nav */
             scroll-behavior: smooth;
         }
 
@@ -558,7 +576,8 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             align-items: center;
             box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
             z-index: 10000;
-            padding: 8px 12px 24px; /* extra bottom padding for mobile safe area */
+            padding: 8px 12px 24px;
+            /* extra bottom padding for mobile safe area */
             transition: background 0.3s, border-color 0.3s;
         }
 
@@ -611,21 +630,24 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 backdrop-filter: blur(6px) !important;
                 -webkit-backdrop-filter: blur(6px) !important;
             }
-            [id$="-modal"] > div {
+
+            [id$="-modal"]>div {
                 width: 100% !important;
                 max-width: 500px !important;
                 border-bottom-left-radius: 0 !important;
                 border-bottom-right-radius: 0 !important;
                 border-top-left-radius: 28px !important;
                 border-top-right-radius: 28px !important;
-                padding: 32px 24px 100px !important; /* bottom padding to not overlap bottom-nav */
+                padding: 32px 24px 100px !important;
+                /* bottom padding to not overlap bottom-nav */
                 animation: slideUpModal 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
                 border: 1px solid var(--border-light) !important;
                 border-bottom: none !important;
                 box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.25) !important;
                 position: relative;
             }
-            [id$="-modal"] > div::before {
+
+            [id$="-modal"]>div::before {
                 content: '';
                 display: block;
                 width: 44px;
@@ -641,7 +663,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
         }
 
         /* Globally style all modal close buttons to be theme-aware */
-        [id$="-modal"] button[onclick*="close"], 
+        [id$="-modal"] button[onclick*="close"],
         [id$="-modal"] button[onclick*="display='none'"],
         [id$="-modal"] button[onclick*="hide"] {
             background: var(--bg-input) !important;
@@ -649,7 +671,8 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             border: 1px solid var(--border-light) !important;
             transition: all 0.2s !important;
         }
-        [id$="-modal"] button[onclick*="close"]:hover, 
+
+        [id$="-modal"] button[onclick*="close"]:hover,
         [id$="-modal"] button[onclick*="display='none'"]:hover {
             opacity: 0.8;
             transform: scale(1.05);
@@ -659,6 +682,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             from {
                 transform: translateY(100%);
             }
+
             to {
                 transform: translateY(0);
             }
@@ -911,9 +935,11 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                         $logoPath = $settingsModel->getConfig('logo_path');
                         ?>
                         <?php if ($logoPath): ?>
-                            <img src="<?= base_url($logoPath) ?>" alt="Logo" style="max-height: 28px; max-width: 120px; object-fit: contain;">
+                            <img src="<?= base_url($logoPath) ?>" alt="Logo"
+                                style="max-height: 28px; max-width: 120px; object-fit: contain;">
                         <?php else: ?>
-                            <span style="font-weight: 800; font-size: 18px; color: white; letter-spacing: -0.5px;">Guardian</span>
+                            <span
+                                style="font-weight: 800; font-size: 18px; color: white; letter-spacing: -0.5px;">Guardian</span>
                         <?php endif; ?>
                     </div>
                     <div style="display: flex; gap: 14px; align-items: center;">
@@ -948,7 +974,8 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                         <button id="theme-toggle-btn" onclick="toggleTheme()"
                             style="background: none; border: none; color: #3b82f6; padding: 4px; display: flex; align-items: center; cursor: pointer; -webkit-tap-highlight-color: transparent;"
                             title="Alterar Tema">
-                            <svg id="theme-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg id="theme-icon" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
                             </svg>
                         </button>
@@ -1000,7 +1027,8 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                         </p>
                         <div class="live-rate-mobile" style="border-radius: 6px; padding: 6px 12px;">
                             <div class="rate-dot"></div>
-                            <span id="live-rate-val" style="color: #3b82f6; font-weight: 700; font-size: 20px;">R$ 0,0000</span>
+                            <span id="live-rate-val" style="color: #3b82f6; font-weight: 700; font-size: 20px;">R$
+                                0,0000</span>
                         </div>
                     </div>
                 </div>
@@ -1382,7 +1410,8 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                     </svg>
                 </div>
                 <h2 style="color: white; font-size: 18px; font-weight: 700; margin-bottom: 4px;">
-                    <?= $isChinese ? '存款' : 'Realizar Depósito' ?></h2>
+                    <?= $isChinese ? '存款' : 'Realizar Depósito' ?>
+                </h2>
                 <p style="color: #94a3b8; font-size: 12px; margin-bottom: 16px;">
                     <?= $isChinese ? '上传付款凭证，金额将自动识别。' : 'Envie o(s) comprovante(s) de pagamento. O valor será identificado automaticamente.' ?>
                 </p>
@@ -1397,9 +1426,11 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 style="flex-shrink: 0; border: 2px dashed rgba(16,185,129,0.3); border-radius: 14px; padding: 20px 16px; text-align: center; cursor: pointer; margin-bottom: 16px; transition: 0.2s;">
                 <div style="font-size: 26px; margin-bottom: 6px;">📎</div>
                 <div style="color: #34d399; font-weight: 600; font-size: 13px; margin-bottom: 2px;">
-                    <?= $isChinese ? '点击或拖拽多个凭证到此处' : 'Clique ou arraste vários comprovantes aqui' ?></div>
+                    <?= $isChinese ? '点击或拖拽多个凭证到此处' : 'Clique ou arraste vários comprovantes aqui' ?>
+                </div>
                 <div style="color: #64748b; font-size: 11px;">
-                    <?= $isChinese ? '可一次选择多个文件' : 'Você pode selecionar quantos arquivos quiser de uma vez' ?></div>
+                    <?= $isChinese ? '可一次选择多个文件' : 'Você pode selecionar quantos arquivos quiser de uma vez' ?>
+                </div>
             </div>
 
             <!-- Scrollable list of items -->
@@ -1529,7 +1560,8 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 style="position: absolute; right: 20px; top: 20px; background: rgba(255,255,255,0.05); border: none; color: #94a3b8; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer;">&times;</button>
 
             <h1 style="font-size: 20px; color: white; font-weight: 700; margin-bottom: 4px; padding-right: 40px;">
-                <?= lang('App.stmt_title') ?></h1>
+                <?= lang('App.stmt_title') ?>
+            </h1>
             <p style="font-size: 12px; color: #64748b; margin-bottom: 16px;"><?= lang('App.stmt_subtitle') ?></p>
 
             <!-- Posição Financeira (resumo) -->
@@ -1700,31 +1732,57 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             style="background: rgba(30, 41, 59, 0.98); width: 100%; max-width: 420px; padding: 25px; border-radius: 24px; position: relative; border: 1px solid rgba(59, 130, 246, 0.2); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
             <button onclick="document.getElementById('profile-modal').style.display='none'"
                 style="position: absolute; right: 20px; top: 20px; background: rgba(255,255,255,0.05); border: none; color: #94a3b8; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer;">&times;</button>
-            <h2 style="color: white; font-size: 18px; font-weight: 700; margin-bottom: 20px;"><?= $isChinese ? '个人中心' : 'Perfil do Usuário' ?></h2>
-            <div style="background: rgba(255,255,255,0.02); padding: 16px; border-radius: 12px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.05); text-align: center;">
+            <h2 style="color: white; font-size: 18px; font-weight: 700; margin-bottom: 20px;">
+                <?= $isChinese ? '个人中心' : 'Perfil do Usuário' ?></h2>
+            <div
+                style="background: rgba(255,255,255,0.02); padding: 16px; border-radius: 12px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.05); text-align: center;">
                 <div style="font-size: 18px; font-weight: 700; color: white;">@<?= esc($user['login']) ?></div>
-                <div style="font-size: 12px; color: #94a3b8; margin-top: 4px; text-transform: capitalize;"><?= $user['role'] === 'admin' ? 'Admin' : ($user['role'] === 'operator' ? 'Operador' : 'Cliente') ?></div>
+                <div style="font-size: 12px; color: #94a3b8; margin-top: 4px; text-transform: capitalize;">
+                    <?= $user['role'] === 'admin' ? 'Admin' : ($user['role'] === 'operator' ? 'Operador' : 'Cliente') ?>
+                </div>
             </div>
             <div style="display: flex; flex-direction: column; gap: 12px;">
-                <button onclick="openMyAccountModal(event)" style="display: flex; align-items: center; gap: 12px; width: 100%; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.15); color: #60a5fa; padding: 14px; border-radius: 12px; font-weight: 600; font-size: 14px; cursor: pointer; text-align: left; transition: all 0.2s;">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <button onclick="openMyAccountModal(event)"
+                    style="display: flex; align-items: center; gap: 12px; width: 100%; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.15); color: #60a5fa; padding: 14px; border-radius: 12px; font-weight: 600; font-size: 14px; cursor: pointer; text-align: left; transition: all 0.2s;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                    </svg>
                     <span><?= $isChinese ? '我的账户' : 'Minha Conta' ?></span>
                 </button>
-                <button onclick="openChangePasswordModal(event)" style="display: flex; align-items: center; gap: 12px; width: 100%; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.15); color: #60a5fa; padding: 14px; border-radius: 12px; font-weight: 600; font-size: 14px; cursor: pointer; text-align: left; transition: all 0.2s;">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <button onclick="openChangePasswordModal(event)"
+                    style="display: flex; align-items: center; gap: 12px; width: 100%; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.15); color: #60a5fa; padding: 14px; border-radius: 12px; font-weight: 600; font-size: 14px; cursor: pointer; text-align: left; transition: all 0.2s;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
                     <span><?= $isChinese ? '修改密码' : 'Alterar Senha' ?></span>
                 </button>
-                
-                <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); margin-top: 4px;">
-                    <label style="font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">Idioma / 语言</label>
-                    <select onchange="changeLanguage(this.value)" style="width: 100%; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); color: white; padding: 10px; border-radius: 8px; outline: none; font-size: 13px; cursor: pointer;">
-                        <option value="pt-BR" <?= session()->get('user_lang') == 'pt-BR' ? 'selected' : '' ?>>🇧🇷 Português</option>
-                        <option value="zh-CN" <?= session()->get('user_lang') == 'zh-CN' ? 'selected' : '' ?>>🇨🇳 中文</option>
+
+                <div
+                    style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); margin-top: 4px;">
+                    <label
+                        style="font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">Idioma
+                        / 语言</label>
+                    <select onchange="changeLanguage(this.value)"
+                        style="width: 100%; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); color: white; padding: 10px; border-radius: 8px; outline: none; font-size: 13px; cursor: pointer;">
+                        <option value="pt-BR" <?= session()->get('user_lang') == 'pt-BR' ? 'selected' : '' ?>>🇧🇷
+                            Português</option>
+                        <option value="zh-CN" <?= session()->get('user_lang') == 'zh-CN' ? 'selected' : '' ?>>🇨🇳 中文
+                        </option>
                     </select>
                 </div>
 
-                <a href="<?= url_to('logout') ?>" style="display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; border: 1px solid rgba(239, 68, 68, 0.25); background: rgba(239, 68, 68, 0.08); color: #f87171; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 14px; text-decoration: none; cursor: pointer; text-align: center; transition: all 0.2s; margin-top: 10px;">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                <a href="<?= url_to('logout') ?>"
+                    style="display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; border: 1px solid rgba(239, 68, 68, 0.25); background: rgba(239, 68, 68, 0.08); color: #f87171; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 14px; text-decoration: none; cursor: pointer; text-align: center; transition: all 0.2s; margin-top: 10px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16 17 21 12 16 7" />
+                        <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
                     <span><?= $isChinese ? '退出' : 'Sair' ?></span>
                 </a>
             </div>
@@ -1740,9 +1798,11 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 style="position: absolute; right: 20px; top: 20px; background: rgba(255,255,255,0.05); border: none; color: #94a3b8; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer;">&times;</button>
 
             <h1 style="font-size: 20px; color: white; font-weight: 700; margin-bottom: 4px; padding-right: 40px;">
-                <?= $isChinese ? '系统通知' : 'Notificações' ?></h1>
+                <?= $isChinese ? '系统通知' : 'Notificações' ?>
+            </h1>
             <p style="font-size: 12px; color: #64748b; margin-bottom: 16px;">
-                <?= $isChinese ? '查看您的最新财务和操单更新。' : 'Acompanhe as atualizações de saldo e operações.' ?></p>
+                <?= $isChinese ? '查看您的最新财务和操单更新。' : 'Acompanhe as atualizações de saldo e operações.' ?>
+            </p>
 
             <!-- List (scrollable) -->
             <div id="notifications-list"
@@ -1801,9 +1861,11 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 </svg>
             </div>
             <h2 style="color: white; font-size: 20px; font-weight: 700; margin-bottom: 10px;">
-                <?= $isChinese ? '上传付款凭证' : 'Enviar Comprovante' ?></h2>
+                <?= $isChinese ? '上传付款凭证' : 'Enviar Comprovante' ?>
+            </h2>
             <p style="color: #94a3b8; font-size: 14px; margin-bottom: 25px;">
-                <?= $isChinese ? '请选择付款截图或PDF文件。' : 'Por favor, selecione o print ou PDF do pagamento.' ?></p>
+                <?= $isChinese ? '请选择付款截图或PDF文件。' : 'Por favor, selecione o print ou PDF do pagamento.' ?>
+            </p>
 
             <input type="file" id="proof-file" accept="image/*,application/pdf" style="display: none;"
                 onchange="handleFileSelect(this)">
@@ -1911,7 +1973,8 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 25px;">
                 <h3
                     style="font-size: 13px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 5px 0; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px;">
-                    <?= $isChinese ? '注册信息' : 'Informações do Cadastro' ?></h3>
+                    <?= $isChinese ? '注册信息' : 'Informações do Cadastro' ?>
+                </h3>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px;">
                     <div>
@@ -1927,13 +1990,6 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                             <?= $user['role'] === 'admin' ? 'Admin' : ($user['role'] === 'operator' ? 'Operador' : 'Cliente') ?>
                         </span>
                     </div>
-                    <?php if (isset($user['fee_percent']) && floatval($user['fee_percent']) != 0): ?>
-                        <div>
-                            <span
-                                style="color: #94a3b8; display: block; font-size: 11px;"><?= $isChinese ? '费率 / Spread' : 'Spread / Taxa' ?></span>
-                            <strong style="color: white;"><?= number_format($user['fee_percent'] ?? 0, 2) ?>%</strong>
-                        </div>
-                    <?php endif; ?>
                     <div>
                         <span
                             style="color: #94a3b8; display: block; font-size: 11px;"><?= $isChinese ? '常规合同类型' : 'Contrato Padrão' ?></span>
@@ -2034,7 +2090,8 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                         <span id="twofa-secret-text">-</span>
                         <div
                             style="font-size: 9px; color: #64748b; font-weight: 400; margin-top: 3px; letter-spacing: normal;">
-                            <?= $isChinese ? '点击复制密钥' : 'Clique para copiar a chave' ?></div>
+                            <?= $isChinese ? '点击复制密钥' : 'Clique para copiar a chave' ?>
+                        </div>
                     </div>
 
                     <p style="font-size: 12px; color: #94a3b8; margin: 0 0 8px 0; line-height: 1.5; text-align: left;">
@@ -2075,7 +2132,8 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 20px; margin-top: 20px;">
                 <button onclick="closeMyAccountModal(); openChangePasswordModal(event);"
                     style="width: 100%; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; padding: 12px; border-radius: 12px; font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                         <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                     </svg>
@@ -3369,7 +3427,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                     marginLockDetails = `<div style="font-size:11px;color:#94a3b8;background:var(--bg-card);border:1px solid var(--border-light);border-radius:8px;padding:8px 10px;margin-top:6px;">`
                         + `<div style="font-family:monospace;word-break:break-all;">${stmtLang.hashLabel}: ${item.notes}</div></div>`;
                 }
- 
+
                 const el = document.createElement('div');
                 el.style.cssText = 'display:flex;flex-direction:column;padding:14px 0;border-bottom:1px solid var(--border-light);';
                 el.innerHTML = `
@@ -4166,13 +4224,15 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
     <!-- Bottom Nav Bar -->
     <div class="bottom-nav">
         <button class="nav-item active" data-tab="chat" onclick="switchTab('chat')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
             </svg>
             <span><?= $isChinese ? '对话' : 'Conversa' ?></span>
         </button>
         <button class="nav-item" data-tab="operacoes" onclick="switchTab('operacoes')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                 <polyline points="14 2 14 8 20 8"></polyline>
                 <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -4182,7 +4242,8 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             <span><?= $isChinese ? '我的操作' : 'Operações' ?></span>
         </button>
         <button class="nav-item" data-tab="extrato" onclick="switchTab('extrato')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
                 <line x1="18" y1="20" x2="18" y2="10"></line>
                 <line x1="12" y1="20" x2="12" y2="4"></line>
                 <line x1="6" y1="20" x2="6" y2="14"></line>
@@ -4191,7 +4252,8 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             <span><?= $isChinese ? '对账单' : 'Extrato' ?></span>
         </button>
         <button class="nav-item" data-tab="perfil" onclick="switchTab('perfil')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                 <circle cx="12" cy="7" r="4"></circle>
             </svg>
@@ -4203,7 +4265,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
         // Monkeypatch window.showModal to update bottom nav state
         if (window.showModal) {
             const originalShowModal = window.showModal;
-            window.showModal = function(id) {
+            window.showModal = function (id) {
                 originalShowModal(id);
                 updateBottomNavActive(id);
             };
@@ -4235,7 +4297,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             if (modalId === 'contracts-modal') tabName = 'operacoes';
             else if (modalId === 'statement-modal') tabName = 'extrato';
             else if (modalId === 'profile-modal') tabName = 'perfil';
-            
+
             const activeItem = document.querySelector(`.bottom-nav .nav-item[data-tab="${tabName}"]`);
             if (activeItem) activeItem.classList.add('active');
         }
@@ -4257,7 +4319,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
         function toggleTheme() {
             const isLight = document.documentElement.classList.toggle('light-mode');
             localStorage.setItem('theme', isLight ? 'light' : 'dark');
-            
+
             const themeIcon = document.getElementById('theme-icon');
             if (themeIcon) {
                 themeIcon.innerHTML = isLight ? `
@@ -4277,7 +4339,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
         }
 
         // Apply saved theme early
-        (function() {
+        (function () {
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'light') {
                 document.documentElement.classList.add('light-mode');
