@@ -104,6 +104,12 @@ abstract class BaseController extends Controller
         if (in_array('settings', $perms)) {
             return '/admin/settings';
         }
+        if (in_array('conciliation', $perms)) {
+            return '/admin/conciliation';
+        }
+        if (in_array('chat', $perms)) {
+            return '/admin/chat';
+        }
 
         if ($role === 'operator') {
             return '/logout';

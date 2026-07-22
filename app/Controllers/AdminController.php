@@ -1162,6 +1162,7 @@ class AdminController extends BaseController
 
     public function conciliation()
     {
+        if ($response = $this->checkPermission('conciliation')) return $response;
         $db       = \Config\Database::connect();
         $perPage  = (int)($this->request->getGet('per_page') ?? 20);
         $perPage  = in_array($perPage, [20, 50, 100]) ? $perPage : 20;
