@@ -543,7 +543,7 @@ $adminAlertSound = $settingsModel->getConfig('admin_alert_sound', 'chime_premium
             </a>
             <?php endif; ?>
 
-            <?php if ($hasPerm('transacoes')): ?>
+            <?php if ($hasPerm('conciliation')): ?>
             <a href="<?= url_to('admin_conciliation') ?>"
                 class="nav-link <?= (isset($active_menu) && $active_menu == 'conciliation') ? 'active' : '' ?>">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -566,6 +566,7 @@ $adminAlertSound = $settingsModel->getConfig('admin_alert_sound', 'chime_premium
             </a>
             <?php endif; ?>
 
+            <?php if ($hasPerm('chat')): ?>
             <a href="<?= url_to('admin_chat') ?>"
                 class="nav-link <?= current_url() == url_to('admin_chat') ? 'active' : '' ?>" style="color: #60a5fa; margin-bottom: 5px;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -574,6 +575,7 @@ $adminAlertSound = $settingsModel->getConfig('admin_alert_sound', 'chime_premium
                 </svg>
                 Atendimento Chat
             </a>
+            <?php endif; ?>
 
             <?php if ($hasPerm('settings')): ?>
             <a href="<?= url_to('admin_settings') ?>"

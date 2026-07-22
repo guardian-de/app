@@ -9,18 +9,14 @@ class AdminChatController extends BaseController
 {
     public function index()
     {
-        if (!session()->get('isLoggedIn') || !in_array(session()->get('user_role'), ['admin', 'operator'])) {
-            return redirect()->to('/');
-        }
+        if ($response = $this->checkPermission('chat')) return $response;
 
         return view('admin/chat/index');
     }
 
     public function getUsers()
     {
-        if (!session()->get('isLoggedIn') || !in_array(session()->get('user_role'), ['admin', 'operator'])) {
-            return $this->response->setJSON(['error' => 'Unauthorized'])->setStatusCode(401);
-        }
+        if ($response = $this->checkPermission('chat')) return $response;
 
         $db = Database::connect();
         
@@ -43,9 +39,7 @@ class AdminChatController extends BaseController
 
     public function getMessages($userId)
     {
-        if (!session()->get('isLoggedIn') || !in_array(session()->get('user_role'), ['admin', 'operator'])) {
-            return $this->response->setJSON(['error' => 'Unauthorized'])->setStatusCode(401);
-        }
+        if ($response = $this->checkPermission('chat')) return $response;
 
         $db = Database::connect();
         $lastId = (int)$this->request->getGet('last_id');
@@ -66,9 +60,7 @@ class AdminChatController extends BaseController
 
     public function send()
     {
-        if (!session()->get('isLoggedIn') || !in_array(session()->get('user_role'), ['admin', 'operator'])) {
-            return $this->response->setJSON(['error' => 'Unauthorized'])->setStatusCode(401);
-        }
+        if ($response = $this->checkPermission('chat')) return $response;
 
         $json = $this->request->getJSON();
         $userId = $json->user_id ?? null;
@@ -93,9 +85,7 @@ class AdminChatController extends BaseController
 
     public function close($userId)
     {
-        if (!session()->get('isLoggedIn') || !in_array(session()->get('user_role'), ['admin', 'operator'])) {
-            return $this->response->setJSON(['error' => 'Unauthorized'])->setStatusCode(401);
-        }
+        if ($response = $this->checkPermission('chat')) return $response;
 
         $db = Database::connect();
         $db->table('chat_messages')->where('user_id', $userId)->delete();
