@@ -60,6 +60,12 @@
                 <input id="fee_percent" type="number" name="fee_percent" value="<?= old('fee_percent', $user['fee_percent']) ?>" step="0.01" required
                     style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none;">
             </div>
+            <?php elseif (session()->get('user_role') === 'operator'): ?>
+            <div class="form-group">
+                <label for="fee_percent" style="display: block; color: #94a3b8; font-size: 12px; font-weight: 600; margin-bottom: 8px;">Spread / Taxa (%)</label>
+                <input id="fee_percent" type="number" value="<?= old('fee_percent', $user['fee_percent']) ?>" step="0.01" disabled
+                    style="width: 100%; background: rgba(15, 23, 42, 0.3); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: #64748b; outline: none; cursor: not-allowed;">
+            </div>
             <?php endif; ?>
 
             <div class="form-group" style="border: 1px solid rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; background: rgba(255,255,255,0.01);">
