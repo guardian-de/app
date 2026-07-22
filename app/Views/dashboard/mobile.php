@@ -655,9 +655,11 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                         $logoPath = $settingsModel->getConfig('logo_path');
                         ?>
                         <?php if ($logoPath): ?>
-                            <img src="<?= base_url($logoPath) ?>" alt="Logo" style="max-height: 28px; max-width: 120px; object-fit: contain;">
+                            <img src="<?= base_url($logoPath) ?>" alt="Logo"
+                                style="max-height: 28px; max-width: 120px; object-fit: contain;">
                         <?php else: ?>
-                            <span style="font-weight: 800; font-size: 18px; color: white; letter-spacing: -0.5px;">Guardian</span>
+                            <span
+                                style="font-weight: 800; font-size: 18px; color: white; letter-spacing: -0.5px;">Guardian</span>
                         <?php endif; ?>
                     </div>
                     <div style="display: flex; gap: 14px; align-items: center;">
@@ -784,7 +786,8 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                         </p>
                         <div class="live-rate-mobile" style="border-radius: 6px; padding: 6px 12px;">
                             <div class="rate-dot"></div>
-                            <span id="live-rate-val" style="color: #3b82f6; font-weight: 700; font-size: 20px;">R$ 0,0000</span>
+                            <span id="live-rate-val" style="color: #3b82f6; font-weight: 700; font-size: 20px;">R$
+                                0,0000</span>
                         </div>
                     </div>
                 </div>
@@ -1166,7 +1169,8 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                     </svg>
                 </div>
                 <h2 style="color: white; font-size: 18px; font-weight: 700; margin-bottom: 4px;">
-                    <?= $isChinese ? '存款' : 'Realizar Depósito' ?></h2>
+                    <?= $isChinese ? '存款' : 'Realizar Depósito' ?>
+                </h2>
                 <p style="color: #94a3b8; font-size: 12px; margin-bottom: 16px;">
                     <?= $isChinese ? '上传付款凭证，金额将自动识别。' : 'Envie o(s) comprovante(s) de pagamento. O valor será identificado automaticamente.' ?>
                 </p>
@@ -1181,9 +1185,11 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 style="flex-shrink: 0; border: 2px dashed rgba(16,185,129,0.3); border-radius: 14px; padding: 20px 16px; text-align: center; cursor: pointer; margin-bottom: 16px; transition: 0.2s;">
                 <div style="font-size: 26px; margin-bottom: 6px;">📎</div>
                 <div style="color: #34d399; font-weight: 600; font-size: 13px; margin-bottom: 2px;">
-                    <?= $isChinese ? '点击或拖拽多个凭证到此处' : 'Clique ou arraste vários comprovantes aqui' ?></div>
+                    <?= $isChinese ? '点击或拖拽多个凭证到此处' : 'Clique ou arraste vários comprovantes aqui' ?>
+                </div>
                 <div style="color: #64748b; font-size: 11px;">
-                    <?= $isChinese ? '可一次选择多个文件' : 'Você pode selecionar quantos arquivos quiser de uma vez' ?></div>
+                    <?= $isChinese ? '可一次选择多个文件' : 'Você pode selecionar quantos arquivos quiser de uma vez' ?>
+                </div>
             </div>
 
             <!-- Scrollable list of items -->
@@ -1313,7 +1319,8 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 style="position: absolute; right: 20px; top: 20px; background: rgba(255,255,255,0.05); border: none; color: #94a3b8; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer;">&times;</button>
 
             <h1 style="font-size: 20px; color: white; font-weight: 700; margin-bottom: 4px; padding-right: 40px;">
-                <?= lang('App.stmt_title') ?></h1>
+                <?= lang('App.stmt_title') ?>
+            </h1>
             <p style="font-size: 12px; color: #64748b; margin-bottom: 16px;"><?= lang('App.stmt_subtitle') ?></p>
 
             <!-- Posição Financeira (resumo) -->
@@ -1486,9 +1493,11 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 style="position: absolute; right: 20px; top: 20px; background: rgba(255,255,255,0.05); border: none; color: #94a3b8; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer;">&times;</button>
 
             <h1 style="font-size: 20px; color: white; font-weight: 700; margin-bottom: 4px; padding-right: 40px;">
-                <?= $isChinese ? '系统通知' : 'Notificações' ?></h1>
+                <?= $isChinese ? '系统通知' : 'Notificações' ?>
+            </h1>
             <p style="font-size: 12px; color: #64748b; margin-bottom: 16px;">
-                <?= $isChinese ? '查看您的最新财务和操单更新。' : 'Acompanhe as atualizações de saldo e operações.' ?></p>
+                <?= $isChinese ? '查看您的最新财务和操单更新。' : 'Acompanhe as atualizações de saldo e operações.' ?>
+            </p>
 
             <!-- List (scrollable) -->
             <div id="notifications-list"
@@ -1547,9 +1556,11 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 </svg>
             </div>
             <h2 style="color: white; font-size: 20px; font-weight: 700; margin-bottom: 10px;">
-                <?= $isChinese ? '上传付款凭证' : 'Enviar Comprovante' ?></h2>
+                <?= $isChinese ? '上传付款凭证' : 'Enviar Comprovante' ?>
+            </h2>
             <p style="color: #94a3b8; font-size: 14px; margin-bottom: 25px;">
-                <?= $isChinese ? '请选择付款截图或PDF文件。' : 'Por favor, selecione o print ou PDF do pagamento.' ?></p>
+                <?= $isChinese ? '请选择付款截图或PDF文件。' : 'Por favor, selecione o print ou PDF do pagamento.' ?>
+            </p>
 
             <input type="file" id="proof-file" accept="image/*,application/pdf" style="display: none;"
                 onchange="handleFileSelect(this)">
@@ -1657,7 +1668,8 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 25px;">
                 <h3
                     style="font-size: 13px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 5px 0; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px;">
-                    <?= $isChinese ? '注册信息' : 'Informações do Cadastro' ?></h3>
+                    <?= $isChinese ? '注册信息' : 'Informações do Cadastro' ?>
+                </h3>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px;">
                     <div>
@@ -1673,13 +1685,6 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                             <?= $user['role'] === 'admin' ? 'Admin' : ($user['role'] === 'operator' ? 'Operador' : 'Cliente') ?>
                         </span>
                     </div>
-                    <?php if (isset($user['fee_percent']) && floatval($user['fee_percent']) != 0): ?>
-                        <div>
-                            <span
-                                style="color: #94a3b8; display: block; font-size: 11px;"><?= $isChinese ? '费率 / Spread' : 'Spread / Taxa' ?></span>
-                            <strong style="color: white;"><?= number_format($user['fee_percent'] ?? 0, 2) ?>%</strong>
-                        </div>
-                    <?php endif; ?>
                     <div>
                         <span
                             style="color: #94a3b8; display: block; font-size: 11px;"><?= $isChinese ? '常规合同类型' : 'Contrato Padrão' ?></span>
@@ -1780,7 +1785,8 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                         <span id="twofa-secret-text">-</span>
                         <div
                             style="font-size: 9px; color: #64748b; font-weight: 400; margin-top: 3px; letter-spacing: normal;">
-                            <?= $isChinese ? '点击复制密钥' : 'Clique para copiar a chave' ?></div>
+                            <?= $isChinese ? '点击复制密钥' : 'Clique para copiar a chave' ?>
+                        </div>
                     </div>
 
                     <p style="font-size: 12px; color: #94a3b8; margin: 0 0 8px 0; line-height: 1.5; text-align: left;">
@@ -1821,7 +1827,8 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
             <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 20px; margin-top: 20px;">
                 <button onclick="closeMyAccountModal(); openChangePasswordModal(event);"
                     style="width: 100%; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: #60a5fa; padding: 12px; border-radius: 12px; font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                         <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                     </svg>
