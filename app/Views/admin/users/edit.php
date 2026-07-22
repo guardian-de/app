@@ -33,8 +33,8 @@
             </div>
             <div class="form-group">
                 <label for="password" style="display: block; color: #94a3b8; font-size: 12px; font-weight: 600; margin-bottom: 8px;">Nova Senha</label>
-                <input id="password" type="password" name="password" placeholder="Deixe em branco para não alterar"
-                    style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none;">
+                <input id="password" type="password" name="password" placeholder="<?= session()->get('user_role') === 'admin' ? 'Deixe em branco para não alterar' : 'Apenas administradores podem alterar' ?>" <?= session()->get('user_role') === 'admin' ? '' : 'disabled' ?>
+                    style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none; opacity: <?= session()->get('user_role') === 'admin' ? '1' : '0.5' ?>;">
             </div>
         </div>
 
@@ -54,8 +54,8 @@
         <div id="client-fields" style="display: flex; flex-direction: column; gap: 20px;">
             <div class="form-group">
                 <label for="fee_percent" style="display: block; color: #94a3b8; font-size: 12px; font-weight: 600; margin-bottom: 8px;">Taxa (%)</label>
-                <input id="fee_percent" type="number" name="fee_percent" value="<?= old('fee_percent', $user['fee_percent']) ?>" step="0.01" required
-                    style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none;">
+                <input id="fee_percent" type="number" name="fee_percent" value="<?= old('fee_percent', $user['fee_percent']) ?>" step="0.01" required <?= session()->get('user_role') === 'admin' ? '' : 'disabled' ?>
+                    style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none; opacity: <?= session()->get('user_role') === 'admin' ? '1' : '0.5' ?>;">
             </div>
 
             <div class="form-group" style="border: 1px solid rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; background: rgba(255,255,255,0.01);">
