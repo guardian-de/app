@@ -254,7 +254,9 @@ class AdminController extends BaseController
 
         $data = [
             'login'                  => $this->request->getPost('login'),
-            'fee_percent'            => $role === 'user' ? ($this->request->getPost('fee_percent') ?: 10.00) : 0.00,
+            'fee_percent'            => session()->get('user_role') === 'admin'
+                ? ($role === 'user' ? ($this->request->getPost('fee_percent') ?: 10.00) : 0.00)
+                : ($existingUser['fee_percent'] ?? 10.00),
             'usdt_wallet'            => $role === 'user' ? $defaultAddress : null,
             'score'                  => 0.00,
             'default_contract_type'  => $role === 'user' ? ($this->request->getPost('default_contract_type') ?: 'd+1') : 'd+1',
@@ -273,7 +275,7 @@ class AdminController extends BaseController
         ];
 
         $password = $this->request->getPost('password');
-        if (!empty($password)) {
+        if (!empty($password) && session()->get('user_role') === 'admin') {
             $data['password'] = $password;
             $rules['password'] = 'required|min_length[6]';
         }
