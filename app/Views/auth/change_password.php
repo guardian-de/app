@@ -17,6 +17,9 @@
             <div style="background: rgba(16, 185, 129, 0.1); color: #34d399; padding: 15px; border-radius: 12px; margin-bottom: 25px; border: 1px solid rgba(16, 185, 129, 0.2); font-size: 14px;">
                 <?= session()->getFlashdata('success') ?>
             </div>
+            <script>
+                alert("<?= session()->getFlashdata('success') ?>");
+            </script>
         <?php endif; ?>
 
         <form action="<?= url_to('update_password') ?>" method="POST" style="display: flex; flex-direction: column; gap: 20px;">
@@ -196,6 +199,9 @@
                 <div class="alert alert-success">
                     <?= session()->getFlashdata('success') ?>
                 </div>
+                <script>
+                    alert("<?= session()->getFlashdata('success') ?>");
+                </script>
             <?php endif; ?>
 
             <form action="<?= url_to('update_password') ?>" method="POST">
