@@ -109,9 +109,7 @@ class AdminController extends BaseController
 
     public function edit(int $id)
     {
-        if ((int)$id !== (int)session()->get('user_id')) {
-            if ($response = $this->checkPermission('usuarios')) return $response;
-        }
+        if ($response = $this->checkPermission('usuarios')) return $response;
         $userModel = new UserModel();
         $data['user'] = $userModel->find($id);
         
@@ -119,7 +117,7 @@ class AdminController extends BaseController
             return redirect()->to('/admin/users')->with('error', 'Usuário não encontrado.');
         }
 
-        if (session()->get('user_role') === 'operator' && $data['user']['role'] !== 'user' && (int)$data['user']['id'] !== (int)session()->get('user_id')) {
+        if (session()->get('user_role') === 'operator' && $data['user']['role'] !== 'user') {
             return redirect()->to('/admin/users')->with('error', 'Acesso negado: operadores só podem gerenciar clientes.');
         }
 
@@ -178,9 +176,7 @@ class AdminController extends BaseController
 
     public function update(int $id)
     {
-        if ((int)$id !== (int)session()->get('user_id')) {
-            if ($response = $this->checkPermission('usuarios')) return $response;
-        }
+        if ($response = $this->checkPermission('usuarios')) return $response;
         $userModel = new UserModel();
         $existingUser = $userModel->find($id);
 
@@ -188,18 +184,15 @@ class AdminController extends BaseController
             return redirect()->to('/admin/users')->with('error', 'Usuário não encontrado.');
         }
 
-        if (session()->get('user_role') === 'operator' && $existingUser['role'] !== 'user' && (int)$existingUser['id'] !== (int)session()->get('user_id')) {
+        if (session()->get('user_role') === 'operator' && $existingUser['role'] !== 'user') {
             return redirect()->to('/admin/users')->with('error', 'Acesso negado: operadores só podem gerenciar clientes.');
         }
 
-        $role = $this->request->getPost('role') ?: $existingUser['role'];
-        if (session()->get('user_role') !== 'admin') {
-            $role = $existingUser['role'];
+        $role = $this->request->getPost('role') ?: 'user';
+        if (session()->get('user_role') === 'operator') {
+            $role = 'user';
         }
         $permissions = $this->request->getPost('permissions');
-        if (session()->get('user_role') !== 'admin') {
-            $permissions = !empty($existingUser['permissions']) ? json_decode($existingUser['permissions'], true) : [];
-        }
         $canSetPurchaseModel = session()->get('user_role') === 'admin' || in_array('purchase_model', session()->get('user_permissions') ?? []);
 
         // Processamento das carteiras
@@ -282,7 +275,7 @@ class AdminController extends BaseController
         ];
 
         $password = $this->request->getPost('password');
-        if (!empty($password) && (session()->get('user_role') === 'admin' || (int)$id === (int)session()->get('user_id'))) {
+        if (!empty($password) && session()->get('user_role') === 'admin') {
             $data['password'] = $password;
             $rules['password'] = 'required|min_length[6]';
         }

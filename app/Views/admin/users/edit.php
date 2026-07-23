@@ -25,13 +25,13 @@
     <form action="<?= url_to('admin_users_update', $user['id']) ?>" method="POST" style="display: flex; flex-direction: column; gap: 20px;">
         <?= csrf_field() ?>
 
-        <div style="display: grid; grid-template-columns: <?= (session()->get('user_role') === 'admin' || (int)$user['id'] === (int)session()->get('user_id')) ? '1fr 1fr' : '1fr' ?>; gap: 20px;">
+        <div style="display: grid; grid-template-columns: <?= session()->get('user_role') === 'admin' ? '1fr 1fr' : '1fr' ?>; gap: 20px;">
             <div class="form-group">
                 <label for="login" style="display: block; color: #94a3b8; font-size: 12px; font-weight: 600; margin-bottom: 8px;">Login</label>
                 <input id="login" type="text" name="login" value="<?= old('login', $user['login']) ?>" required
                     style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none;">
             </div>
-            <?php if (session()->get('user_role') === 'admin' || (int)$user['id'] === (int)session()->get('user_id')): ?>
+            <?php if (session()->get('user_role') === 'admin'): ?>
             <div class="form-group">
                 <label for="password" style="display: block; color: #94a3b8; font-size: 12px; font-weight: 600; margin-bottom: 8px;">Nova Senha</label>
                 <input id="password" type="password" name="password" placeholder="Deixe em branco para não alterar"
@@ -43,14 +43,13 @@
         <div class="form-group">
             <label for="role" style="display: block; color: #94a3b8; font-size: 12px; font-weight: 600; margin-bottom: 8px;">Permissão (Nível de Acesso)</label>
             <select id="role" name="role" onchange="toggleFields()"
-                <?= session()->get('user_role') !== 'admin' ? 'disabled style="width: 100%; background: rgba(15, 23, 42, 0.3); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: #64748b; outline: none; cursor: not-allowed;"' : 'style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none; cursor: pointer;"' ?>>
+                style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none; cursor: pointer;">
                 <option value="user"     <?= old('role', $user['role']) == 'user'     ? 'selected' : '' ?>>Cliente (Acesso ao Chat/App)</option>
-                <option value="operator" <?= old('role', $user['role']) == 'operator' ? 'selected' : '' ?>>Operador (Suporte/Financeiro)</option>
-                <option value="admin"    <?= old('role', $user['role']) == 'admin'    ? 'selected' : '' ?>>Administrador (Acesso Total)</option>
+                <?php if (session()->get('user_role') === 'admin'): ?>
+                    <option value="operator" <?= old('role', $user['role']) == 'operator' ? 'selected' : '' ?>>Operador (Suporte/Financeiro)</option>
+                    <option value="admin"    <?= old('role', $user['role']) == 'admin'    ? 'selected' : '' ?>>Administrador (Acesso Total)</option>
+                <?php endif; ?>
             </select>
-            <?php if (session()->get('user_role') !== 'admin'): ?>
-                <input type="hidden" name="role" value="<?= esc($user['role']) ?>">
-            <?php endif; ?>
         </div>
 
         <!-- Client specific fields container -->
@@ -160,50 +159,49 @@
         <!-- Permissions container (for Admin / Operator) -->
         <div id="permission-fields" style="display: none; flex-direction: column; gap: 15px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 20px;">
             <label style="display: block; color: #94a3b8; font-size: 12px; font-weight: 600; margin-bottom: 8px;">Permissões do Painel de Controle</label>
-            <?php $disabled = session()->get('user_role') !== 'admin' ? 'disabled' : ''; ?>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; background: rgba(15, 23, 42, 0.2); border: 1px solid rgba(255,255,255,0.05); padding: 15px; border-radius: 10px;">
                 <label style="display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 14px; cursor: pointer; user-select: none;">
-                    <input type="checkbox" name="permissions[]" value="usuarios" <?= in_array('usuarios', $savedPermissions) ? 'checked' : '' ?> <?= $disabled ?> style="accent-color: #6366f1; width: 18px; height: 18px; cursor: pointer;">
+                    <input type="checkbox" name="permissions[]" value="usuarios" <?= in_array('usuarios', $savedPermissions) ? 'checked' : '' ?> style="accent-color: #6366f1; width: 18px; height: 18px; cursor: pointer;">
                     Gerenciar Usuários
                 </label>
                 <label style="display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 14px; cursor: pointer; user-select: none;">
-                    <input type="checkbox" name="permissions[]" value="transacoes" <?= in_array('transacoes', $savedPermissions) ? 'checked' : '' ?> <?= $disabled ?> style="accent-color: #6366f1; width: 18px; height: 18px; cursor: pointer;">
+                    <input type="checkbox" name="permissions[]" value="transacoes" <?= in_array('transacoes', $savedPermissions) ? 'checked' : '' ?> style="accent-color: #6366f1; width: 18px; height: 18px; cursor: pointer;">
                     Gerenciar Transações
                 </label>
                 <label style="display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 14px; cursor: pointer; user-select: none;">
-                    <input type="checkbox" name="permissions[]" value="enviar_usdt" <?= in_array('enviar_usdt', $savedPermissions) ? 'checked' : '' ?> <?= $disabled ?> style="accent-color: #6366f1; width: 18px; height: 18px; cursor: pointer;">
+                    <input type="checkbox" name="permissions[]" value="enviar_usdt" <?= in_array('enviar_usdt', $savedPermissions) ? 'checked' : '' ?> style="accent-color: #6366f1; width: 18px; height: 18px; cursor: pointer;">
                     Enviar USDT (Fila/Contratos)
                 </label>
                 <label style="display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 14px; cursor: pointer; user-select: none;">
-                    <input type="checkbox" name="permissions[]" value="lots" <?= in_array('lots', $savedPermissions) ? 'checked' : '' ?> <?= $disabled ?> style="accent-color: #6366f1; width: 18px; height: 18px; cursor: pointer;">
+                    <input type="checkbox" name="permissions[]" value="lots" <?= in_array('lots', $savedPermissions) ? 'checked' : '' ?> style="accent-color: #6366f1; width: 18px; height: 18px; cursor: pointer;">
                     Gerenciar Lotes USDT
                 </label>
                 <label style="display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 14px; cursor: pointer; user-select: none;">
-                    <input type="checkbox" name="permissions[]" value="suppliers" <?= in_array('suppliers', $savedPermissions) ? 'checked' : '' ?> <?= $disabled ?> style="accent-color: #6366f1; width: 18px; height: 18px; cursor: pointer;">
+                    <input type="checkbox" name="permissions[]" value="suppliers" <?= in_array('suppliers', $savedPermissions) ? 'checked' : '' ?> style="accent-color: #6366f1; width: 18px; height: 18px; cursor: pointer;">
                     Gerenciar Fornecedores
                 </label>
                 <label style="display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 14px; cursor: pointer; user-select: none;">
-                    <input type="checkbox" name="permissions[]" value="deposits" <?= in_array('deposits', $savedPermissions) ? 'checked' : '' ?> <?= $disabled ?> style="accent-color: #6366f1; width: 18px; height: 18px; cursor: pointer;">
+                    <input type="checkbox" name="permissions[]" value="deposits" <?= in_array('deposits', $savedPermissions) ? 'checked' : '' ?> style="accent-color: #6366f1; width: 18px; height: 18px; cursor: pointer;">
                     Confirmar Depósitos
                 </label>
                 <label style="display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 14px; cursor: pointer; user-select: none;">
-                    <input type="checkbox" name="permissions[]" value="settings" <?= in_array('settings', $savedPermissions) ? 'checked' : '' ?> <?= $disabled ?> style="accent-color: #6366f1; width: 18px; height: 18px; cursor: pointer;">
+                    <input type="checkbox" name="permissions[]" value="settings" <?= in_array('settings', $savedPermissions) ? 'checked' : '' ?> style="accent-color: #6366f1; width: 18px; height: 18px; cursor: pointer;">
                     Configurações Gerais
                 </label>
                 <label style="display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 14px; cursor: pointer; user-select: none;">
-                    <input type="checkbox" name="permissions[]" value="purchase_model" <?= in_array('purchase_model', $savedPermissions) ? 'checked' : '' ?> <?= $disabled ?> style="accent-color: #6366f1; width: 18px; height: 18px; cursor: pointer;">
+                    <input type="checkbox" name="permissions[]" value="purchase_model" <?= in_array('purchase_model', $savedPermissions) ? 'checked' : '' ?> style="accent-color: #6366f1; width: 18px; height: 18px; cursor: pointer;">
                     Gerenciar Modelo de Compra de Clientes
                 </label>
                 <label style="display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 14px; cursor: pointer; user-select: none;">
-                    <input type="checkbox" name="permissions[]" value="edit_deposit_amount" <?= in_array('edit_deposit_amount', $savedPermissions) ? 'checked' : '' ?> <?= $disabled ?> style="accent-color: #6366f1; width: 18px; height: 18px; cursor: pointer;">
+                    <input type="checkbox" name="permissions[]" value="edit_deposit_amount" <?= in_array('edit_deposit_amount', $savedPermissions) ? 'checked' : '' ?> style="accent-color: #6366f1; width: 18px; height: 18px; cursor: pointer;">
                     Corrigir Valor de Depósitos (IA)
                 </label>
                 <label style="display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 14px; cursor: pointer; user-select: none;">
-                    <input type="checkbox" name="permissions[]" value="conciliation" <?= in_array('conciliation', $savedPermissions) ? 'checked' : '' ?> <?= $disabled ?> style="accent-color: #6366f1; width: 18px; height: 18px; cursor: pointer;">
+                    <input type="checkbox" name="permissions[]" value="conciliation" <?= in_array('conciliation', $savedPermissions) ? 'checked' : '' ?> style="accent-color: #6366f1; width: 18px; height: 18px; cursor: pointer;">
                     Conciliação
                 </label>
                 <label style="display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 14px; cursor: pointer; user-select: none;">
-                    <input type="checkbox" name="permissions[]" value="chat" <?= in_array('chat', $savedPermissions) ? 'checked' : '' ?> <?= $disabled ?> style="accent-color: #6366f1; width: 18px; height: 18px; cursor: pointer;">
+                    <input type="checkbox" name="permissions[]" value="chat" <?= in_array('chat', $savedPermissions) ? 'checked' : '' ?> style="accent-color: #6366f1; width: 18px; height: 18px; cursor: pointer;">
                     Atendimento Chat
                 </label>
             </div>
