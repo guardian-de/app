@@ -2416,8 +2416,14 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
                 if (activePromoLotId) {
                     return;
                 }
+                const newBaseRate = parseFloat(data.base_rate);
+                const newRate = parseFloat(data.rate);
+                const newFeePercent = parseFloat(data.fee_percent);
+                if (newBaseRate === currentBaseRate && newRate === currentExchangeRate && newFeePercent === currentFeePercent) {
+                    return;
+                }
                 // Mostrar cotação SEM taxas no header
-                const formattedRate = `R$ ${parseFloat(data.base_rate).toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`;
+                const formattedRate = `R$ ${newBaseRate.toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`;
                 const liveRateVal = document.getElementById('live-rate-val');
                 if (liveRateVal) liveRateVal.textContent = formattedRate;
                 const liveRateValDesktop = document.getElementById('live-rate-val-desktop');
@@ -3627,7 +3633,7 @@ $isChinese = session()->get('user_lang') === 'zh-CN';
         checkNotifications();
         checkPromotionalLots();
 
-        setInterval(updateLiveRate, 2000); // 2s interval for real-time updates
+        setInterval(updateLiveRate, 100); // 100ms interval for real-time updates
         setInterval(updateDebtBalance, 30000);
         setInterval(checkNotifications, 30000);
         setInterval(checkPromotionalLots, 5000);
