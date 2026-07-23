@@ -36,6 +36,10 @@ class AuthFilter implements FilterInterface
 
         $role = session()->get('user_role');
         if ($role === 'operator') {
+            $path = ltrim($request->getUri()->getPath(), '/');
+            if ($path === 'change-password') {
+                return;
+            }
             return redirect()->to('/admin/contracts')->with('error', 'Acesso negado. Operadores não têm acesso ao chat do cliente (/dashboard ou /m).');
         }
     }
