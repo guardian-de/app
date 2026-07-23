@@ -1519,16 +1519,12 @@ class ChatController extends BaseController
             }
 
             if ($baseRate !== null) {
-                // Cache the baseline rate for 5 seconds to avoid external rate-limiting
-                cache()->save($cacheKey, $baseRate, 5);
+                // Cache the baseline rate for 1 second to avoid external rate-limiting and delay
+                cache()->save($cacheKey, $baseRate, 1);
             }
         }
 
         if ($baseRate !== null) {
-            // Add dynamic real-time fluctuation so trend goes up and down
-            $fluctuation = (mt_rand(-30, 30) / 10000);
-            $baseRate += $fluctuation;
-
             $rateWithFee = $baseRate * (1 + ($feePercent / 100));
             return $rateWithFee;
         }
@@ -1539,6 +1535,9 @@ class ChatController extends BaseController
     private function getTransferoOtcRate($settlement = 'D0')
     {
         $apiKey = env('TRANSFERO_OTC_API_KEY');
+        if (empty($apiKey)) {
+            return null;
+        }
         $baseUrl = 'https://staging.otc.transfero.com';
 
         try {
