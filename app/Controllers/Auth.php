@@ -224,9 +224,13 @@ class Auth extends BaseController
                         return redirect()->to('/admin/suppliers');
                     } elseif (in_array('settings', $perms)) {
                         return redirect()->to('/admin/settings');
+                    } elseif (in_array('chat', $perms)) {
+                        return redirect()->to('/admin/chat');
+                    } elseif (in_array('conciliation', $perms)) {
+                        return redirect()->to('/admin/conciliation');
                     } else {
-                        $session->destroy();
-                        return redirect()->to('/')->with('error', 'Acesso negado: você não tem permissão para acessar esta área.');
+                        // Se for operador mas não tiver nenhuma permissão de menu cadastrada, permite login e envia para alterar senha
+                        return redirect()->to('/change-password');
                     }
                 }
 
