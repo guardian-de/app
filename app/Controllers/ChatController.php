@@ -720,9 +720,20 @@ class ChatController extends BaseController
         $financialModel = new \App\Models\FinancialStatementModel();
         if ($type === 'buy') {
             $balance = $financialModel->getBalance($userId);
+            // Valida saldo se a restrição de saldo estiver ativa nas configurações globais
+            $settingsModel = new \App\Models\SettingsModel();
+            $lockMode = $settingsModel->getConfig('lock_only_with_balance_mode', 'disabled');
+            $shouldLock = false;
+            if ($lockMode === 'all') {
+                $shouldLock = true;
+            } elseif ($lockMode === 'specific') {
+                $lockClients = json_decode($settingsModel->getConfig('lock_only_with_balance_clients', '[]'), true) ?? [];
+                if (in_array($userId, $lockClients)) {
+                    $shouldLock = true;
+                }
+            }
 
-            // Valida saldo se lock_only_with_balance estiver ativo
-            if (!empty($user['lock_only_with_balance']) && ($balance - $brlAmount) < 0) {
+            if ($shouldLock && ($balance - $brlAmount) < 0) {
                 $errorMsg = $userLang == 'zh-CN'
                     ? "余额不足。可用余额为 R$ " . number_format(max(0.0, $balance), 2, ',', '.')
                     : "Saldo insuficiente. Disponível para compra: R$ " . number_format(max(0.0, $balance), 2, ',', '.') . ".";

@@ -1297,6 +1297,11 @@ class AdminController extends BaseController
         $data['admin_alert_sound'] = $settingsModel->getConfig('admin_alert_sound', 'chime_premium');
         $data['disable_d1'] = $settingsModel->getConfig('disable_d1', '0') === '1';
         $data['disable_d2'] = $settingsModel->getConfig('disable_d2', '0') === '1';
+
+        $userModel = new \App\Models\UserModel();
+        $data['clients'] = $userModel->where('role', 'user')->orderBy('login', 'ASC')->findAll();
+        $data['lock_only_with_balance_mode'] = $settingsModel->getConfig('lock_only_with_balance_mode', 'disabled');
+        $data['lock_only_with_balance_clients'] = json_decode($settingsModel->getConfig('lock_only_with_balance_clients', '[]'), true) ?? [];
         
         return view('admin/settings', $data);
     }
@@ -1324,12 +1329,17 @@ class AdminController extends BaseController
         if ($startD2) $settingsModel->setConfig('business_hours_d2_start', $startD2);
         if ($endD2) $settingsModel->setConfig('business_hours_d2_end', $endD2);
         if ($quotationFlow) $settingsModel->setConfig('quotation_flow', $quotationFlow);
+
         if ($adminAlertSound) $settingsModel->setConfig('admin_alert_sound', $adminAlertSound);
         $settingsModel->setConfig('operator_whatsapp', $operatorWhatsapp ?? '');
+
         $settingsModel->setConfig('disable_d1', $disableD1);
         $settingsModel->setConfig('disable_d2', $disableD2);
 
-        // Upload de Logo
+        $lockOnlyWithBalanceMode = $this->request->getPost('lock_only_with_balance_mode') ?: 'disabled';
+        $lockOnlyWithBalanceClients = $this->request->getPost('lock_only_with_balance_clients') ?: [];
+        $settingsModel->setConfig('lock_only_with_balance_mode', $lockOnlyWithBalanceMode);
+        $settingsModel->setConfig('lock_only_with_balance_clients', json_encode($lockOnlyWithBalanceClients));
         $logoFile = $this->request->getFile('logo');
         if ($logoFile && $logoFile->isValid() && !$logoFile->hasMoved()) {
             $validationRule = [

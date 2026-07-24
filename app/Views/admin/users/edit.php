@@ -152,12 +152,6 @@
                     <option value="both" <?= old('purchase_model', $user['purchase_model']) == 'both' ? 'selected' : '' ?>>Ambos (cliente escolhe)</option>
                 </select>
             </div>
-            <div class="form-group" style="margin-top: 15px;">
-                <label style="display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 14px; cursor: pointer; user-select: none;">
-                    <input type="checkbox" name="lock_only_with_balance" value="1" <?= old('lock_only_with_balance', $user['lock_only_with_balance'] ?? 0) == 1 ? 'checked' : '' ?> style="accent-color: #6366f1; width: 18px; height: 18px; cursor: pointer;">
-                    Travar apenas com saldo em conta
-                </label>
-            </div>
             <?php endif; ?>
         </div>
 
