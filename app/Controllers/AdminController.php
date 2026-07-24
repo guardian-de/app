@@ -1219,7 +1219,7 @@ class AdminController extends BaseController
                         WHEN la.contract_id IS NOT NULL AND c.total_amount > 0 THEN
                             ROUND((CASE WHEN COALESCE(c.fee_percent, 0) > 0 THEN (c.total_brl / c.total_amount) ELSE (c.total_brl / c.total_amount) * (1 + COALESCE(uc.fee_percent, 0) / 100) END - ul.conversion_rate) * la.usdt_amount, 2)
                         WHEN la.transaction_id IS NOT NULL AND t.amount_usdt > 0 THEN
-                            ROUND((CASE WHEN COALESCE(t.fee_percent, 0) > 0 THEN (t.total_brl / t.amount_usdt) ELSE (t.total_brl / t.amount_usdt) * (1 + COALESCE(ut.fee_percent, 0) / 100) END - ul.conversion_rate) * la.usdt_amount, 2)
+                            ROUND((CASE WHEN COALESCE(t.fee_percent, 0) > 0 THEN (t.amount_brl / t.amount_usdt) ELSE (t.amount_brl / t.amount_usdt) * (1 + COALESCE(ut.fee_percent, 0) / 100) END - ul.conversion_rate) * la.usdt_amount, 2)
                         ELSE 0
                     END
                 ELSE NULL
@@ -1234,21 +1234,21 @@ class AdminController extends BaseController
                 WHEN la.contract_id    IS NOT NULL AND c.total_amount > 0 THEN 
                     ROUND(CASE WHEN COALESCE(c.fee_percent, 0) > 0 THEN (c.total_brl / c.total_amount) ELSE (c.total_brl / c.total_amount) * (1 + COALESCE(uc.fee_percent, 0) / 100) END, 4)
                 WHEN la.transaction_id IS NOT NULL AND t.amount_usdt  > 0 THEN 
-                    ROUND(CASE WHEN COALESCE(t.fee_percent, 0) > 0 THEN (t.total_brl / t.amount_usdt) ELSE (t.total_brl / t.amount_usdt) * (1 + COALESCE(ut.fee_percent, 0) / 100) END, 4)
+                    ROUND(CASE WHEN COALESCE(t.fee_percent, 0) > 0 THEN (t.amount_brl / t.amount_usdt) ELSE (t.amount_brl / t.amount_usdt) * (1 + COALESCE(ut.fee_percent, 0) / 100) END, 4)
                 ELSE NULL
             END AS client_rate,
             CASE
                 WHEN la.contract_id    IS NOT NULL AND c.total_amount > 0 THEN 
                     ROUND(CASE WHEN COALESCE(c.fee_percent, 0) > 0 THEN (c.total_brl / c.total_amount) ELSE (c.total_brl / c.total_amount) * (1 + COALESCE(uc.fee_percent, 0) / 100) END - ul.conversion_rate, 4)
                 WHEN la.transaction_id IS NOT NULL AND t.amount_usdt  > 0 THEN 
-                    ROUND(CASE WHEN COALESCE(t.fee_percent, 0) > 0 THEN (t.total_brl / t.amount_usdt) ELSE (t.total_brl / t.amount_usdt) * (1 + COALESCE(ut.fee_percent, 0) / 100) END - ul.conversion_rate, 4)
+                    ROUND(CASE WHEN COALESCE(t.fee_percent, 0) > 0 THEN (t.amount_brl / t.amount_usdt) ELSE (t.amount_brl / t.amount_usdt) * (1 + COALESCE(ut.fee_percent, 0) / 100) END - ul.conversion_rate, 4)
                 ELSE NULL
             END AS margin_per_usdt,
             CASE
                 WHEN la.contract_id    IS NOT NULL AND c.total_amount > 0 THEN 
                     ROUND(CASE WHEN COALESCE(c.fee_percent, 0) > 0 THEN (c.total_brl / c.total_amount) ELSE (c.total_brl / c.total_amount) * (1 + COALESCE(uc.fee_percent, 0) / 100) END * la.usdt_amount, 2)
                 WHEN la.transaction_id IS NOT NULL AND t.amount_usdt  > 0 THEN 
-                    ROUND(CASE WHEN COALESCE(t.fee_percent, 0) > 0 THEN (t.total_brl / t.amount_usdt) ELSE (t.total_brl / t.amount_usdt) * (1 + COALESCE(ut.fee_percent, 0) / 100) END * la.usdt_amount, 2)
+                    ROUND(CASE WHEN COALESCE(t.fee_percent, 0) > 0 THEN (t.amount_brl / t.amount_usdt) ELSE (t.amount_brl / t.amount_usdt) * (1 + COALESCE(ut.fee_percent, 0) / 100) END * la.usdt_amount, 2)
                 ELSE NULL
             END AS valor_cliente_brl,
             ROUND(ul.conversion_rate * la.usdt_amount, 2) AS valor_fornecedor_brl,
@@ -1277,7 +1277,7 @@ class AdminController extends BaseController
                             WHEN la.contract_id IS NOT NULL AND c.total_amount > 0 THEN
                                 ROUND((CASE WHEN COALESCE(c.fee_percent, 0) > 0 THEN (c.total_brl / c.total_amount) ELSE (c.total_brl / c.total_amount) * (1 + COALESCE(uc.fee_percent, 0) / 100) END - ul.conversion_rate) * la.usdt_amount, 2)
                             WHEN la.transaction_id IS NOT NULL AND t.amount_usdt > 0 THEN
-                                ROUND((CASE WHEN COALESCE(t.fee_percent, 0) > 0 THEN (t.total_brl / t.amount_usdt) ELSE (t.total_brl / t.amount_usdt) * (1 + COALESCE(ut.fee_percent, 0) / 100) END - ul.conversion_rate) * la.usdt_amount, 2)
+                                ROUND((CASE WHEN COALESCE(t.fee_percent, 0) > 0 THEN (t.amount_brl / t.amount_usdt) ELSE (t.amount_brl / t.amount_usdt) * (1 + COALESCE(ut.fee_percent, 0) / 100) END - ul.conversion_rate) * la.usdt_amount, 2)
                             ELSE 0
                         END
                     ELSE 0

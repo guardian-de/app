@@ -188,12 +188,12 @@ class LotAllocationModel extends Model
             }
         } else {
             $row = $db->table('transactions')
-                      ->select('transactions.comercial_brl, transactions.total_brl, transactions.amount_usdt, transactions.fee_percent, users.fee_percent as user_fee')
+                      ->select('transactions.comercial_brl, transactions.amount_brl, transactions.amount_usdt, transactions.fee_percent, users.fee_percent as user_fee')
                       ->join('users', 'users.id = transactions.user_id')
                       ->where('transactions.id', $entityId)
                       ->get()->getRow();
             if ($row && (float)$row->amount_usdt > 0) {
-                $rate = (float)$row->total_brl / (float)$row->amount_usdt;
+                $rate = (float)$row->amount_brl / (float)$row->amount_usdt;
                 if (!((float)$row->fee_percent > 0) && (float)$row->user_fee > 0) {
                     $rate = $rate * (1 + (float)$row->user_fee / 100);
                 }
