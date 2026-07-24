@@ -95,10 +95,14 @@
                     <option value="both" <?= old('purchase_model') == 'both' ? 'selected' : '' ?>>Ambos (cliente escolhe)</option>
                 </select>
             </div>
+            <div class="form-group" style="margin-top: 15px;">
+                <label style="display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 14px; cursor: pointer; user-select: none;">
+                    <input type="checkbox" name="lock_only_with_balance" value="1" <?= old('lock_only_with_balance') == 1 ? 'checked' : '' ?> style="accent-color: #6366f1; width: 18px; height: 18px; cursor: pointer;">
+                    Travar apenas com saldo em conta
+                </label>
+            </div>
             <?php endif; ?>
         </div>
-
-        <!-- Permissions container (for Admin / Operator) -->
         <div id="permission-fields" style="display: none; flex-direction: column; gap: 15px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 20px;">
             <label style="display: block; color: #94a3b8; font-size: 12px; font-weight: 600; margin-bottom: 8px;">Permissões do Painel de Controle</label>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; background: rgba(15, 23, 42, 0.2); border: 1px solid rgba(255,255,255,0.05); padding: 15px; border-radius: 10px;">

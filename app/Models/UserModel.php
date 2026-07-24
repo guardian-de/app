@@ -11,12 +11,11 @@ class UserModel extends Model
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
-    protected $protectFields    = true;
     protected $allowedFields    = [
         'login', 'password', 'fee_percent', 'language', 'usdt_wallet',
         'role', 'score', 'default_contract_type', 'daily_interest_rate', 'allowed_delivery_types', 'permissions',
         'purchase_model', 'last_purchase_mode', 'two_factor_secret', 'two_factor_enabled',
-        'login_attempts', 'blocked_until'
+        'login_attempts', 'blocked_until', 'lock_only_with_balance'
     ];
 
     protected bool $allowEmptyInserts = false;

@@ -714,7 +714,6 @@ class ChatController extends BaseController
         $feeBrl = round($brlAmount - $comercialBrl, 2);
 
         $transactionModel = new \App\Models\TransactionModel();
-        
         $contractId = null;
         $balance = 0.0;
         $contractModel = new \App\Models\ContractModel();
@@ -722,15 +721,13 @@ class ChatController extends BaseController
         if ($type === 'buy') {
             $balance = $financialModel->getBalance($userId);
 
-            // Valida saldo: balance - compra >= 0 (Comentado para permitir compra mesmo com saldo abaixo de 0,00)
-            /*
-            if (($balance - $brlAmount) < 0) {
+            // Valida saldo se lock_only_with_balance estiver ativo
+            if (!empty($user['lock_only_with_balance']) && ($balance - $brlAmount) < 0) {
                 $errorMsg = $userLang == 'zh-CN'
                     ? "余额不足。可用余额为 R$ " . number_format(max(0.0, $balance), 2, ',', '.')
                     : "Saldo insuficiente. Disponível para compra: R$ " . number_format(max(0.0, $balance), 2, ',', '.') . ".";
                 return $this->response->setJSON(['error' => $errorMsg])->setStatusCode(400);
             }
-            */
 
             // Toda compra gera contrato (margin_lock reduz o saldo via ledger)
             {
