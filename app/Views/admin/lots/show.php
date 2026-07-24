@@ -88,7 +88,15 @@
     </div>
     <div>
         <p style="font-size:11px;color:#64748b;text-transform:uppercase;margin-bottom:4px;">Destinatários</p>
-        <p style="font-size:13px;color:#94a3b8;"><?= strtoupper($lot['target_type'] ?? '') ?> <?= $lot['target_group'] ? ' - ' . esc($lot['target_group']) : '' ?></p>
+        <p style="font-size:13px;color:#94a3b8;">
+            <?php if (($lot['target_type'] ?? '') === 'users'): ?>
+                Clientes Específicos: <?= !empty($targetClients) ? esc(implode(', ', array_column($targetClients, 'login'))) : 'Nenhum selecionado' ?>
+            <?php elseif (($lot['target_type'] ?? '') === 'all'): ?>
+                Todos
+            <?php else: ?>
+                <?= strtoupper($lot['target_type'] ?? '') ?>
+            <?php endif; ?>
+        </p>
     </div>
     <?php endif; ?>
     <?php if ($lot['delivery_type']): ?>

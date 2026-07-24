@@ -54,6 +54,32 @@
             </div>
 
             <div>
+                <label style="display:block;font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Público-Alvo</label>
+                <select name="target_type" id="target_type"
+                    style="width:100%;padding:12px 16px;background:#0f172a;border:1px solid #334155;border-radius:12px;color:white;font-size:14px;outline:none;transition:border-color 0.2s;"
+                    onfocus="this.style.borderColor='#f43f5e'" onblur="this.style.borderColor='#334155'">
+                    <option value="all" <?= old('target_type') === 'all' ? 'selected' : '' ?>>Todos</option>
+                    <option value="users" <?= old('target_type') === 'users' ? 'selected' : '' ?>>Clientes Específicos</option>
+                </select>
+            </div>
+
+            <div id="target_users_container" style="display:none;">
+                <label style="display:block;font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Selecionar Clientes *</label>
+                <div style="max-height:200px;overflow-y:auto;background:#0f172a;border:1px solid #334155;border-radius:12px;padding:12px 16px;display:flex;flex-direction:column;gap:10px;">
+                    <?php if (!empty($users)): ?>
+                        <?php foreach ($users as $u): ?>
+                            <label style="display:flex;align-items:center;gap:10px;color:white;font-size:14px;cursor:pointer;">
+                                <input type="checkbox" name="target_users[]" value="<?= $u['id'] ?>" <?= is_array(old('target_users')) && in_array($u['id'], old('target_users')) ? 'checked' : '' ?>>
+                                <?= esc($u['login']) ?>
+                            </label>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <span style="color:#64748b;font-size:13px;">Nenhum cliente cadastrado.</span>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <div>
                 <label style="display:block;font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Prazo de Entrega (Fluxo)</label>
                 <select name="delivery_type"
                     style="width:100%;padding:12px 16px;background:#0f172a;border:1px solid #334155;border-radius:12px;color:white;font-size:14px;outline:none;transition:border-color 0.2s;"
@@ -77,6 +103,19 @@
     const usdtInput    = document.getElementById('usdt_amount');
     const rateInput    = document.getElementById('conversion_rate');
     const totalDisplay = document.getElementById('total_brl_display');
+    const targetTypeSelect = document.getElementById('target_type');
+    const targetUsersContainer = document.getElementById('target_users_container');
+
+    function toggleTargetUsers() {
+        if (targetTypeSelect.value === 'users') {
+            targetUsersContainer.style.display = 'block';
+        } else {
+            targetUsersContainer.style.display = 'none';
+        }
+    }
+
+    targetTypeSelect.addEventListener('change', toggleTargetUsers);
+    toggleTargetUsers(); // Run initially
 
     function recalc() {
         const usdt = parseFloat(usdtInput.value) || 0;

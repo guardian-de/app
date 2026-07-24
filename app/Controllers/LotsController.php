@@ -172,12 +172,22 @@ class LotsController extends BaseController
 
         $logs = $logModel->getForEntity('lot', $id);
 
+        $targetClients = [];
+        if (isset($lot['is_promotional']) && $lot['is_promotional'] && ($lot['target_type'] ?? '') === 'users' && !empty($lot['target_users'])) {
+            $userIds = json_decode($lot['target_users'], true);
+            if (is_array($userIds) && !empty($userIds)) {
+                $userModel = new \App\Models\UserModel();
+                $targetClients = $userModel->select('login')->whereIn('id', $userIds)->findAll();
+            }
+        }
+
         $activeMenu = (isset($lot['is_promotional']) && $lot['is_promotional']) ? 'promotions' : 'lots';
 
         return view('admin/lots/show', [
             'lot'         => $lot,
             'allocations' => $allocations,
             'logs'        => $logs,
+            'targetClients' => $targetClients,
             'active_menu' => $activeMenu,
         ]);
     }
@@ -504,9 +514,12 @@ class LotsController extends BaseController
     {
         if ($response = $this->checkPermission('lots')) return $response;
         $supplierModel = new SupplierModel();
+        $userModel     = new \App\Models\UserModel();
+        $users         = $userModel->where('role', 'user')->orderBy('login', 'ASC')->findAll();
 
         return view('admin/promotions/new', [
             'suppliers'   => $supplierModel->getEnabled(),
+            'users'       => $users,
             'active_menu' => 'promotions',
         ]);
     }
@@ -524,6 +537,9 @@ class LotsController extends BaseController
         $purchaseHash   = trim($this->request->getPost('purchase_hash') ?? '');
         $deliveryType   = $this->request->getPost('delivery_type');
 
+        $targetType     = $this->request->getPost('target_type') ?: 'all';
+        $targetUsersArr = $this->request->getPost('target_users');
+
         if ($usdtAmount <= 0 || $conversionRate <= 0) {
             return redirect()->back()->withInput()->with('error', 'Preencha todos os campos obrigatórios (Quantidade e Taxa por USDT).');
         }
@@ -532,6 +548,11 @@ class LotsController extends BaseController
             $supplier = 'Promoção';
         }
         $totalBrl = round($usdtAmount * $conversionRate, 2);
+
+        $targetUsers = null;
+        if ($targetType === 'users' && is_array($targetUsersArr)) {
+            $targetUsers = json_encode(array_map('intval', $targetUsersArr));
+        }
 
         $lotId = $lotModel->insert([
             'supplier'        => $supplier,
@@ -543,9 +564,9 @@ class LotsController extends BaseController
             'status'          => 'active',
             'created_by'      => session()->get('user_id'),
             'is_promotional'  => 1,
-            'target_type'     => 'all',
+            'target_type'     => $targetType,
             'target_group'    => null,
-            'target_users'    => null,
+            'target_users'    => $targetUsers,
             'promo_rate'      => $promoRate,
         ]);
 
@@ -557,9 +578,9 @@ class LotsController extends BaseController
             'conversion_rate' => $conversionRate,
             'total_brl'       => $totalBrl,
             'is_promotional'  => true,
-            'target_type'     => 'all',
+            'target_type'     => $targetType,
             'target_group'    => null,
-            'target_users'    => null,
+            'target_users'    => $targetUsers,
             'promo_rate'      => $promoRate,
         ]);
 
