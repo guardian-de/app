@@ -55,8 +55,11 @@ class DepositsController extends BaseController
         $perPage   = (int) ($this->request->getGet('per_page') ?? 50);
 
         $depositModel = new DepositModel();
-        $builder = $depositModel->select('deposits.*, u.login as user_login')
+        $builder = $depositModel->select('deposits.*, u.login as user_login, a.login as accepted_by_login, r.login as reversed_by_login, rj.login as rejected_by_login')
             ->join('users u', 'u.id = deposits.user_id', 'left')
+            ->join('users a', 'a.id = deposits.accepted_by', 'left')
+            ->join('users r', 'r.id = deposits.reversed_by', 'left')
+            ->join('users rj', 'rj.id = deposits.rejected_by', 'left')
             ->orderBy('deposits.created_at', 'DESC');
 
         if ($status !== 'all' && $status !== '') {

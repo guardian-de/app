@@ -100,6 +100,7 @@
                     <th>Cliente</th>
                     <th>Valor (BRL)</th>
                     <th>Status</th>
+                    <th>Processado por</th>
                     <th>Data</th>
                     <th></th>
                 </tr>
@@ -107,7 +108,7 @@
             <tbody>
                 <?php if (empty($deposits)): ?>
                     <tr>
-                        <td colspan="6" style="text-align: center; color: #94a3b8; padding: 40px;">Nenhum depósito encontrado.</td>
+                        <td colspan="7" style="text-align: center; color: #94a3b8; padding: 40px;">Nenhum depósito encontrado.</td>
                     </tr>
                 <?php else: ?>
                     <?php foreach ($deposits as $d): ?>
@@ -118,7 +119,7 @@
                             <?php if ($d['amount'] === null): ?>
                                 <?php if (($d['ocr_status'] ?? 'needs_review') === 'processing'): ?>
                                     <span style="color: #94a3b8;">Processando...</span>
-                                <?php else: ?>
+                                  <?php else: ?>
                                     <span style="color: #fbbf24;">Não identificado</span>
                                 <?php endif; ?>
                             <?php else: ?>
@@ -139,6 +140,19 @@
                             <?php else: ?>
                                 <span class="badge badge-reversed">Revertido</span>
                             <?php endif; ?>
+                        </td>
+                        <td style="color: #94a3b8;">
+                            <?php
+                            $actor = '—';
+                            if ($d['status'] === 'accepted' && !empty($d['accepted_by_login'])) {
+                                $actor = esc($d['accepted_by_login']);
+                            } elseif ($d['status'] === 'reversed' && !empty($d['reversed_by_login'])) {
+                                $actor = esc($d['reversed_by_login']);
+                            } elseif ($d['status'] === 'rejected' && !empty($d['rejected_by_login'])) {
+                                $actor = esc($d['rejected_by_login']);
+                            }
+                            echo $actor;
+                            ?>
                         </td>
                         <td style="color: #94a3b8;"><?= date('d/m/Y H:i', strtotime($d['created_at'])) ?></td>
                         <td>
