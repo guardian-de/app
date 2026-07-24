@@ -1213,7 +1213,17 @@ class AdminController extends BaseController
             la.transaction_id,
             la.usdt_amount,
             la.status,
-            la.profit_brl,
+            CASE
+                WHEN la.status = 'delivered' THEN
+                    CASE
+                        WHEN la.contract_id IS NOT NULL AND c.total_amount > 0 THEN
+                            ROUND((CASE WHEN COALESCE(c.fee_percent, 0) > 0 THEN (c.total_brl / c.total_amount) ELSE (c.total_brl / c.total_amount) * (1 + COALESCE(uc.fee_percent, 0) / 100) END - ul.conversion_rate) * la.usdt_amount, 2)
+                        WHEN la.transaction_id IS NOT NULL AND t.amount_usdt > 0 THEN
+                            ROUND((CASE WHEN COALESCE(t.fee_percent, 0) > 0 THEN (t.amount_brl / t.amount_usdt) ELSE (t.amount_brl / t.amount_usdt) * (1 + COALESCE(ut.fee_percent, 0) / 100) END - ul.conversion_rate) * la.usdt_amount, 2)
+                        ELSE 0
+                    END
+                ELSE NULL
+            END AS profit_brl,
             la.created_at,
             ul.conversion_rate   AS supplier_rate,
             ul.supplier,
@@ -1221,18 +1231,24 @@ class AdminController extends BaseController
             COALESCE(uc.login, ut.login) AS client_name,
             COALESCE(tc.delivery_type, t.delivery_type) AS client_delivery_type,
             CASE
-                WHEN la.contract_id    IS NOT NULL AND c.total_amount > 0 THEN ROUND(c.comercial_brl / c.total_amount, 4)
-                WHEN la.transaction_id IS NOT NULL AND t.amount_usdt  > 0 THEN ROUND(t.comercial_brl / t.amount_usdt,  4)
+                WHEN la.contract_id    IS NOT NULL AND c.total_amount > 0 THEN 
+                    ROUND(CASE WHEN COALESCE(c.fee_percent, 0) > 0 THEN (c.total_brl / c.total_amount) ELSE (c.total_brl / c.total_amount) * (1 + COALESCE(uc.fee_percent, 0) / 100) END, 4)
+                WHEN la.transaction_id IS NOT NULL AND t.amount_usdt  > 0 THEN 
+                    ROUND(CASE WHEN COALESCE(t.fee_percent, 0) > 0 THEN (t.amount_brl / t.amount_usdt) ELSE (t.amount_brl / t.amount_usdt) * (1 + COALESCE(ut.fee_percent, 0) / 100) END, 4)
                 ELSE NULL
             END AS client_rate,
             CASE
-                WHEN la.contract_id    IS NOT NULL AND c.total_amount > 0 THEN ROUND(c.comercial_brl / c.total_amount - ul.conversion_rate, 4)
-                WHEN la.transaction_id IS NOT NULL AND t.amount_usdt  > 0 THEN ROUND(t.comercial_brl / t.amount_usdt  - ul.conversion_rate, 4)
+                WHEN la.contract_id    IS NOT NULL AND c.total_amount > 0 THEN 
+                    ROUND(CASE WHEN COALESCE(c.fee_percent, 0) > 0 THEN (c.total_brl / c.total_amount) ELSE (c.total_brl / c.total_amount) * (1 + COALESCE(uc.fee_percent, 0) / 100) END - ul.conversion_rate, 4)
+                WHEN la.transaction_id IS NOT NULL AND t.amount_usdt  > 0 THEN 
+                    ROUND(CASE WHEN COALESCE(t.fee_percent, 0) > 0 THEN (t.amount_brl / t.amount_usdt) ELSE (t.amount_brl / t.amount_usdt) * (1 + COALESCE(ut.fee_percent, 0) / 100) END - ul.conversion_rate, 4)
                 ELSE NULL
             END AS margin_per_usdt,
             CASE
-                WHEN la.contract_id    IS NOT NULL AND c.total_amount > 0 THEN ROUND((c.comercial_brl / c.total_amount) * la.usdt_amount, 2)
-                WHEN la.transaction_id IS NOT NULL AND t.amount_usdt  > 0 THEN ROUND((t.comercial_brl / t.amount_usdt)  * la.usdt_amount, 2)
+                WHEN la.contract_id    IS NOT NULL AND c.total_amount > 0 THEN 
+                    ROUND(CASE WHEN COALESCE(c.fee_percent, 0) > 0 THEN (c.total_brl / c.total_amount) ELSE (c.total_brl / c.total_amount) * (1 + COALESCE(uc.fee_percent, 0) / 100) END * la.usdt_amount, 2)
+                WHEN la.transaction_id IS NOT NULL AND t.amount_usdt  > 0 THEN 
+                    ROUND(CASE WHEN COALESCE(t.fee_percent, 0) > 0 THEN (t.amount_brl / t.amount_usdt) ELSE (t.amount_brl / t.amount_usdt) * (1 + COALESCE(ut.fee_percent, 0) / 100) END * la.usdt_amount, 2)
                 ELSE NULL
             END AS valor_cliente_brl,
             ROUND(ul.conversion_rate * la.usdt_amount, 2) AS valor_fornecedor_brl,
@@ -1252,11 +1268,20 @@ class AdminController extends BaseController
 
         $total = (int)$db->query("SELECT COUNT(*) AS cnt $joins $where", $params)->getRow()->cnt;
         $rows  = $db->query("SELECT $selectCols $joins $where ORDER BY la.created_at DESC LIMIT $perPage OFFSET $offset", $params)->getResultArray();
-
         $summary = $db->query("
             SELECT
                 COALESCE(SUM(la.usdt_amount), 0)  AS total_usdt,
-                COALESCE(SUM(CASE WHEN la.status = 'delivered' THEN la.profit_brl ELSE 0 END), 0) AS total_profit
+                COALESCE(SUM(CASE 
+                    WHEN la.status = 'delivered' THEN
+                        CASE
+                            WHEN la.contract_id IS NOT NULL AND c.total_amount > 0 THEN
+                                ROUND((CASE WHEN COALESCE(c.fee_percent, 0) > 0 THEN (c.total_brl / c.total_amount) ELSE (c.total_brl / c.total_amount) * (1 + COALESCE(uc.fee_percent, 0) / 100) END - ul.conversion_rate) * la.usdt_amount, 2)
+                            WHEN la.transaction_id IS NOT NULL AND t.amount_usdt > 0 THEN
+                                ROUND((CASE WHEN COALESCE(t.fee_percent, 0) > 0 THEN (t.amount_brl / t.amount_usdt) ELSE (t.amount_brl / t.amount_usdt) * (1 + COALESCE(ut.fee_percent, 0) / 100) END - ul.conversion_rate) * la.usdt_amount, 2)
+                            ELSE 0
+                        END
+                    ELSE 0
+                END), 0) AS total_profit
             $joins $where
         ", $params)->getRow();
 

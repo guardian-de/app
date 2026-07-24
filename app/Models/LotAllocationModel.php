@@ -174,14 +174,30 @@ class LotAllocationModel extends Model
         $db = \Config\Database::connect();
 
         if ($entityType === 'contract') {
-            $row = $db->table('contracts')->select('comercial_brl, total_amount')->where('id', $entityId)->get()->getRow();
+            $row = $db->table('contracts')
+                      ->select('contracts.comercial_brl, contracts.total_brl, contracts.total_amount, contracts.fee_percent, users.fee_percent as user_fee')
+                      ->join('users', 'users.id = contracts.user_id')
+                      ->where('contracts.id', $entityId)
+                      ->get()->getRow();
             if ($row && (float)$row->total_amount > 0) {
-                return (float)$row->comercial_brl / (float)$row->total_amount;
+                $rate = (float)$row->total_brl / (float)$row->total_amount;
+                if (!((float)$row->fee_percent > 0) && (float)$row->user_fee > 0) {
+                    $rate = $rate * (1 + (float)$row->user_fee / 100);
+                }
+                return $rate;
             }
         } else {
-            $row = $db->table('transactions')->select('comercial_brl, amount_usdt')->where('id', $entityId)->get()->getRow();
+            $row = $db->table('transactions')
+                      ->select('transactions.comercial_brl, transactions.amount_brl, transactions.amount_usdt, transactions.fee_percent, users.fee_percent as user_fee')
+                      ->join('users', 'users.id = transactions.user_id')
+                      ->where('transactions.id', $entityId)
+                      ->get()->getRow();
             if ($row && (float)$row->amount_usdt > 0) {
-                return (float)$row->comercial_brl / (float)$row->amount_usdt;
+                $rate = (float)$row->amount_brl / (float)$row->amount_usdt;
+                if (!((float)$row->fee_percent > 0) && (float)$row->user_fee > 0) {
+                    $rate = $rate * (1 + (float)$row->user_fee / 100);
+                }
+                return $rate;
             }
         }
 
