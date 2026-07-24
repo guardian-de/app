@@ -54,7 +54,10 @@
                 <p style="font-size: 12px; color: #94a3b8; text-transform: uppercase;">Spot da Compra</p>
                 <p style="font-size: 18px; font-weight: 700; color: white;">
                     <?php
-                    $spotRate = !empty($clientProof['base_rate']) ? (float)$clientProof['base_rate'] : 0;
+                    $spotRate = !empty($c['transaction_rate']) ? (float)$c['transaction_rate'] : 0;
+                    if ($spotRate <= 0 && !empty($clientProof['base_rate'])) {
+                        $spotRate = (float)$clientProof['base_rate'];
+                    }
                     if ($spotRate <= 0 && (float)$c['total_amount'] > 0 && (float)$c['comercial_brl'] > 0) {
                         $spotRate = (float)$c['comercial_brl'] / (float)$c['total_amount'];
                     }
