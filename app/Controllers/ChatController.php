@@ -714,23 +714,31 @@ class ChatController extends BaseController
         $feeBrl = round($brlAmount - $comercialBrl, 2);
 
         $transactionModel = new \App\Models\TransactionModel();
-        
         $contractId = null;
         $balance = 0.0;
         $contractModel = new \App\Models\ContractModel();
         $financialModel = new \App\Models\FinancialStatementModel();
         if ($type === 'buy') {
             $balance = $financialModel->getBalance($userId);
+            // Valida saldo se a restrição de saldo estiver ativa nas configurações globais
+            $settingsModel = new \App\Models\SettingsModel();
+            $lockMode = $settingsModel->getConfig('lock_only_with_balance_mode', 'disabled');
+            $shouldLock = false;
+            if ($lockMode === 'all') {
+                $shouldLock = true;
+            } elseif ($lockMode === 'specific') {
+                $lockClients = json_decode($settingsModel->getConfig('lock_only_with_balance_clients', '[]'), true) ?? [];
+                if (in_array($userId, $lockClients)) {
+                    $shouldLock = true;
+                }
+            }
 
-            // Valida saldo: balance - compra >= 0 (Comentado para permitir compra mesmo com saldo abaixo de 0,00)
-            /*
-            if (($balance - $brlAmount) < 0) {
+            if ($shouldLock && ($balance - $brlAmount) < 0) {
                 $errorMsg = $userLang == 'zh-CN'
                     ? "余额不足。可用余额为 R$ " . number_format(max(0.0, $balance), 2, ',', '.')
                     : "Saldo insuficiente. Disponível para compra: R$ " . number_format(max(0.0, $balance), 2, ',', '.') . ".";
                 return $this->response->setJSON(['error' => $errorMsg])->setStatusCode(400);
             }
-            */
 
             // Toda compra gera contrato (margin_lock reduz o saldo via ledger)
             {

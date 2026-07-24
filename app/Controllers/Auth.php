@@ -147,10 +147,13 @@ class Auth extends BaseController
             }
             if (!$db->fieldExists('login_attempts', 'users')) {
                 $db->query("ALTER TABLE `users` ADD COLUMN `login_attempts` INT(11) NOT NULL DEFAULT 0 AFTER `two_factor_enabled`");
-            }
-            if (!$db->fieldExists('blocked_until', 'users')) {
+            }            if (!$db->fieldExists('blocked_until', 'users')) {
                 $db->query("ALTER TABLE `users` ADD COLUMN `blocked_until` DATETIME NULL AFTER `login_attempts`");
             }
+            if (!$db->fieldExists('lock_only_with_balance', 'users')) {
+                $db->query("ALTER TABLE `users` ADD COLUMN `lock_only_with_balance` TINYINT(1) NOT NULL DEFAULT 0 AFTER `purchase_model`");
+            }
+
             if (!$db->fieldExists('status', 'user_wallets')) {
                 $db->query("ALTER TABLE `user_wallets` ADD COLUMN `status` ENUM('active','inactive') NOT NULL DEFAULT 'active' AFTER `is_default`");
             }

@@ -238,6 +238,53 @@
             }
         </script>
 
+        <div style="padding: 20px; background: rgba(15, 23, 42, 0.3); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);">
+            <h3 style="font-size: 16px; color: white; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                🔒 Travar Apenas com Saldo em Conta
+            </h3>
+            
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display: block; color: #94a3b8; font-size: 12px; font-weight: 600; margin-bottom: 12px;">Modo de Restrição</label>
+                
+                <select id="lock_only_with_balance_mode" name="lock_only_with_balance_mode" onchange="toggleLockClientsList()"
+                    style="width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none; font-size: 16px;">
+                    <option value="disabled" <?= ($lock_only_with_balance_mode ?? 'disabled') === 'disabled' ? 'selected' : '' ?>>Desativado (todos os clientes podem travar mesmo sem saldo)</option>
+                    <option value="all" <?= ($lock_only_with_balance_mode ?? 'disabled') === 'all' ? 'selected' : '' ?>>Todos (todos os clientes só podem travar se tiverem saldo)</option>
+                    <option value="specific" <?= ($lock_only_with_balance_mode ?? 'disabled') === 'specific' ? 'selected' : '' ?>>Clientes Específicos (apenas os selecionados abaixo só travam com saldo)</option>
+                </select>
+            </div>
+
+            <div id="lock_clients_list_container" style="display: <?= ($lock_only_with_balance_mode ?? 'disabled') === 'specific' ? 'block' : 'none' ?>; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px; margin-top: 20px;">
+                <label style="display: block; color: #94a3b8; font-size: 12px; font-weight: 600; margin-bottom: 12px;">Selecione os Clientes</label>
+                <div style="max-height: 200px; overflow-y: auto; background: rgba(15, 23, 42, 0.2); border: 1px solid rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; display: flex; flex-direction: column; gap: 10px;">
+                    <?php if (!empty($clients)): ?>
+                        <?php foreach ($clients as $client): ?>
+                            <label style="display: flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 14px; cursor: pointer; user-select: none;">
+                                <input type="checkbox" name="lock_only_with_balance_clients[]" value="<?= esc($client['id']) ?>" <?= in_array($client['id'], $lock_only_with_balance_clients ?? []) ? 'checked' : '' ?> style="accent-color: #6366f1; width: 18px; height: 18px; cursor: pointer;">
+                                <?= esc($client['login']) ?>
+                            </label>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <p style="color: #64748b; font-size: 13px; margin: 0;">Nenhum cliente cadastrado.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+            
+            <p style="margin-top: 15px; color: #64748b; font-size: 12px;">Esta regra impede novas compras se o saldo disponível em conta (descontando a compra) for menor que 0.</p>
+        </div>
+
+        <script>
+            function toggleLockClientsList() {
+                const mode = document.getElementById('lock_only_with_balance_mode').value;
+                const container = document.getElementById('lock_clients_list_container');
+                if (mode === 'specific') {
+                    container.style.display = 'block';
+                } else {
+                    container.style.display = 'none';
+                }
+            }
+        </script>
+
         <button type="submit" class="btn btn-primary" style="padding: 15px; justify-content: center; font-size: 15px;">Salvar Alterações</button>
     </form>
 </div>

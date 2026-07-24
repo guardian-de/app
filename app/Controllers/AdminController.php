@@ -19,6 +19,7 @@ class AdminController extends BaseController
         try {
             if (!$db->fieldExists('purchase_model', 'users')) { $db->query("ALTER TABLE `users` ADD COLUMN `purchase_model` ENUM('usdt','brl','both') NOT NULL DEFAULT 'usdt' AFTER `allowed_delivery_types`"); }
             if (!$db->fieldExists('last_purchase_mode', 'users')) { $db->query("ALTER TABLE `users` ADD COLUMN `last_purchase_mode` ENUM('usdt','brl') NULL AFTER `purchase_model`"); }
+            if (!$db->fieldExists('lock_only_with_balance', 'users')) { $db->query("ALTER TABLE `users` ADD COLUMN `lock_only_with_balance` TINYINT(1) NOT NULL DEFAULT 0 AFTER `purchase_model`"); }
         } catch (\Throwable $e) {}
 
         $search = $this->request->getGet('search') ?? '';
@@ -86,6 +87,8 @@ class AdminController extends BaseController
             'daily_interest_rate'    => $role === 'user' ? ($this->request->getPost('daily_interest_rate') ?: 0.00) : 0.00,
             'allowed_delivery_types' => $role === 'user' ? ($this->request->getPost('allowed_delivery_types') ?: 'all') : 'all',
             'purchase_model'         => ($role === 'user' && $canSetPurchaseModel) ? ($this->request->getPost('purchase_model') ?: 'usdt') : 'usdt',
+
+            'lock_only_with_balance' => $role === 'user' ? (int)$this->request->getPost('lock_only_with_balance') : 0,
             'role'                   => $role,
             'permissions'            => ($role !== 'user' && !empty($permissions)) ? json_encode($permissions) : null,
         ];
@@ -258,18 +261,17 @@ class AdminController extends BaseController
                 ? ($role === 'user' ? ($this->request->getPost('fee_percent') ?: 10.00) : 0.00)
                 : ($existingUser['fee_percent'] ?? 10.00),
             'usdt_wallet'            => $role === 'user' ? $defaultAddress : null,
-            'score'                  => 0.00,
             'default_contract_type'  => $role === 'user' ? ($this->request->getPost('default_contract_type') ?: 'd+1') : 'd+1',
             'daily_interest_rate'    => $role === 'user' ? ($this->request->getPost('daily_interest_rate') ?: 0.00) : 0.00,
             'allowed_delivery_types' => $role === 'user' ? ($this->request->getPost('allowed_delivery_types') ?: 'all') : 'all',
             'purchase_model'         => $role === 'user'
                 ? ($canSetPurchaseModel ? ($this->request->getPost('purchase_model') ?: 'usdt') : ($existingUser['purchase_model'] ?? 'usdt'))
                 : 'usdt',
+            'lock_only_with_balance' => $role === 'user' ? (int)$this->request->getPost('lock_only_with_balance') : 0,
             'role'                   => $role,
             'permissions'            => ($role !== 'user' && !empty($permissions)) ? json_encode($permissions) : null,
         ];
 
-        // Regras de validação customizadas para UPDATE
         $rules = [
             'login' => "required|min_length[3]|max_length[150]|is_unique[users.login,id,$id]",
         ];
@@ -1295,6 +1297,11 @@ class AdminController extends BaseController
         $data['admin_alert_sound'] = $settingsModel->getConfig('admin_alert_sound', 'chime_premium');
         $data['disable_d1'] = $settingsModel->getConfig('disable_d1', '0') === '1';
         $data['disable_d2'] = $settingsModel->getConfig('disable_d2', '0') === '1';
+
+        $userModel = new \App\Models\UserModel();
+        $data['clients'] = $userModel->where('role', 'user')->orderBy('login', 'ASC')->findAll();
+        $data['lock_only_with_balance_mode'] = $settingsModel->getConfig('lock_only_with_balance_mode', 'disabled');
+        $data['lock_only_with_balance_clients'] = json_decode($settingsModel->getConfig('lock_only_with_balance_clients', '[]'), true) ?? [];
         
         return view('admin/settings', $data);
     }
@@ -1322,12 +1329,17 @@ class AdminController extends BaseController
         if ($startD2) $settingsModel->setConfig('business_hours_d2_start', $startD2);
         if ($endD2) $settingsModel->setConfig('business_hours_d2_end', $endD2);
         if ($quotationFlow) $settingsModel->setConfig('quotation_flow', $quotationFlow);
+
         if ($adminAlertSound) $settingsModel->setConfig('admin_alert_sound', $adminAlertSound);
         $settingsModel->setConfig('operator_whatsapp', $operatorWhatsapp ?? '');
+
         $settingsModel->setConfig('disable_d1', $disableD1);
         $settingsModel->setConfig('disable_d2', $disableD2);
 
-        // Upload de Logo
+        $lockOnlyWithBalanceMode = $this->request->getPost('lock_only_with_balance_mode') ?: 'disabled';
+        $lockOnlyWithBalanceClients = $this->request->getPost('lock_only_with_balance_clients') ?: [];
+        $settingsModel->setConfig('lock_only_with_balance_mode', $lockOnlyWithBalanceMode);
+        $settingsModel->setConfig('lock_only_with_balance_clients', json_encode($lockOnlyWithBalanceClients));
         $logoFile = $this->request->getFile('logo');
         if ($logoFile && $logoFile->isValid() && !$logoFile->hasMoved()) {
             $validationRule = [

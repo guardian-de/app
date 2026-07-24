@@ -142,7 +142,6 @@
                     </select>
                 </div>
             </div>
-
             <?php if ($canSetPurchaseModel): ?>
             <div class="form-group">
                 <label for="purchase_model" style="display: block; color: #94a3b8; font-size: 12px; font-weight: 600; margin-bottom: 8px;">Modelo de Compra</label>
