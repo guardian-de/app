@@ -23,7 +23,10 @@ $isClosed = $totalAmount > 0 && $totalLotAllocated >= $totalAmount;
         <div style="font-size: 10px; color: #f87171; font-weight: normal;">Faltando: <?= number_format($contract['total_amount'] - $contract['delivered_usdt'], 2, '.', ',') ?></div>
     </td>
     <td style="padding: 15px; font-size: 13px;">
-        <?= isset($contract['spot_rate']) && $contract['spot_rate'] !== null ? 'R$ ' . number_format($contract['spot_rate'], 4, ',', '.') : '—' ?>
+        <?php
+        $rate = isset($contract['tx_rate']) && (float)$contract['tx_rate'] > 0 ? (float)$contract['tx_rate'] : (isset($contract['spot_rate']) ? (float)$contract['spot_rate'] : 0);
+        echo $rate > 0 ? 'R$ ' . number_format($rate, 4, ',', '.') : '—';
+        ?>
     </td>
     <td style="padding: 15px;">
         <span style="color: #f87171; font-weight: 700;">
