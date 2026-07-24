@@ -635,6 +635,13 @@ class ChatController extends BaseController
                 return $this->response->setJSON(['error' => 'Lote promocional inválido ou esgotado.'])->setStatusCode(400);
             }
 
+            if (($lot['target_type'] ?? 'all') === 'users') {
+                $allowedUsers = json_decode($lot['target_users'] ?? '[]', true);
+                if (!is_array($allowedUsers) || !in_array((int)$userId, $allowedUsers)) {
+                    return $this->response->setJSON(['error' => 'Você não tem permissão para comprar deste lote promocional.'])->setStatusCode(403);
+                }
+            }
+
             if ($inputMode === 'brl') {
                 $usdtAmountReq = round($brlAmountReq / (float)$lot['promo_rate'], 4);
             }
@@ -1372,6 +1379,7 @@ class ChatController extends BaseController
         if (!session()->get('isLoggedIn')) {
             return $this->response->setJSON(['error' => 'Unauthorized'])->setStatusCode(401);
         }
+        $userId = (int)session()->get('user_id');
 
         $lotModel = new \App\Models\UsdtLotModel();
         $lots = $lotModel->where('is_promotional', 1)
@@ -1380,6 +1388,13 @@ class ChatController extends BaseController
 
         $targetedLots = [];
         foreach ($lots as $lot) {
+            if (($lot['target_type'] ?? 'all') === 'users') {
+                $allowedUsers = json_decode($lot['target_users'] ?? '[]', true);
+                if (!is_array($allowedUsers) || !in_array($userId, $allowedUsers)) {
+                    continue;
+                }
+            }
+
             $available = $lotModel->getAvailable((int)$lot['id']);
             if ($available > 0.0001) {
                 $targetedLots[] = [
